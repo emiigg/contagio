@@ -1,11 +1,28 @@
+# Contagio en produccion: contagio.emiigg.dev.
+# Lo sirve el nginx global de /opt/infra, que alcanza el contenedor por el alias
+# "contagio-web" en la red docker externa "web". No publica puerto en el host:
+# el 3001 queda libre para `npm run dev`.
+#
+# Desplegar / actualizar tras un git pull:
+#   docker compose -f /opt/contagio/docker-compose.yml up -d --build
+
+name: contagio
+
 services:
   contagio:
     build: .
     image: contagio:latest
     restart: unless-stopped
-    ports:
-      - "${CONTAGIO_PORT:-3001}:3001"
     environment:
       NODE_ENV: production
       PORT: 3001
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://contagio.emiigg.dev}
+    networks:
+      web:
+        aliases:
+          - contagio-web
+
+networks:
+  web:
+    external: true
+    name: web

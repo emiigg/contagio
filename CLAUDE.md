@@ -152,9 +152,24 @@ sigue funcionando). Una sala sin humanos conectados se cierra tras un minuto de 
 desconexión y quien vuelve debe reencontrar su partida— y en el acto si no queda ni el asiento de un humano.
 `GET /health` devuelve salas abiertas y tope.
 
+## Producción
+
+Publicado en **https://contagio.emiigg.dev**. Actualizar tras un push:
+
+```bash
+git pull && docker compose -f /opt/contagio/docker-compose.yml up -d --build
+```
+
+- El contenedor entra en la red docker externa `web` con alias `contagio-web` y **no publica puerto**: el 3001 del
+  host es de `npm run dev`, y las capturas usan otros puertos a propósito.
+- Lo enruta el nginx global de `/opt/infra` (no es un repositorio git) con `conf.d/contagio.conf`, que es copia de
+  `contagio.conf.https`; `contagio.conf.http-bootstrap` sirve para reemitir desde cero. Lleva las cabeceras de
+  WebSocket: sin ellas Socket.IO se queda en long-polling.
+- Certificado Let's Encrypt propio del subdominio (el de `emiigg.dev` no cubre subdominios), renovado por el cron de
+  `/opt/infra/renew-certs.sh`. Tras tocar una conf: `docker compose -f /opt/infra/docker-compose.yml exec nginx nginx
+  -t` y después `nginx -s reload`.
+
 ## Pendiente
 
 - El glifo del tratamiento **Brote** se lee regular; merece un redibujo.
 - Falta un workflow de CI, si se quiere.
-- Despliegue: la máquina tiene un nginx en `/opt/infra` delante de otros proyectos; Contagio trae `Dockerfile` y
-  `docker-compose.yml` pero todavía no está publicado.

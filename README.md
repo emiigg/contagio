@@ -133,9 +133,21 @@ En producción el mismo proceso Node sirve el cliente compilado y el socket:
 
 ```bash
 npm run build && node packages/server/dist/index.js   # http://localhost:3001
-# o
-docker compose up --build
 ```
+
+### Producción
+
+El juego está publicado en **https://contagio.emiigg.dev**. La máquina tiene un nginx global en `/opt/infra`, delante
+de otros proyectos, que enruta por dominio a contenedores de la red docker externa `web`:
+
+```bash
+git pull && docker compose -f /opt/contagio/docker-compose.yml up -d --build
+```
+
+El contenedor entra en `web` con el alias `contagio-web` y no publica puerto en el host, así que el 3001 sigue libre
+para `npm run dev`. Su bloque de nginx es `/opt/infra/conf.d/contagio.conf`, con las cabeceras de WebSocket que
+necesita Socket.IO y el socket abierto hasta una hora. El certificado de Let's Encrypt es propio del subdominio y se
+renueva con el cron que ya tenía `/opt/infra`.
 
 Variables: `PORT` (3001), `CORS_ORIGIN` (`*`), `VITE_SERVER_URL` para apuntar el proxy de desarrollo a otro servidor.
 
