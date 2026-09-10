@@ -1208,23 +1208,27 @@ button {
 
 /* --- reverso de carta ----------------------------------------------------- */
 
+/* Verde quirofano: el complementario del naranja de la marca, que asi se lee
+   entero sin competir con los cuatro colores de organo. El reverso no cambia
+   con el tema: es el mismo objeto en la mesa, se mire de dia o de noche. */
 .cardback {
   display: grid;
   place-items: center;
   width: var(--w, 2.6rem);
   aspect-ratio: 5 / 7;
   border-radius: var(--radius-card);
-  border: 1px solid #0f1a18;
-  color: rgba(238, 241, 236, 0.85);
+  border: 1px solid var(--back-deep);
+  color: var(--brand-warm);
   background:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
-    linear-gradient(160deg, #1d2b28, #16211f 60%, #223330);
-  box-shadow: inset 0 0 0 3px rgba(238, 241, 236, 0.12);
+    repeating-linear-gradient(45deg, rgba(227, 122, 65, 0.07) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, var(--back), var(--back-deep) 62%, var(--back));
+  box-shadow: inset 0 0 0 3px rgba(227, 122, 65, 0.22);
 }
 
 .cardback__emblem {
-  width: 62%;
-  height: 62%;
+  width: 58%;
+  height: 58%;
+  filter: drop-shadow(0 1px 0 rgba(14, 48, 51, 0.6));
 }
 
 /* --- mano ----------------------------------------------------------------- */
