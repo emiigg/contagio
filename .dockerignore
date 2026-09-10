@@ -2,5 +2,7 @@ node_modules
 **/node_modules
 **/dist
 **/dist-test
+**/*.tsbuildinfo
+tools/shots
 .git
 *.log
