@@ -1,4 +1,4 @@
-import { Emblem } from '../art';
+import { Mark } from '../art';
 
 /**
  * Reverso de carta: lo que se ve de las manos ajenas y de las cartas que
@@ -7,7 +7,7 @@ import { Emblem } from '../art';
 export function CardBack({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <span className={`cardback ${className ?? ''}`} style={style} aria-hidden>
-      <Emblem className="cardback__emblem" />
+      <Mark className="cardback__emblem" />
     </span>
   );
 }
