@@ -5,10 +5,29 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio' | 'arrecife' | 'grimorio';
+export type PackId =
+  | 'contagio'
+  | 'heroes'
+  | 'marvel'
+  | 'frutas'
+  | 'cortafuegos'
+  | 'orbita'
+  | 'asedio'
+  | 'arrecife'
+  | 'grimorio';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio', 'arrecife', 'grimorio'];
+export const PACK_IDS: PackId[] = [
+  'contagio',
+  'heroes',
+  'marvel',
+  'frutas',
+  'cortafuegos',
+  'orbita',
+  'asedio',
+  'arrecife',
+  'grimorio',
+];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -251,6 +270,94 @@ const HEROES: Pack = {
     loseText: 'Tu equipo se quedo a medias. La proxima ronda empieza de cero.',
   },
   credit: 'Los personajes de Heroes DC pertenecen a DC Comics; este paquete es un homenaje sin animo de lucro.',
+};
+
+/** Paquete de aficionado con personajes de Marvel, igual que Heroes DC. */
+const MARVEL: Pack = {
+  id: 'marvel',
+  name: 'Heroes Marvel',
+  tagline: 'Los Vengadores contra Thanos y compania.',
+  kinds: { organ: 'Heroe', virus: 'Villano', medicine: 'Refuerzo', treatment: 'Evento' },
+  organs: {
+    red: { name: 'Iron Man', art: 'el' },
+    blue: { name: 'Capitan America', art: 'el' },
+    green: { name: 'Hulk', art: 'el' },
+    yellow: { name: 'Thor', art: 'el' },
+    wild: { name: 'Spider-Man', art: 'el' },
+  },
+  viruses: {
+    red: 'Ultron',
+    blue: 'Craneo Rojo',
+    green: 'Abominacion',
+    yellow: 'Loki',
+    wild: 'Thanos',
+  },
+  medicines: {
+    red: 'Reactor Arc',
+    blue: 'Escudo de vibranio',
+    green: 'Laboratorio de Banner',
+    yellow: 'Bifrost',
+    wild: 'Torre de los Vengadores',
+  },
+  treatments: {
+    swap: {
+      name: 'Salto cuantico',
+      text: 'Viajas por el reino cuantico y cambias un heroe tuyo por uno de otro jugador. Ninguno puede ser invencible ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Iniciativa Vengadores',
+      text: 'Fichas a un heroe de otro jugador para tu equipo. No funciona con heroes invencibles ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Fuga de la Balsa',
+      text: 'Los villanos que tienes encima escapan de la prision y caen sobre heroes libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Chasquido',
+      text: 'Con un chasquido, la mano de tus rivales se vuelve polvo: la descartan y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Incursion multiversal',
+      text: 'Intercambias tu equipo entero con el de otro jugador, invencibles incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Sumalo a tu equipo. Un color por equipo.',
+    virus: 'Captura a un heroe libre, derrota a uno capturado o rompe su proteccion.',
+    medicine: 'Rescata a un heroe capturado, protege a uno libre o vuelve invencible a uno protegido.',
+  },
+  stamps: { infected: 'Capturado', vaccinated: 'Protegido', immunized: 'Invencible' },
+  words: {
+    organ: 'heroe',
+    organs: 'heroes',
+    the: 'el',
+    one: 'uno',
+    healthy: 'en pie',
+    threat: 'villano',
+    threats: 'villanos',
+    body: 'equipo',
+  },
+  lines: {
+    place: '{p} recluta a {card} para los Vengadores.',
+    infect: '{p} captura a {organ}.',
+    remove: '{p} derrota a {organ}.',
+    breakShield: '{p} rompe la proteccion de {organ}.',
+    cure: '{p} rescata a {organ}.',
+    vaccinate: '{p} protege a {organ}.',
+    immunize: '{p} vuelve invencible a {organ}.',
+    spread: '{p} suelta {n} {threats} sobre sus rivales.',
+    quarantine: '{p} chasquea los dedos: el resto pierde su mano.',
+    malpractice: '{p} provoca una incursion y cambia de equipo con {victim}.',
+    win: '{p} reune a los Vengadores y gana la partida.',
+  },
+  buttons: { spread: 'Soltar {n} {threats}', quarantine: 'Chasquear los dedos', malpractice: 'Cambiar de universo' },
+  ending: {
+    winTitle: 'Vengadores reunidos. Ganas.',
+    winText: 'Cuatro heroes en pie antes que nadie.',
+    loseTitle: '{p} reune a los Vengadores.',
+    loseText: 'Tu equipo se quedo a medias. La proxima ronda empieza de cero.',
+  },
+  credit: 'Los personajes de Heroes Marvel pertenecen a Marvel; este paquete es un homenaje sin animo de lucro.',
 };
 
 const FRUTAS: Pack = {
@@ -772,6 +879,7 @@ const GRIMORIO: Pack = {
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
+  marvel: MARVEL,
   frutas: FRUTAS,
   cortafuegos: CORTAFUEGOS,
   orbita: ORBITA,
