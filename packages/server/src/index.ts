@@ -70,6 +70,7 @@ function makeRoom(): Room {
     room: (view) => io.to(code).emit('room:state', view),
     view: (socketId, view) => io.to(socketId).emit('game:view', view),
     gameOver: (payload) => io.to(code).emit('game:over', payload),
+    toast: (socketId, message) => io.to(socketId).emit('toast', { message, kind: 'info' }),
   });
   rooms.set(code, room);
   return room;

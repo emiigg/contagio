@@ -33,9 +33,22 @@ export interface PlayerView {
   lastMove: MoveSummary | null;
   /** Jugadas validas ahora mismo; vacio si no es tu turno. */
   legalActions: Action[];
+  /**
+   * Reloj del turno. Milisegundos que le quedan a quien juega, o null si el
+   * turno no se cronometra (los bots no necesitan reloj: van solos y rapido).
+   */
+  turnMsLeft: number | null;
+  /** Duracion completa del turno, para saber cuanto se ha gastado ya. */
+  turnLimitMs: number;
 }
 
-export function toPlayerView(state: GameState, youId: string): PlayerView {
+/** Lo que el motor no sabe: cuanto lleva pensando quien juega. */
+export interface TurnClock {
+  msLeft: number | null;
+  limitMs: number;
+}
+
+export function toPlayerView(state: GameState, youId: string, clock: TurnClock = { msLeft: null, limitMs: 0 }): PlayerView {
   const turnPlayer = state.players[state.turn];
   const you = state.players.find((p) => p.id === youId);
   return {
@@ -61,5 +74,7 @@ export function toPlayerView(state: GameState, youId: string): PlayerView {
     log: state.log.slice(-40),
     lastMove: state.lastMove,
     legalActions: turnPlayer?.id === youId ? legalActions(state, youId) : [],
+    turnMsLeft: state.phase === 'playing' ? clock.msLeft : null,
+    turnLimitMs: clock.limitMs,
   };
 }

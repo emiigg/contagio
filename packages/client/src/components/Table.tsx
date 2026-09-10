@@ -10,6 +10,7 @@ import { CardFace, cardHint } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
 import { ThemeToggle } from './ThemeToggle';
+import { TurnClock } from './TurnClock';
 
 interface TableProps {
   view: PlayerView;
@@ -260,6 +261,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         <div className="bar__turn">
           <Pulse active={view.isYourTurn} />
           <span>{view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}</span>
+          {view.turnMsLeft !== null && !dealing && <TurnClock msLeft={view.turnMsLeft} limitMs={view.turnLimitMs} />}
         </div>
         <div className="bar__tools">
           <ThemeToggle compact />

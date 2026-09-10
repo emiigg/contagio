@@ -1825,6 +1825,56 @@ button {
   flex: none;
 }
 
+/* --- reloj del turno ------------------------------------------------------ */
+
+/* Un aro que se gasta. Solo sale cuando juega una persona: los bots no lo
+   necesitan y un aro de un minuto sobre un turno de cuatro segundos confunde. */
+.clock {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: none;
+  color: var(--ink-soft);
+}
+
+.clock__dial {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* El aro empieza arriba, como cualquier reloj. */
+  transform: rotate(-90deg);
+}
+
+.clock__track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 3;
+}
+
+.clock__sweep {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 220ms linear;
+}
+
+.clock__num {
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.clock.is-urgent {
+  color: var(--danger);
+}
+
+.clock.is-urgent .clock__num {
+  font-weight: 700;
+}
+
 /* --- sorteo de salida ----------------------------------------------------- */
 
 /* El cartel de quien abre no lleva cartas, asi que se apoya en la marca y en

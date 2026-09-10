@@ -32,11 +32,18 @@ const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS ?? 4500);
 const OPENING_DELAY_MS = Number(process.env.OPENING_DELAY_MS ?? 4200);
 /** Tiempo antes de que un bot cubra el turno de un humano desconectado. */
 const ABANDON_DELAY_MS = 8000;
+/**
+ * Lo que dura el turno de una persona. Pasado el minuto la mesa juega por ella
+ * con la misma heuristica que los bots: una partida en tiempo real no puede
+ * quedarse parada porque alguien se levante a por un cafe.
+ */
+const TURN_LIMIT_MS = Number(process.env.TURN_LIMIT_MS ?? 60_000);
 
 export type RoomBroadcast = {
   room: (room: RoomView) => void;
   view: (socketId: string, view: PlayerView) => void;
   gameOver: (payload: { winnerId: string; winnerName: string }) => void;
+  toast: (socketId: string, message: string) => void;
 };
 
 export class Room {
@@ -47,6 +54,8 @@ export class Room {
   difficulty: BotDifficulty = 'normal';
   private botTimer: NodeJS.Timeout | null = null;
   private botSeed = randomSeed();
+  /** Cuando vence el turno en curso, si es de una persona. */
+  private turnDeadline: number | null = null;
 
   constructor(code: string, private readonly broadcast: RoomBroadcast) {
     this.code = code;
@@ -132,8 +141,8 @@ export class Room {
       this.members.map((m) => ({ id: m.id, name: m.name, isBot: m.isBot })),
       randomSeed(),
     );
-    this.pushState();
     this.scheduleAutoTurn();
+    this.pushState();
     return { ok: true };
   }
 
@@ -149,9 +158,9 @@ export class Room {
     const result = applyAction(this.state, playerId, action);
     if (!result.ok) return { ok: false, error: result.error };
     this.state = result.state;
+    this.scheduleAutoTurn();
     this.pushState();
     this.announceWinner();
-    this.scheduleAutoTurn();
     return { ok: true };
   }
 
@@ -160,16 +169,22 @@ export class Room {
     if (!member) return;
     member.socketId = socketId;
     if (this.state) this.state = setConnected(this.state, playerId, socketId !== null);
-    this.pushState();
+    // Quien vuelve a sentarse estrena minuto: el reloj se reprograma antes de
+    // publicar la vista para que nadie reciba el del turno anterior.
     this.scheduleAutoTurn();
+    this.pushState();
   }
 
   pushState(): void {
     this.broadcast.room(this.view());
     if (!this.state) return;
+    const clock = {
+      msLeft: this.turnDeadline === null ? null : Math.max(0, this.turnDeadline - Date.now()),
+      limitMs: TURN_LIMIT_MS,
+    };
     for (const member of this.members) {
       if (!member.socketId) continue;
-      this.broadcast.view(member.socketId, toPlayerView(this.state, member.id));
+      this.broadcast.view(member.socketId, toPlayerView(this.state, member.id, clock));
     }
   }
 
@@ -180,11 +195,13 @@ export class Room {
   }
 
   /**
-   * Programa el turno automatico: lo juega un bot, o un humano desconectado
-   * pasado un margen para que le de tiempo a volver.
+   * Programa el final del turno: lo juega un bot enseguida, un humano
+   * desconectado pasado un margen para que le de tiempo a volver, y una persona
+   * conectada al agotarse su minuto. Solo el minuto se ensena como reloj.
    */
   private scheduleAutoTurn(): void {
     this.clearTimer();
+    this.turnDeadline = null;
     if (!this.state || this.state.phase !== 'playing') return;
 
     const active = this.state.players[this.state.turn];
@@ -192,16 +209,17 @@ export class Room {
     const member = this.members.find((m) => m.id === active.id);
     if (!member) return;
 
-    const isAuto = member.isBot || member.socketId === null;
-    if (!isAuto) return;
-
     // El primer turno espera al reparto animado del cliente.
     const opening = this.state.turnCount <= 1 ? OPENING_DELAY_MS : 0;
-    const delay = (member.isBot ? BOT_DELAY_MS : ABANDON_DELAY_MS) + opening;
-    this.botTimer = setTimeout(() => this.playAutoTurn(active.id), delay);
+    const timed = !member.isBot && member.socketId !== null;
+    const base = member.isBot ? BOT_DELAY_MS : timed ? TURN_LIMIT_MS : ABANDON_DELAY_MS;
+    const delay = base + opening;
+
+    if (timed) this.turnDeadline = Date.now() + delay;
+    this.botTimer = setTimeout(() => this.playAutoTurn(active.id, timed), delay);
   }
 
-  private playAutoTurn(playerId: string): void {
+  private playAutoTurn(playerId: string, timedOut = false): void {
     this.botTimer = null;
     if (!this.state || this.state.phase !== 'playing') return;
     if (this.state.players[this.state.turn]?.id !== playerId) return;
@@ -213,14 +231,21 @@ export class Room {
     const result = applyAction(this.state, playerId, choice.action);
     if (!result.ok) return;
     this.state = result.state;
+
+    if (timedOut) {
+      const socketId = this.members.find((m) => m.id === playerId)?.socketId;
+      if (socketId) this.broadcast.toast(socketId, 'Se agoto tu minuto: la mesa ha jugado por ti.');
+    }
+
+    this.scheduleAutoTurn();
     this.pushState();
     this.announceWinner();
-    this.scheduleAutoTurn();
   }
 
   clearTimer(): void {
     if (this.botTimer) clearTimeout(this.botTimer);
     this.botTimer = null;
+    this.turnDeadline = null;
   }
 }
 
