@@ -22,8 +22,14 @@ export interface RoomMember {
   socketId: string | null;
 }
 
-/** Milisegundos que "piensa" un bot antes de jugar, para que la mesa se lea bien. */
-const BOT_DELAY_MS = 1100;
+/**
+ * Milisegundos que "piensa" un bot antes de jugar. Es tiempo de lectura, no de
+ * calculo: la mesa tiene que dar tiempo a ver que carta cayo y sobre que organo.
+ * Ajustable con BOT_DELAY_MS por si se quiere una partida mas agil.
+ */
+const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS ?? 3000);
+/** Pausa extra tras el reparto inicial, mientras el cliente anima las cartas. */
+const OPENING_DELAY_MS = Number(process.env.OPENING_DELAY_MS ?? 4200);
 /** Tiempo antes de que un bot cubra el turno de un humano desconectado. */
 const ABANDON_DELAY_MS = 8000;
 
@@ -183,7 +189,9 @@ export class Room {
     const isAuto = member.isBot || member.socketId === null;
     if (!isAuto) return;
 
-    const delay = member.isBot ? BOT_DELAY_MS : ABANDON_DELAY_MS;
+    // El primer turno espera al reparto animado del cliente.
+    const opening = this.state.turnCount <= 1 ? OPENING_DELAY_MS : 0;
+    const delay = (member.isBot ? BOT_DELAY_MS : ABANDON_DELAY_MS) + opening;
     this.botTimer = setTimeout(() => this.playAutoTurn(active.id), delay);
   }
 
