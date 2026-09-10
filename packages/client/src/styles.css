@@ -629,6 +629,14 @@ button {
   grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
   gap: clamp(0.35rem, 1vw, 0.9rem);
   align-items: stretch;
+  /* Un costado mide esto. Vive aqui, y no en el propio costado, porque la fila
+     de arriba necesita saberlo para dejarle sitio. */
+  --side-slot: clamp(1.9rem, min(9.5vh, (100vw - 70rem) / 7.6), 5.4rem);
+  --side-w: calc(var(--side-slot) * 3 + 0.28rem * 2 + 1.6rem);
+}
+
+.arena:not(.has-sides) {
+  --side-w: 0rem;
 }
 
 /* Los costados pueden no existir (con pocos jugadores se ocultan). Sin decirlo
@@ -659,10 +667,12 @@ button {
   align-items: flex-start;
   gap: clamp(0.4rem, 1.2vw, 1rem);
   flex-wrap: nowrap;
-  /* Cada cuerpo son cinco huecos fijos. El hueco se calcula con el ancho real y
-     el numero de rivales, para que la fila nunca se parta en dos ni se corte. */
+  /* Cada cuerpo son cinco huecos fijos. El hueco sale de la cuenta exacta de la
+     fila -cinco huecos, sus separaciones y el marco de cada asiento- para que
+     nunca se parta en dos ni asome por el borde. */
   --seats: 3;
-  --slot: min(5.4rem, 11vh, calc((100vw - 7rem) / (var(--seats) * 6.1)));
+  --seat-extra: calc((var(--seats) - 1) * 1rem + var(--seats) * 2.22rem);
+  --slot: min(5.4rem, 11vh, calc((100vw - 3.8rem - var(--seat-extra)) / (var(--seats) * 5)));
 }
 
 .seats[data-count='1'] {
@@ -687,11 +697,13 @@ button {
 
 /* Los costados solo existen cuando hay rivales de sobra para sentarlos ahi.
    Van despues de .seats y con doble clase para ganarle a sus medidas. */
+/* El hueco del costado crece con lo que sobra a los lados de la mesa: ahi hay
+   alto de sobra y era el sitio peor aprovechado de la pantalla. */
 .seats.seats--side {
   display: grid;
   align-content: center;
-  gap: 0.5rem;
-  --slot: clamp(1.9rem, 4.4vh, 2.8rem);
+  gap: 0.6rem;
+  --slot: var(--side-slot);
 }
 
 .seats.seats--side:empty {
@@ -700,8 +712,10 @@ button {
 
 /* Tres huecos por fila: el cuerpo se pliega en 3 + 2 y cabe en el costado. */
 .seat-board.seat-board--side {
-  width: calc(var(--slot) * 3 + 0.28rem * 2 + 1.6rem);
+  width: var(--side-w);
   margin-top: 0;
+  /* Lo de dentro se mide contra este ancho, no contra la ventana. */
+  container-type: inline-size;
 }
 
 .seat-board--side .seat-board__body {
@@ -729,8 +743,38 @@ button {
   opacity: 0.9;
 }
 
+/* Cuando el costado da de si, el asiento vuelve a contarlo todo: el sello con
+   su palabra y la etiqueta de bot. Se mide el asiento, no la ventana, porque
+   es su ancho el que decide si cabe. */
+@container (min-width: 12rem) {
+  .seat-board--side .organ__stamp {
+    width: auto;
+    height: auto;
+    padding: 0.05rem 0.3rem;
+    border: 2px solid currentColor;
+    border-radius: 2px;
+    font-size: 0.52rem;
+    rotate: -7deg;
+    bottom: 1.15rem;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    opacity: 0.88;
+  }
+
+  .seat-board--side .tag:not(.tag--warn) {
+    display: inline;
+  }
+}
+
+/* La fila de arriba se mide con lo que dejan libre los dos costados. Si no
+   descuenta su ancho, se sale por la derecha y arrastra la mesa con ella. */
 .arena.has-sides .seats--top {
-  --slot: min(5rem, 10.5vh, calc((100vw - 26rem) / (var(--seats) * 6.1)));
+  --slot: min(5rem, 10.5vh, calc((100vw - var(--side-w) * 2 - 6.6rem - var(--seat-extra)) / (var(--seats) * 5)));
+}
+
+/* Que la fila no pueda ensanchar su columna: si algun dia no cupiera, preferimos
+   que se apriete a que empuje la mesa fuera del centro. */
+.seats--top {
+  min-width: 0;
 }
 
 .seat-board {
