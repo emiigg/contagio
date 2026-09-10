@@ -27,7 +27,7 @@ export interface RoomMember {
  * calculo: la mesa tiene que dar tiempo a ver que carta cayo y sobre que organo.
  * Ajustable con BOT_DELAY_MS por si se quiere una partida mas agil.
  */
-const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS ?? 3000);
+const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS ?? 4500);
 /** Pausa extra tras el reparto inicial, mientras el cliente anima las cartas. */
 const OPENING_DELAY_MS = Number(process.env.OPENING_DELAY_MS ?? 4200);
 /** Tiempo antes de que un bot cubra el turno de un humano desconectado. */

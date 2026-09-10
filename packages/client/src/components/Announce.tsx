@@ -10,7 +10,7 @@ import { CardGlyph } from '../art';
  * ajenos se resuelven solos: sin este cartel, una carta aparece y desaparece
  * sin que nadie llegue a leer que ha pasado.
  */
-export function Announce({ move, youId, holdMs = 2600 }: { move: MoveSummary | null; youId: string; holdMs?: number }) {
+export function Announce({ move, youId, holdMs = 3800 }: { move: MoveSummary | null; youId: string; holdMs?: number }) {
   const [shown, setShown] = useState<MoveSummary | null>(null);
 
   useEffect(() => {
