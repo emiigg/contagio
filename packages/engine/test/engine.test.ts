@@ -26,6 +26,8 @@ function scenario(playerCount = 2): GameState {
     state.discard.push(...p.hand);
     p.hand = [];
   }
+  // El sorteo de salida es aleatorio; aqui los turnos se dirigen a mano.
+  state.turn = 0;
   return state;
 }
 
@@ -338,11 +340,31 @@ test('solo puede actuar el jugador en turno', () => {
   assert.match(expectFail(applyAction(state, 'p1', { type: 'PLAY_ORGAN', cardId: state.players[1]!.hand[0]!.id })), /turno/i);
 });
 
+test('la salida se sortea y queda anunciada', () => {
+  const seeds = [
+    { id: 'p0', name: 'A' },
+    { id: 'p1', name: 'B' },
+    { id: 'p2', name: 'C' },
+  ];
+  const openers = new Set<string>();
+  for (let seed = 1; seed <= 40; seed++) {
+    const state = createGame(seeds, seed);
+    const opener = state.players[state.turn]!;
+    openers.add(opener.id);
+    assert.equal(state.lastMove?.kind, 'START');
+    assert.equal(state.lastMove?.playerId, opener.id);
+    assert.match(state.lastMove!.text, new RegExp(opener.name + '\\.$'));
+  }
+  // Con cuarenta semillas los tres asientos tienen que haber abierto alguna vez.
+  assert.equal(openers.size, 3);
+});
+
 test('tras jugar se roba hasta tener tres cartas', () => {
   const state = createGame([
     { id: 'p0', name: 'A' },
     { id: 'p1', name: 'B' },
   ]);
+  state.turn = 0;
   const next = expectOk(applyAction(state, 'p0', { type: 'DISCARD', cardIds: [state.players[0]!.hand[0]!.id] }));
   assert.equal(next.players[0]!.hand.length, 3);
 });

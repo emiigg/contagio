@@ -269,7 +269,9 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             <p className="pile__label mono">mazo · {view.deckCount}</p>
           </div>
 
-          <Announce move={view.lastMove} youId={view.youId} />
+          {/* Durante el reparto el cartel queda oculto: asi el sorteo de salida
+              se lee cuando las cartas ya estan en su sitio. */}
+          <Announce move={dealing ? null : view.lastMove} youId={view.youId} />
 
           <div className="pile pile--discard">
             <div className="pile__stack">

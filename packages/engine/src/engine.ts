@@ -1,5 +1,5 @@
 import { buildDeck, cardName } from './cards.js';
-import { shuffle } from './rng.js';
+import { nextRandom, shuffle } from './rng.js';
 import {
   HAND_SIZE,
   cardById,
@@ -45,19 +45,33 @@ export function createGame(seeds: PlayerSeed[], seed = 1): GameState {
     }
   }
 
+  // Abrir la partida es ventaja, asi que no se la queda el anfitrion: sale por
+  // sorteo con la misma semilla que baraja, y la mesa lo anuncia antes de jugar.
+  const draw = nextRandom(shuffled.seed);
+  const turn = Math.floor(draw.value * players.length) % players.length;
+  const opener = players[turn]!;
+
   const state: GameState = {
     players,
-    turn: 0,
+    turn,
     deck,
     discard: [],
     phase: 'playing',
     winnerId: null,
-    seed: shuffled.seed,
+    seed: draw.seed,
     turnCount: 1,
     log: [],
-    lastMove: null,
+    lastMove: {
+      serial: 1,
+      playerId: opener.id,
+      playerName: opener.name,
+      kind: 'START',
+      cards: [],
+      targets: [],
+      text: `El sorteo abre con ${opener.name}.`,
+    },
   };
-  pushLog(state, `Comienza la partida. Turno de ${players[0]!.name}.`);
+  pushLog(state, `Comienza la partida. Abre ${opener.name}.`, opener.id);
   return state;
 }
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { cardName } from '@contagio/engine';
 import type { MoveSummary } from '@contagio/engine';
 
-import { CardGlyph } from '../art';
+import { CardGlyph, Mark } from '../art';
 
 /**
  * Anuncia la ultima jugada en el centro de la mesa. Existe porque los turnos
@@ -23,8 +23,10 @@ export function Announce({ move, youId, holdMs = 3800 }: { move: MoveSummary | n
   if (!shown) return <div className="announce announce--empty" aria-hidden />;
 
   const mine = shown.playerId === youId;
+  const start = shown.kind === 'START';
   return (
-    <div className={`announce ${mine ? 'is-mine' : ''}`} role="status" aria-live="polite">
+    <div className={`announce ${mine ? 'is-mine' : ''} ${start ? 'announce--start' : ''}`} role="status" aria-live="polite">
+      {start && <Mark className="announce__mark" />}
       <div className="announce__cards">
         {shown.cards.slice(0, 3).map((card, index) => (
           <span key={card.id} className={`announce__card tone-${card.color ?? 'treatment'}`} style={{ '--i': index } as React.CSSProperties}>

@@ -78,7 +78,8 @@ export interface MoveSummary {
   serial: number;
   playerId: string;
   playerName: string;
-  kind: Action['type'];
+  /** 'START' es el sorteo de salida; el resto son jugadas de verdad. */
+  kind: Action['type'] | 'START';
   /** Cartas que quedan a la vista: la jugada o las descartadas. */
   cards: Card[];
   /** Organos afectados, para resaltarlos un instante. */
