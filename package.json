@@ -1,0 +1,24 @@
+{
+  "name": "contagio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Contagio - juego de cartas online por turnos (portafolio)",
+  "workspaces": [
+    "packages/engine",
+    "packages/server",
+    "packages/client"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:server": "npm run dev --workspace=@contagio/server",
+    "dev:client": "npm run dev --workspace=@contagio/client",
+    "build": "npm run build --workspace=@contagio/engine && npm run build --workspace=@contagio/client && npm run build --workspace=@contagio/server",
+    "test": "npm run test --workspace=@contagio/engine",
+    "typecheck": "tsc -b packages/engine packages/server",
+    "test:e2e": "npm run test --workspace=@contagio/server",
+    "start": "node packages/server/dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
