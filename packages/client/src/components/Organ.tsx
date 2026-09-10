@@ -1,7 +1,32 @@
 import { cardName, organStatus } from '@contagio/engine';
-import type { OrganPile, OrganStatus } from '@contagio/engine';
+import type { Color, OrganPile, OrganStatus } from '@contagio/engine';
 
-import { CardGlyph, MedicineGlyph, VirusGlyph } from '../art';
+import { CardGlyph, MedicineGlyph, OrganSilhouette, VirusGlyph } from '../art';
+
+const SLOT_LABEL: Record<Color, string> = {
+  red: 'Corazon',
+  blue: 'Cerebro',
+  green: 'Pulmon',
+  yellow: 'Higado',
+  wild: 'Organo quimerico',
+};
+
+/**
+ * Hueco de un organo que todavia no esta en la mesa. Existe para que el cuerpo
+ * de cada jugador ocupe siempre lo mismo: la mesa no salta al colocar cartas,
+ * y de un vistazo se ve que le falta a cada uno.
+ */
+export function OrganSlot({ color, compact }: { color: Color; compact?: boolean }) {
+  return (
+    <span
+      className={`slot tone-${color} ${compact ? 'slot--compact' : ''}`}
+      title={`${SLOT_LABEL[color]}: sin colocar`}
+      aria-label={`${SLOT_LABEL[color]} sin colocar`}
+    >
+      <OrganSilhouette color={color} className="slot__glyph" />
+    </span>
+  );
+}
 
 const STAMP: Record<OrganStatus, string | null> = {
   free: null,

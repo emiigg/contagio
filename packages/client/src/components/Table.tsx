@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cardName } from '@contagio/engine';
-import type { Action, Card, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
+import type { Action, Card, Color, OrganPile, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
 
 import { CardGlyph, Pulse } from '../art';
 import { Announce } from './Announce';
 import { CardBack } from './CardBack';
 import { CardFace, cardHint } from './Card';
 import { Deal } from './Deal';
-import { Organ } from './Organ';
+import { Organ, OrganSlot } from './Organ';
 
 interface TableProps {
   view: PlayerView;
@@ -25,6 +25,17 @@ const keyOf = (playerId: string, organId: string): OrganKey => `${playerId}:${or
 
 /** Cuanto se resalta un organo despues de recibir una carta. */
 const HIT_MS = 2400;
+
+/**
+ * Un cuerpo se dibuja siempre con cinco huecos, uno por color mas el comodin.
+ * Cada organo cae en el suyo, asi que colocar una carta no mueve el resto ni
+ * cambia el tamano de la mesa.
+ */
+const BODY_SLOTS: Color[] = ['red', 'blue', 'green', 'yellow', 'wild'];
+
+function bodySlots(body: OrganPile[]): { color: Color; pile: OrganPile | undefined }[] {
+  return BODY_SLOTS.map((color) => ({ color, pile: body.find((p) => p.organ.color === color) }));
+}
 
 export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRules }: TableProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -244,11 +255,12 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             <span className="mine__meta mono">{you.healthyOrgans}/4 organos sanos</span>
           </header>
           <div className="mine__body">
-            {you.body.map((pile) => {
+            {bodySlots(you.body).map(({ color, pile }) => {
+              if (!pile) return <OrganSlot key={color} color={color} />;
               const action = organTargets.get(keyOf(you.id, pile.organ.id));
               return (
                 <Organ
-                  key={pile.organ.id}
+                  key={color}
                   pile={pile}
                   targetable={Boolean(action)}
                   selected={swapMineId === pile.organ.id}
@@ -257,7 +269,6 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                 />
               );
             })}
-            {you.body.length === 0 && <p className="mine__empty">Sin organos. Coloca uno para empezar tu cuerpo.</p>}
           </div>
         </section>
         </div>
@@ -464,11 +475,12 @@ function RivalSeat({
       </div>
 
       <div className="seat-board__body">
-        {player.body.map((pile) => {
+        {bodySlots(player.body).map(({ color, pile }) => {
+          if (!pile) return <OrganSlot key={color} color={color} compact />;
           const action = targetableOrgans.get(keyOf(player.id, pile.organ.id));
           return (
             <Organ
-              key={pile.organ.id}
+              key={color}
               pile={pile}
               compact
               targetable={Boolean(action)}
@@ -477,7 +489,6 @@ function RivalSeat({
             />
           );
         })}
-        {player.body.length === 0 && <p className="seat-board__empty">Mesa vacia</p>}
       </div>
     </article>
   );
