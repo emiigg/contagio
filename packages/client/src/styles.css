@@ -611,7 +611,7 @@ button {
 /* La mesa: dentro caben el mazo, el descarte, la jugada y tu cuerpo. */
 .board {
   position: relative;
-  width: min(1120px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
   display: grid;
   gap: clamp(0.25rem, 0.8vh, 0.7rem);
@@ -626,9 +626,24 @@ button {
 
 .arena {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
   gap: clamp(0.35rem, 1vw, 0.9rem);
   align-items: stretch;
+}
+
+/* Los costados pueden no existir (con pocos jugadores se ocultan). Sin decirlo
+   a mano, la mesa se colocaria en la primera columna y toda la partida quedaria
+   pegada a la izquierda: se le asigna la del medio pase lo que pase. */
+.arena > .seats--side:first-child {
+  grid-column: 1;
+}
+
+.arena__middle {
+  grid-column: 2;
+}
+
+.arena > .seats--side:last-child {
+  grid-column: 3;
 }
 
 .arena__middle {
@@ -1755,9 +1770,14 @@ button {
     grid-template-columns: 1fr;
   }
 
-  /* Sin sitio a los costados: la mesa vuelve a una sola columna. */
+  /* Sin sitio a los costados: la mesa vuelve a una sola columna, y con ella la
+     colocacion explicita de la columna del medio. */
   .arena {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arena__middle {
+    grid-column: 1;
   }
 
   .seats.seats--side {
