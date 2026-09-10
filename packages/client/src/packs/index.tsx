@@ -14,6 +14,7 @@ import { heroesArt } from './heroes';
 import { jurasicoArt } from './jurasico';
 import { marvelArt } from './marvel';
 import { orbitaArt } from './orbita';
+import { piratasArt } from './piratas';
 import type { PackArt } from './types';
 
 export const PACK_ART: Record<PackId, PackArt> = {
@@ -28,6 +29,7 @@ export const PACK_ART: Record<PackId, PackArt> = {
   grimorio: grimorioArt,
   jurasico: jurasicoArt,
   banda: bandaArt,
+  piratas: piratasArt,
 };
 
 /**

@@ -16,7 +16,8 @@ export type PackId =
   | 'arrecife'
   | 'grimorio'
   | 'jurasico'
-  | 'banda';
+  | 'banda'
+  | 'piratas';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
 export const PACK_IDS: PackId[] = [
@@ -31,6 +32,7 @@ export const PACK_IDS: PackId[] = [
   'grimorio',
   'jurasico',
   'banda',
+  'piratas',
 ];
 
 export const DEFAULT_PACK: PackId = 'contagio';
@@ -1052,6 +1054,92 @@ const BANDA: Pack = {
   },
 };
 
+const PIRATAS: Pack = {
+  id: 'piratas',
+  name: 'Piratas',
+  tagline: 'Un barco, un mapa y una tripulacion que no se fia de nadie.',
+  kinds: { organ: 'Botin', virus: 'Desastre', medicine: 'Remedio', treatment: 'Treta' },
+  organs: {
+    red: { name: 'Loro', art: 'el' },
+    blue: { name: 'Barco', art: 'el' },
+    green: { name: 'Mapa', art: 'el' },
+    yellow: { name: 'Catalejo', art: 'el' },
+    wild: { name: 'Isla del tesoro', art: 'la' },
+  },
+  viruses: {
+    red: 'Motin',
+    blue: 'Kraken',
+    green: 'Escorbuto',
+    yellow: 'Niebla',
+    wild: 'Barco fantasma',
+  },
+  medicines: {
+    red: 'Galleta',
+    blue: 'Velas nuevas',
+    green: 'Limones',
+    yellow: 'Brujula',
+    wild: 'Tripulacion leal',
+  },
+  treatments: {
+    swap: {
+      name: 'Trueque en puerto',
+      text: 'Cambias un botin tuyo por uno de otro jugador. Ninguno puede estar enterrado ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Abordaje',
+      text: 'Abordas a otro jugador y te llevas un botin a tu bodega. No sirve con botines enterrados ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Andanada',
+      text: 'Disparas los desastres de tu bodega contra botines libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Tormenta',
+      text: 'Una tormenta tira por la borda la mano de tus rivales: la descartan y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Cambio de bandera',
+      text: 'Intercambias tu bodega entera con la de otro jugador, botines enterrados incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Guardalo en tu bodega. Uno por color.',
+    virus: 'Saquea un botin libre, hunde uno saqueado o descubre uno escondido.',
+    medicine: 'Recupera un botin saqueado, esconde uno libre o entierralo si ya estaba escondido.',
+  },
+  stamps: { infected: 'Saqueado', vaccinated: 'Escondido', immunized: 'Enterrado' },
+  words: {
+    organ: 'botin',
+    organs: 'botines',
+    the: 'el',
+    one: 'uno',
+    healthy: 'a flote',
+    threat: 'desastre',
+    threats: 'desastres',
+    body: 'bodega',
+  },
+  lines: {
+    place: '{p} guarda {card} en su bodega.',
+    infect: '{p} saquea {organ}.',
+    remove: '{p} hunde {organ}.',
+    breakShield: '{p} descubre el escondite de {organ}.',
+    cure: '{p} recupera {organ}.',
+    vaccinate: '{p} esconde {organ}.',
+    immunize: '{p} entierra {organ}.',
+    spread: '{p} dispara {n} {threats} contra sus rivales.',
+    quarantine: '{p} desata una tormenta: el resto pierde su mano por la borda.',
+    malpractice: '{p} cambia de bandera y se queda la bodega de {victim}.',
+    win: '{p} llena su bodega y gana la partida.',
+  },
+  buttons: { spread: 'Disparar {n} {threats}', quarantine: 'Desatar la tormenta', malpractice: 'Cambiar de bandera' },
+  ending: {
+    winTitle: 'Bodega llena. Ganas.',
+    winText: 'Cuatro botines a flote antes que nadie.',
+    loseTitle: '{p} llena su bodega.',
+    loseText: 'Tu bodega se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
@@ -1064,6 +1152,7 @@ export const PACKS: Record<PackId, Pack> = {
   grimorio: GRIMORIO,
   jurasico: JURASICO,
   banda: BANDA,
+  piratas: PIRATAS,
 };
 
 export function isPackId(value: unknown): value is PackId {
