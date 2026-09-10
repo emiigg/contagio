@@ -122,7 +122,11 @@ body {
 }
 
 .app {
+  position: relative;
   min-height: 100%;
+  /* Contexto de apilado propio: el fondo decorativo se mete detras de todo
+     sin escaparse por encima de la mesa. */
+  z-index: 0;
 }
 
 button {
@@ -1634,6 +1638,34 @@ button {
 
 /* --- adaptacion ----------------------------------------------------------- */
 
+/* --- fondo decorativo ----------------------------------------------------- */
+
+/* Instrumental de hospital a linea, tenue y por los margenes. No estorba: no
+   recibe raton y vive detras de todo lo demas. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.backdrop__item {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  color: var(--ink);
+  opacity: var(--backdrop-alpha);
+  transform: translate(-50%, -50%) rotate(var(--rot));
+}
+
+.backdrop__glyph {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* --- boton de tema -------------------------------------------------------- */
 
 .themeswitch {
@@ -1731,6 +1763,16 @@ button {
 }
 
 @media (max-width: 700px) {
+  /* En vertical el contenido ya llena la pantalla: solo se quedan un par de
+     motivos, y mas pequenos, para que el fondo no compita con la mesa. */
+  .backdrop__item--wide {
+    display: none;
+  }
+
+  .backdrop__item {
+    width: calc(var(--size) * 0.6);
+  }
+
   .themeswitch__label {
     display: none;
   }

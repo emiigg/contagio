@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Backdrop } from './components/Backdrop';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { Rules } from './components/Rules';
@@ -16,6 +17,8 @@ export default function App() {
 
   return (
     <div className="app">
+      <Backdrop />
+
       {!room && (
         <Home
           name={name}
