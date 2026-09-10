@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos';
+export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -422,11 +422,98 @@ const CORTAFUEGOS: Pack = {
   },
 };
 
+const ORBITA: Pack = {
+  id: 'orbita',
+  name: 'Orbita',
+  tagline: 'Una estacion espacial, averias y reparaciones a contrarreloj.',
+  kinds: { organ: 'Modulo', virus: 'Averia', medicine: 'Reparacion', treatment: 'Maniobra' },
+  organs: {
+    red: { name: 'Reactor', art: 'el' },
+    blue: { name: 'Soporte vital', art: 'el' },
+    green: { name: 'Invernadero', art: 'el' },
+    yellow: { name: 'Panel solar', art: 'el' },
+    wild: { name: 'Modulo prototipo', art: 'el' },
+  },
+  viruses: {
+    red: 'Fuga de plasma',
+    blue: 'Fuga de oxigeno',
+    green: 'Plaga de esporas',
+    yellow: 'Tormenta solar',
+    wild: 'Meteorito',
+  },
+  medicines: {
+    red: 'Refrigerante',
+    blue: 'Sellado',
+    green: 'Fumigacion',
+    yellow: 'Escudo magnetico',
+    wild: 'Robot de mantenimiento',
+  },
+  treatments: {
+    swap: {
+      name: 'Acoplamiento',
+      text: 'Cambias un modulo tuyo por uno de otro jugador. Ninguno puede estar blindado ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Brazo robotico',
+      text: 'Arrancas un modulo de otra estacion y lo acoplas a la tuya. No sirve con modulos blindados ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Reaccion en cadena',
+      text: 'Las averias de tus modulos saltan a modulos libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Pulso electromagnetico',
+      text: 'Un pulso frie los controles de tus rivales: descartan su mano y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Cambio de orbita',
+      text: 'Intercambias tu estacion entera con la de otro jugador, modulos blindados incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Acoplalo a tu estacion. Uno por color.',
+    virus: 'Averia un modulo libre, destruye uno averiado o rompe un refuerzo.',
+    medicine: 'Arregla una averia, refuerza un modulo libre o blinda uno reforzado.',
+  },
+  stamps: { infected: 'Averiado', vaccinated: 'Reforzado', immunized: 'Blindado' },
+  words: {
+    organ: 'modulo',
+    organs: 'modulos',
+    the: 'el',
+    one: 'uno',
+    healthy: 'operativos',
+    threat: 'averia',
+    threats: 'averias',
+    body: 'estacion',
+  },
+  lines: {
+    place: '{p} acopla {card} a su estacion.',
+    infect: '{p} averia {organ}.',
+    remove: '{p} destruye {organ}.',
+    breakShield: '{p} rompe el refuerzo de {organ}.',
+    cure: '{p} repara {organ}.',
+    vaccinate: '{p} refuerza {organ}.',
+    immunize: '{p} blinda {organ}.',
+    spread: '{p} desata {n} {threats} en las estaciones rivales.',
+    quarantine: '{p} lanza un pulso electromagnetico: el resto pierde su mano.',
+    malpractice: '{p} cambia de orbita con {victim}: estaciones intercambiadas.',
+    win: '{p} pone en marcha su estacion y gana la partida.',
+  },
+  buttons: { spread: 'Desatar {n} {threats}', quarantine: 'Lanzar el pulso', malpractice: 'Cambiar de orbita' },
+  ending: {
+    winTitle: 'Estacion en marcha. Ganas.',
+    winText: 'Cuatro modulos operativos antes que nadie.',
+    loseTitle: '{p} pone en marcha su estacion.',
+    loseText: 'Tu estacion se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
   frutas: FRUTAS,
   cortafuegos: CORTAFUEGOS,
+  orbita: ORBITA,
 };
 
 export function isPackId(value: unknown): value is PackId {

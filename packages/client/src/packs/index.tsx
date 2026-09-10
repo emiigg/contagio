@@ -7,6 +7,7 @@ import { contagioArt } from './contagio';
 import { cortafuegosArt } from './cortafuegos';
 import { frutasArt } from './frutas';
 import { heroesArt } from './heroes';
+import { orbitaArt } from './orbita';
 import type { PackArt } from './types';
 
 export const PACK_ART: Record<PackId, PackArt> = {
@@ -14,6 +15,7 @@ export const PACK_ART: Record<PackId, PackArt> = {
   heroes: heroesArt,
   frutas: frutasArt,
   cortafuegos: cortafuegosArt,
+  orbita: orbitaArt,
 };
 
 /**
