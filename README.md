@@ -26,10 +26,13 @@ El mazo son 68 cartas: 21 órganos, 17 virus, 20 medicinas y 10 tratamientos.
 
 Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos ajenos se entiendan:
 
-- **Los bots se toman su tiempo** (3 s por turno, ajustable con `BOT_DELAY_MS`). No es tiempo de cálculo: es tiempo de
-  lectura.
-- **Cada jugada se anuncia en el centro** con la carta que se ha jugado y una frase — "Dr. Pardo roba el Hígado de
-  Enf. Quiroga" — y el órgano afectado parpadea un instante.
+- **Los bots se toman su tiempo** (4,5 s por turno, ajustable con `BOT_DELAY_MS`). No es tiempo de cálculo: es tiempo
+  de lectura.
+- **Cada jugada se anuncia en el centro**, en grande, con la carta que se ha jugado y una frase — "Dr. Pardo roba el
+  Hígado de Enf. Quiroga" — y el órgano afectado parpadea un instante.
+- **Cada cuerpo tiene cinco huecos fijos**, uno por color más el comodín, así que colocar una carta no mueve la mesa
+  y se ve de un vistazo a quién le falta qué. Con cuatro rivales o más, los costados de la mesa se ocupan en lugar de
+  estrechar la fila de arriba.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 
