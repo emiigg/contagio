@@ -22,6 +22,25 @@
   --danger: #b8433c;
   --ok: #35815b;
 
+  /* La marca: el mismo naranja del icono de la pestana. */
+  --brand: #c8443c;
+  /* El mismo tono, aclarado, para cuando se apoya en un fondo oscuro. */
+  --brand-warm: #e37a41;
+  /* Reverso de carta: verde quirofano, complementario del naranja. */
+  --back: #16484a;
+  --back-deep: #0e3033;
+
+  /* Tintas de superficie: se redefinen enteras en oscuro. */
+  --hover: rgba(22, 33, 31, 0.07);
+  --veil: rgba(22, 33, 31, 0.45);
+  --shadow-sheet: 12px 12px 0 -6px rgba(22, 33, 31, 0.08);
+  --gloss: rgba(255, 255, 255, 0.9);
+  --gloss-soft: rgba(238, 241, 236, 0.3);
+  --gloss-edge: rgba(255, 255, 255, 0.55);
+  --ink-hover: #24322f;
+  /* Cuanto se ve el instrumental del fondo. */
+  --backdrop-alpha: 0.09;
+
   --radius: 4px;
   --radius-card: 10px;
   --shadow-lift: 0 6px 0 -3px rgba(22, 33, 31, 0.12);
@@ -30,6 +49,45 @@
   --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
 
   color-scheme: light;
+}
+
+/* Tema oscuro. La hoja solo conoce el resultado ('light' u 'dark'): quien
+   consulta al sistema es src/theme.ts, y por eso la paleta no se duplica en un
+   @media. El script en linea de index.html lo aplica antes del primer pintado. */
+:root[data-theme='dark'] {
+  --paper: #0f1614;
+  --card: #18211f;
+  --ink: #e7ece7;
+  --ink-soft: #a6b2ad;
+  --ink-faint: #78857f;
+  --line: #2e3b37;
+  --grid-fine: rgba(190, 96, 96, 0.06);
+  --grid-bold: rgba(190, 96, 96, 0.12);
+
+  /* Los mismos cuatro colores, subidos de luz: sobre fondo oscuro el rojo y el
+     azul de la version clara se apagan y dejan de ser informacion legible. */
+  --organ-red: #e4695c;
+  --organ-blue: #63a6e4;
+  --organ-green: #4dbe85;
+  --organ-yellow: #d9a83c;
+  --organ-wild: #a781e0;
+  --treatment: #aebbb6;
+
+  --danger: #e4695c;
+  --ok: #58b98d;
+  --brand: #e37a41;
+
+  --hover: rgba(231, 236, 231, 0.09);
+  --veil: rgba(5, 9, 8, 0.66);
+  --shadow-sheet: 12px 12px 0 -6px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 6px 0 -3px rgba(0, 0, 0, 0.5);
+  --gloss: rgba(255, 255, 255, 0.05);
+  --gloss-soft: rgba(0, 0, 0, 0.2);
+  --gloss-edge: rgba(255, 255, 255, 0.05);
+  --ink-hover: #d3dbd4;
+  --backdrop-alpha: 0.12;
+
+  color-scheme: dark;
 }
 
 *,
@@ -91,7 +149,7 @@ button {
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(22, 33, 31, 0.07);
+  background: var(--hover);
 }
 
 .btn:active:not(:disabled) {
@@ -109,7 +167,7 @@ button {
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: #24322f;
+  background: var(--ink-hover);
 }
 
 .btn--ghost {
@@ -207,7 +265,7 @@ button {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 2px;
-  box-shadow: 12px 12px 0 -6px rgba(22, 33, 31, 0.08);
+  box-shadow: var(--shadow-sheet);
 }
 
 .home__title {
@@ -226,7 +284,7 @@ button {
 .home__mark {
   width: clamp(2.4rem, 6vw, 3.6rem);
   height: clamp(2.4rem, 6vw, 3.6rem);
-  color: var(--organ-red);
+  color: var(--brand);
   flex: none;
 }
 
@@ -312,7 +370,7 @@ button {
   padding: clamp(1.4rem, 4vw, 2.5rem);
   background: var(--card);
   border: 1px solid var(--line);
-  box-shadow: 12px 12px 0 -6px rgba(22, 33, 31, 0.08);
+  box-shadow: var(--shadow-sheet);
 }
 
 .lobby__head {
@@ -324,6 +382,9 @@ button {
 }
 
 .lobby__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   margin: 0;
   font-size: 1.9rem;
   letter-spacing: -0.03em;
@@ -554,9 +615,9 @@ button {
   border: 1px solid var(--line);
   border-radius: clamp(2rem, 7vw, 7rem);
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.9), rgba(238, 241, 236, 0.3) 72%),
+    radial-gradient(ellipse at 50% 40%, var(--gloss), var(--gloss-soft) 72%),
     var(--card);
-  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.55), 0 2px 0 rgba(22, 33, 31, 0.05);
+  box-shadow: inset 0 0 0 5px var(--gloss-edge), 0 2px 0 rgba(22, 33, 31, 0.05);
 }
 
 .arena {
@@ -1453,7 +1514,7 @@ button {
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(22, 33, 31, 0.45);
+  background: var(--veil);
   z-index: 20;
 }
 
@@ -1573,6 +1634,65 @@ button {
 
 /* --- adaptacion ----------------------------------------------------------- */
 
+/* --- boton de tema -------------------------------------------------------- */
+
+.themeswitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.themeswitch:hover {
+  background: var(--hover);
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.themeswitch--compact {
+  padding: 0.42rem;
+}
+
+.themeswitch__icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+}
+
+.themeswitch__label {
+  line-height: 1;
+}
+
+.home__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.lobby__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  /* Si la cabecera parte en dos lineas, el codigo sigue mandando a la derecha. */
+  margin-left: auto;
+}
+
+.lobby__mark {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--brand);
+  flex: none;
+}
+
 @media (max-width: 900px) {
   .home__sheet {
     grid-template-columns: 1fr;
@@ -1611,6 +1731,14 @@ button {
 }
 
 @media (max-width: 700px) {
+  .themeswitch__label {
+    display: none;
+  }
+
+  .home__tools {
+    justify-content: space-between;
+  }
+
   .bar {
     padding: 0.4rem 0.7rem;
     gap: 0.5rem;

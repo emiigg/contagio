@@ -9,6 +9,7 @@ import { CardBack } from './CardBack';
 import { CardFace, cardHint } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
+import { ThemeToggle } from './ThemeToggle';
 
 interface TableProps {
   view: PlayerView;
@@ -238,6 +239,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           <span>{view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}</span>
         </div>
         <div className="bar__tools">
+          <ThemeToggle compact />
           <button type="button" className="btn btn--ghost" onClick={onShowRules}>
             Reglas
           </button>

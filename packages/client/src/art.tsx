@@ -234,3 +234,39 @@ export function Pulse({ active }: { active: boolean }) {
     </svg>
   );
 }
+
+/** Sol: el tema claro. */
+export function SunGlyph({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <circle cx="12" cy="12" r="4.4" stroke="currentColor" strokeWidth="1.6" />
+      <g stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M18.7 5.3L17 7M7 17l-1.7 1.7" />
+      </g>
+    </svg>
+  );
+}
+
+/** Luna: el tema oscuro. */
+export function MoonGlyph({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <path
+        d="M20 14.4A8.6 8.6 0 0 1 9.6 4a8.6 8.6 0 1 0 10.4 10.4z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Circulo mitad y mitad: el tema lo decide el sistema. */
+export function AutoGlyph({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <circle cx="12" cy="12" r="8.4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 3.6a8.4 8.4 0 0 1 0 16.8z" fill="currentColor" />
+    </svg>
+  );
+}

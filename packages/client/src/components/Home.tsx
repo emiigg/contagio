@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 
 import { BrainGlyph, HeartGlyph, LiverGlyph, LungGlyph, Mark } from '../art';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HomeProps {
   name: string;
@@ -66,9 +67,12 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules }: HomePro
             </li>
           </ul>
 
-          <button type="button" className="btn btn--ghost" onClick={onShowRules}>
-            Como se juega
-          </button>
+          <div className="home__tools">
+            <button type="button" className="btn btn--ghost" onClick={onShowRules}>
+              Como se juega
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
 
         <form className="home__form" onSubmit={(e) => submit(e, 'create')}>

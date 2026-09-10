@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { MAX_PLAYERS, MIN_PLAYERS } from '@contagio/engine';
 import type { BotDifficulty, RoomView } from '@contagio/engine';
 
+import { Mark } from '../art';
+import { ThemeToggle } from './ThemeToggle';
+
 interface LobbyProps {
   room: RoomView;
   youId: string | null;
@@ -50,13 +53,19 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onStart, 
       <div className="lobby__sheet">
         <header className="lobby__head">
           <div>
-            <h1 className="lobby__title">Sala abierta</h1>
+            <h1 className="lobby__title">
+              <Mark className="lobby__mark" />
+              Sala abierta
+            </h1>
             <p className="lobby__lead">Comparte el codigo o rellena la mesa con bots. De {MIN_PLAYERS} a {MAX_PLAYERS} jugadores.</p>
           </div>
-          <button type="button" className="codechip mono" onClick={copyCode} title="Copiar codigo">
-            <span className="codechip__code">{room.code}</span>
-            <span className="codechip__hint">{copied ? 'copiado' : 'copiar'}</span>
-          </button>
+          <div className="lobby__tools">
+            <ThemeToggle compact />
+            <button type="button" className="codechip mono" onClick={copyCode} title="Copiar codigo">
+              <span className="codechip__code">{room.code}</span>
+              <span className="codechip__hint">{copied ? 'copiado' : 'copiar'}</span>
+            </button>
+          </div>
         </header>
 
         <ol className="roster">
