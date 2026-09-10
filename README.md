@@ -33,12 +33,16 @@ acto. La mecánica es siempre la misma: cambian los nombres, lo que dice cada ca
 | --- | --- | --- | --- | --- |
 | **Contagio** (por defecto) | Corazón, Cerebro, Pulmón, Hígado, Órgano quimérico | Virus | Medicinas | Tratamientos |
 | **Héroes DC** | Flash, Superman, Linterna Verde, Batman, Mujer Maravilla | Villanos | Refuerzos | Eventos |
+| **Héroes Marvel** | Iron Man, Capitán América, Hulk, Thor, Spider-Man | Villanos | Refuerzos | Eventos |
 | **Frutero** | Fresa, Arándano, Kiwi, Plátano, Macedonia | Plagas | Conservas | Imprevistos |
 | **Cortafuegos** | Procesador, Base de datos, Router, Fuente de poder, Nube híbrida | Malware | Parches | Comandos |
 | **Órbita** | Reactor, Soporte vital, Invernadero, Panel solar, Módulo prototipo | Averías | Reparaciones | Maniobras |
 | **Asedio** | Armería, Pozo, Huerto, Tesoro, Torre del homenaje | Asaltos | Defensas | Estratagemas |
 | **Arrecife** | Cangrejo, Ballena, Tortuga, Pez globo, Pulpo mimético | Amenazas | Rescates | Mareas |
 | **Grimorio** | Fuego, Agua, Bosque, Rayo, Éter | Maldiciones | Runas | Conjuros |
+| **Jurásico** | Tiranosaurio, Pterodáctilo, Diplodocus, Triceratops, Huevo misterioso | Peligros | Refugios | Fenómenos |
+| **Banda** | Guitarra, Batería, Teclado, Trompeta, Tocadiscos | Ruidos | Afinaciones | Escenario |
+| **Piratas** | Loro, Barco, Mapa, Catalejo, Isla del tesoro | Desastres | Remedios | Tretas |
 
 Un paquete es texto en el motor (`packages/engine/src/packs.ts`) y dibujo en el cliente
 (`packages/client/src/packs/`). El texto incluye las plantillas con las que el registro cuenta cada jugada —«Ana
@@ -46,8 +50,9 @@ captura al Batman de Luis», «Ana pudre la Fresa de Luis»— y el género de c
 concuerden. Ninguna regla sabe qué paquete se juega. Los cuatro colores significan lo mismo en todos los mazos, y el
 comodín de cada uno lleva los cuatro.
 
-**Héroes DC es un paquete de aficionado**: los personajes pertenecen a DC Comics y aparecen con su nombre a petición
-del autor. Los emblemas son dibujos propios, no los logotipos oficiales.
+**Héroes DC y Héroes Marvel son paquetes de aficionado**: los personajes pertenecen a DC Comics y a Marvel, y aparecen
+con su nombre a petición del autor. Los emblemas son dibujos propios, no los logotipos oficiales, y las reglas del
+juego llevan la nota de derechos de cada uno.
 
 ## El ritmo de la mesa
 

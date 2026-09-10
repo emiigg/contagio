@@ -3,9 +3,10 @@
 Juego de cartas por turnos para 2–6 jugadores, en tiempo real y con bots. Es un **proyecto de portafolio**: la mecánica
 es la del género de cartas de sabotaje médico, pero las ilustraciones, los textos y el código son originales. No se
 copian ni nombres, ni arte, ni redacción de reglas de ningún juego publicado; si hace falta añadir una carta o un
-texto, se inventa. La única excepción consciente es el paquete **Héroes DC**, de aficionado y pedido por el autor: usa
-los nombres de los personajes de DC Comics, pero sus emblemas son dibujos propios (nada de la «S» ni del óvalo del
-murciélago). Queda anotado en las reglas del juego y en el README.
+texto, se inventa. Las únicas excepciones conscientes son los paquetes **Héroes DC** y **Héroes Marvel**, de
+aficionado y pedidos por el autor: usan los nombres de los personajes de DC Comics y de Marvel, pero sus emblemas son
+dibujos propios (nada de la «S», del óvalo del murciélago ni de la «A» de los Vengadores). Cada uno lleva su nota de
+derechos en `credit`, que las reglas del juego muestran, y queda anotado en el README.
 
 El README cuenta el proyecto hacia fuera. Este archivo cuenta cómo se trabaja dentro: convenciones, invariantes y las
 trampas que ya nos han costado una tarde.
