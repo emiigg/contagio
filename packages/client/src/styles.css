@@ -1101,13 +1101,34 @@ button {
   transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
 }
 
-/* Hueco vacio: la silueta del organo que falta, en gris muy tenue. */
+/* Hueco vacio: la silueta del organo que falta, en gris muy tenue. Es un boton
+   cuando la carta elegida se puede colocar ahi. */
 .slot {
   display: grid;
   place-items: center;
+  padding: 0;
+  font: inherit;
   border: 1px dashed color-mix(in srgb, var(--tone, var(--ink)) 28%, var(--line));
   background: color-mix(in srgb, var(--tone, var(--ink)) 2.5%, transparent);
   color: var(--tone, var(--ink));
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.slot.is-targetable {
+  cursor: pointer;
+  border-style: solid;
+  outline: 2px dashed color-mix(in srgb, var(--tone, var(--ink)) 70%, var(--ink));
+  outline-offset: 2px;
+}
+
+.slot.is-targetable:hover {
+  transform: translateY(-3px);
+  outline-style: solid;
+  background: color-mix(in srgb, var(--tone, var(--ink)) 14%, var(--card));
+}
+
+.slot.is-targetable .slot__glyph {
+  opacity: 0.4;
 }
 
 .slot__glyph {

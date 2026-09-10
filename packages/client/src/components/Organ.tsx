@@ -16,14 +16,39 @@ const SLOT_LABEL: Record<Color, string> = {
  * de cada jugador ocupe siempre lo mismo: la mesa no salta al colocar cartas,
  * y de un vistazo se ve que le falta a cada uno.
  */
-export function OrganSlot({ color, compact }: { color: Color; compact?: boolean }) {
+export function OrganSlot({
+  color,
+  compact,
+  targetable,
+  onClick,
+}: {
+  color: Color;
+  compact?: boolean;
+  /** El hueco acepta la carta elegida: se puede colocar aqui. */
+  targetable?: boolean;
+  onClick?: () => void;
+}) {
+  const className = `slot tone-${color} ${compact ? 'slot--compact' : ''} ${targetable ? 'is-targetable' : ''}`;
+  const glyph = <OrganSilhouette color={color} className="slot__glyph" />;
+
+  // Colocar un organo se hace como todo lo demas: eligiendo el sitio en la mesa.
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        onClick={onClick}
+        title={`Colocar aqui: ${SLOT_LABEL[color]}`}
+        aria-label={`Colocar ${SLOT_LABEL[color]} en su hueco`}
+      >
+        {glyph}
+      </button>
+    );
+  }
+
   return (
-    <span
-      className={`slot tone-${color} ${compact ? 'slot--compact' : ''}`}
-      title={`${SLOT_LABEL[color]}: sin colocar`}
-      aria-label={`${SLOT_LABEL[color]} sin colocar`}
-    >
-      <OrganSilhouette color={color} className="slot__glyph" />
+    <span className={className} title={`${SLOT_LABEL[color]}: sin colocar`} aria-label={`${SLOT_LABEL[color]} sin colocar`}>
+      {glyph}
     </span>
   );
 }

@@ -154,6 +154,20 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     return map;
   }, [selectedActions, swapMineId]);
 
+  /**
+   * Huecos de tu cuerpo que aceptan la carta elegida. Colocar un organo se
+   * hace igual que jugar un virus: eligiendo el sitio sobre la mesa.
+   */
+  const slotTargets = useMemo(() => {
+    const map = new Map<Color, Action>();
+    for (const action of selectedActions) {
+      if (action.type !== 'PLAY_ORGAN') continue;
+      const card = view.hand.find((c) => c.id === action.cardId);
+      if (card?.color) map.set(card.color, action);
+    }
+    return map;
+  }, [selectedActions, view.hand]);
+
   const playerTargets = useMemo(() => {
     const map = new Map<string, Action>();
     for (const action of selectedActions) {
@@ -299,7 +313,17 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           </header>
           <div className="mine__body">
             {bodySlots(you.body).map(({ color, pile }) => {
-              if (!pile) return <OrganSlot key={color} color={color} />;
+              if (!pile) {
+                const place = slotTargets.get(color);
+                return (
+                  <OrganSlot
+                    key={color}
+                    color={color}
+                    targetable={Boolean(place)}
+                    onClick={place ? () => void run(place) : undefined}
+                  />
+                );
+              }
               const action = organTargets.get(keyOf(you.id, pile.organ.id));
               return (
                 <Organ
@@ -571,5 +595,6 @@ function getGuidance(args: {
   if (kinds.has('PLAY_MEDICINE')) return 'Elige el organo que quieres tratar.';
   if (kinds.has('PLAY_STEAL')) return 'Elige el organo rival que te llevas.';
   if (kinds.has('PLAY_MALPRACTICE')) return 'Elige con que jugador intercambias tu cuerpo entero.';
+  if (kinds.has('PLAY_ORGAN')) return 'Coloca el organo en su hueco de tu cuerpo.';
   return cardHint(selectedCard);
 }
