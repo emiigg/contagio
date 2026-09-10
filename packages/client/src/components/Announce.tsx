@@ -10,17 +10,25 @@ import { CardGlyph, Mark } from '../art';
  * ajenos se resuelven solos: sin este cartel, una carta aparece y desaparece
  * sin que nadie llegue a leer que ha pasado.
  */
-export function Announce({ move, youId, holdMs = 3800 }: { move: MoveSummary | null; youId: string; holdMs?: number }) {
+interface AnnounceProps {
+  move: MoveSummary | null;
+  youId: string;
+  holdMs?: number;
+  /** Mientras se reparte: el cartel espera y su reloj no corre. */
+  paused?: boolean;
+}
+
+export function Announce({ move, youId, holdMs = 3800, paused = false }: AnnounceProps) {
   const [shown, setShown] = useState<MoveSummary | null>(null);
 
   useEffect(() => {
-    if (!move) return;
+    if (!move || paused) return;
     setShown(move);
     const timer = setTimeout(() => setShown(null), holdMs);
     return () => clearTimeout(timer);
-  }, [move?.serial, holdMs]);
+  }, [move?.serial, holdMs, paused]);
 
-  if (!shown) return <div className="announce announce--empty" aria-hidden />;
+  if (!shown || paused) return <div className="announce announce--empty" aria-hidden />;
 
   const mine = shown.playerId === youId;
   const start = shown.kind === 'START';

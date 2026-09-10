@@ -269,9 +269,9 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             <p className="pile__label mono">mazo · {view.deckCount}</p>
           </div>
 
-          {/* Durante el reparto el cartel queda oculto: asi el sorteo de salida
-              se lee cuando las cartas ya estan en su sitio. */}
-          <Announce move={dealing ? null : view.lastMove} youId={view.youId} />
+          {/* En pausa mientras se reparte: el cartel del sorteo no puede gastar
+              su turno debajo de las cartas que van volando. */}
+          <Announce move={view.lastMove} youId={view.youId} paused={dealing} />
 
           <div className="pile pile--discard">
             <div className="pile__stack">
