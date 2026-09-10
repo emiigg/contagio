@@ -20,7 +20,11 @@ let server;
 const sockets = [];
 
 before(async () => {
-  server = spawn(process.execPath, [entry], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
+  server = spawn(process.execPath, [entry], {
+    // Tope bajo y margen corto: lo que se prueba es la politica, no los numeros.
+    env: { ...process.env, PORT: String(PORT), MAX_ROOMS: '2', EMPTY_GRACE_MS: '1000' },
+    stdio: 'ignore',
+  });
   for (let i = 0; i < 60; i++) {
     try {
       if ((await fetch(`${URL}/health`)).ok) return;
@@ -102,6 +106,60 @@ test('una partida completa por socket termina con un ganador', async () => {
   assert.equal(view.phase, 'finished');
   assert.ok(view.winnerId, 'la partida debe tener ganador');
   assert.ok(view.players.some((p) => p.id === view.winnerId && p.healthyOrgans >= 4));
+
+  host.close();
+  guest.close();
+});
+
+/** Espera a que /health baje a un numero de salas, o se rinde. */
+async function waitForRooms(count, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  let seen = -1;
+  while (Date.now() < deadline) {
+    seen = (await (await fetch(`${URL}/health`)).json()).rooms;
+    if (seen === count) return;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  assert.fail(`el servidor se quedo en ${seen} salas y se esperaban ${count}`);
+}
+
+test('el servidor no abre mas salas de las que aguanta', async () => {
+  await waitForRooms(0); // la partida anterior se cierra al soltar sus sockets
+  const first = connect();
+  const second = connect();
+  const third = connect();
+  await Promise.all([first, second, third].map((s) => new Promise((r) => s.on('connect', r))));
+
+  await ask(first, 'room:create', { name: 'Una' });
+  await ask(second, 'room:create', { name: 'Otra' });
+  await assert.rejects(ask(third, 'room:create', { name: 'Tarde' }), /rato/i);
+
+  // Al soltarse la primera sala queda hueco y el rechazado ya puede entrar.
+  first.close();
+  await waitForRooms(1);
+  const late = await ask(third, 'room:create', { name: 'Tarde' });
+  assert.match(late.room.code, /^[A-Z0-9]{4}$/);
+
+  second.close();
+  third.close();
+  await waitForRooms(0);
+});
+
+test('una sala en partida se cierra cuando pierde a todos sus humanos', async () => {
+  const solo = connect();
+  await new Promise((r) => solo.on('connect', r));
+  const { room } = await ask(solo, 'room:create', { name: 'Sola' });
+  await ask(solo, 'room:addBot', {});
+  await ask(solo, 'room:start', {});
+
+  const before = (await (await fetch(`${URL}/health`)).json()).rooms;
+  solo.close();
+  await waitForRooms(before - 1);
+
+  // Y el codigo deja de existir para quien intente volver.
+  const stranger = connect();
+  await new Promise((r) => stranger.on('connect', r));
+  await assert.rejects(ask(stranger, 'room:join', { code: room.code, name: 'Nadie' }), /no existe/i);
 });
 
 /** Reutiliza la heuristica del motor sobre la vista publica del jugador. */

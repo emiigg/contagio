@@ -13,8 +13,21 @@ import { Room, generateRoomCode } from './rooms.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const ORIGIN = process.env.CORS_ORIGIN ?? '*';
-/** Una sala vacia se recoge pasado este tiempo. */
-const ROOM_TTL_MS = 30 * 60 * 1000;
+/**
+ * Techo de partidas simultaneas. Cada sala mantiene estado en memoria y un
+ * temporizador para los bots, asi que el limite es lo que protege al servidor:
+ * mejor decir "ahora no" que servir seis partidas a tirones.
+ */
+const MAX_ROOMS = Number(process.env.MAX_ROOMS ?? 5);
+/**
+ * Margen que se le da a una sala sin humanos conectados antes de cerrarla.
+ * No es cero porque recargar la pagina es una desconexion: quien vuelve dentro
+ * de este minuto se reencuentra su partida donde la dejo.
+ */
+const EMPTY_GRACE_MS = Number(process.env.EMPTY_GRACE_MS ?? 60_000);
+const FULL_MESSAGE = `Ahora mismo hay ${MAX_ROOMS} partidas en marcha, que es el tope de este servidor. Intentalo dentro de un rato.`;
+/** Cada cuanto se pasa la escoba. Nunca mas lento que el propio margen. */
+const SWEEP_MS = Math.max(1_000, Math.min(10_000, EMPTY_GRACE_MS));
 
 const app = express();
 const httpServer = createServer(app);
@@ -26,6 +39,30 @@ const rooms = new Map<string, Room>();
 const emptySince = new Map<string, number>();
 /** socket.id -> ubicacion del jugador, para resolver desconexiones. */
 const sessions = new Map<string, { code: string; playerId: string }>();
+
+/**
+ * Cierra una sala y suelta todo lo suyo: temporizador de bots, marca de vacia
+ * y las sesiones que aun la apuntaban.
+ */
+function closeRoom(code: string): void {
+  rooms.get(code)?.clearTimer();
+  rooms.delete(code);
+  emptySince.delete(code);
+  for (const [socketId, session] of sessions) {
+    if (session.code === code) sessions.delete(socketId);
+  }
+}
+
+/** Marca o desmarca el reloj de sala vacia segun quien quede conectado. */
+function reviewOccupancy(room: Room): void {
+  if (!room.isEmpty) {
+    emptySince.delete(room.code);
+    return;
+  }
+  // Sin ningun asiento humano no hay a quien esperar: se cierra en el acto.
+  if (room.isAbandoned) closeRoom(room.code);
+  else if (!emptySince.has(room.code)) emptySince.set(room.code, Date.now());
+}
 
 function makeRoom(): Room {
   const code = generateRoomCode(new Set(rooms.keys()));
@@ -48,6 +85,7 @@ function roomOf(socketId: string): { room: Room; playerId: string } | null {
 
 io.on('connection', (socket) => {
   socket.on('room:create', ({ name }, ack) => {
+    if (rooms.size >= MAX_ROOMS) return ack({ ok: false, error: FULL_MESSAGE });
     const room = makeRoom();
     const member = room.addHuman(name, socket.id);
     sessions.set(socket.id, { code: room.code, playerId: member.id });
@@ -165,7 +203,7 @@ io.on('connection', (socket) => {
       else room.setConnection(playerId, null);
       socket.leave(room.code);
       room.pushState();
-      if (room.isEmpty) emptySince.set(room.code, Date.now());
+      reviewOccupancy(room);
     }
     sessions.delete(socket.id);
     ack({ ok: true, data: {} });
@@ -183,23 +221,21 @@ io.on('connection', (socket) => {
       // En partida el asiento se mantiene: el jugador puede reconectar con su token.
       room.setConnection(playerId, null);
     }
-    if (room.isEmpty) emptySince.set(room.code, Date.now());
+    reviewOccupancy(room);
   });
 });
 
-// Recogida de salas abandonadas.
+// Recogida de salas sin nadie: libera el hueco para la siguiente partida.
 setInterval(() => {
   const now = Date.now();
   for (const [code, since] of emptySince) {
-    if (now - since < ROOM_TTL_MS) continue;
-    rooms.get(code)?.clearTimer();
-    rooms.delete(code);
-    emptySince.delete(code);
+    if (now - since < EMPTY_GRACE_MS) continue;
+    closeRoom(code);
   }
-}, 60_000).unref();
+}, SWEEP_MS).unref();
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, rooms: rooms.size, uptime: process.uptime() });
+  res.json({ ok: true, rooms: rooms.size, maxRooms: MAX_ROOMS, uptime: process.uptime() });
 });
 
 // En produccion el mismo proceso sirve el cliente compilado.

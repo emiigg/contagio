@@ -57,8 +57,14 @@ export class Room {
     return this.state.phase === 'finished' ? 'finished' : 'playing';
   }
 
+  /** Nadie humano conectado: la sala solo se sostiene por si alguien vuelve. */
   get isEmpty(): boolean {
     return this.members.every((m) => m.isBot || m.socketId === null);
+  }
+
+  /** No queda ni el asiento de un humano: no hay nada a lo que volver. */
+  get isAbandoned(): boolean {
+    return this.members.every((m) => m.isBot);
   }
 
   view(): RoomView {
