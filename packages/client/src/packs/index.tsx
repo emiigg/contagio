@@ -5,6 +5,7 @@ import type { Card, Color, Pack, PackId } from '@contagio/engine';
 
 import { arrecifeArt } from './arrecife';
 import { asedioArt } from './asedio';
+import { bandaArt } from './banda';
 import { contagioArt } from './contagio';
 import { cortafuegosArt } from './cortafuegos';
 import { frutasArt } from './frutas';
@@ -26,6 +27,7 @@ export const PACK_ART: Record<PackId, PackArt> = {
   arrecife: arrecifeArt,
   grimorio: grimorioArt,
   jurasico: jurasicoArt,
+  banda: bandaArt,
 };
 
 /**

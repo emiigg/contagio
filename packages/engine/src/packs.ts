@@ -15,7 +15,8 @@ export type PackId =
   | 'asedio'
   | 'arrecife'
   | 'grimorio'
-  | 'jurasico';
+  | 'jurasico'
+  | 'banda';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
 export const PACK_IDS: PackId[] = [
@@ -29,6 +30,7 @@ export const PACK_IDS: PackId[] = [
   'arrecife',
   'grimorio',
   'jurasico',
+  'banda',
 ];
 
 export const DEFAULT_PACK: PackId = 'contagio';
@@ -964,6 +966,92 @@ const JURASICO: Pack = {
   },
 };
 
+const BANDA: Pack = {
+  id: 'banda',
+  name: 'Banda',
+  tagline: 'Instrumentos, desafinadas y el ultimo ensayo antes del concierto.',
+  kinds: { organ: 'Instrumento', virus: 'Ruido', medicine: 'Afinacion', treatment: 'Escenario' },
+  organs: {
+    red: { name: 'Guitarra', art: 'la' },
+    blue: { name: 'Bateria', art: 'la' },
+    green: { name: 'Teclado', art: 'el' },
+    yellow: { name: 'Trompeta', art: 'la' },
+    wild: { name: 'Tocadiscos', art: 'el' },
+  },
+  viruses: {
+    red: 'Cuerda rota',
+    blue: 'Baqueta rota',
+    green: 'Tecla atascada',
+    yellow: 'Nota falsa',
+    wild: 'Acople',
+  },
+  medicines: {
+    red: 'Cuerdas nuevas',
+    blue: 'Parche nuevo',
+    green: 'Afinador',
+    yellow: 'Boquilla',
+    wild: 'Ensayo general',
+  },
+  treatments: {
+    swap: {
+      name: 'Palomazo',
+      text: 'Cambias un instrumento tuyo por uno de otro jugador. Ninguno puede ser legendario ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Fichaje estrella',
+      text: 'Un instrumento de otro jugador se pasa a tu banda. No sirve con instrumentos legendarios ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Eco',
+      text: 'El ruido de tus instrumentos rebota en la sala y cae sobre instrumentos libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Abucheo',
+      text: 'El publico abuchea a tus rivales: sueltan su mano y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Cambio de escenario',
+      text: 'Intercambias tu banda entera con la de otro jugador, instrumentos legendarios incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Subelo a tu escenario. Uno por color.',
+    virus: 'Desafina un instrumento libre, arruina uno desafinado o deshaz una afinacion.',
+    medicine: 'Arregla un instrumento desafinado, afina uno libre o vuelvelo legendario si ya estaba afinado.',
+  },
+  stamps: { infected: 'Desafinado', vaccinated: 'Afinado', immunized: 'Legendario' },
+  words: {
+    organ: 'instrumento',
+    organs: 'instrumentos',
+    the: 'el',
+    one: 'uno',
+    healthy: 'a punto',
+    threat: 'ruido',
+    threats: 'ruidos',
+    body: 'banda',
+  },
+  lines: {
+    place: '{p} sube {card} a su escenario.',
+    infect: '{p} desafina {organ}.',
+    remove: '{p} arruina {organ}.',
+    breakShield: '{p} deshace la afinacion de {organ}.',
+    cure: '{p} arregla {organ}.',
+    vaccinate: '{p} afina {organ}.',
+    immunize: '{p} convierte en leyenda {organ}.',
+    spread: '{p} hace rebotar {n} {threats} hacia sus rivales.',
+    quarantine: '{p} provoca un abucheo: el resto suelta su mano.',
+    malpractice: '{p} cambia de escenario con {victim}: bandas intercambiadas.',
+    win: '{p} completa su banda y gana la partida.',
+  },
+  buttons: { spread: 'Rebotar {n} {threats}', quarantine: 'Provocar abucheo', malpractice: 'Cambiar de escenario' },
+  ending: {
+    winTitle: 'Banda completa. Ganas.',
+    winText: 'Cuatro instrumentos a punto antes que nadie.',
+    loseTitle: '{p} completa su banda.',
+    loseText: 'Tu banda se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
@@ -975,6 +1063,7 @@ export const PACKS: Record<PackId, Pack> = {
   arrecife: ARRECIFE,
   grimorio: GRIMORIO,
   jurasico: JURASICO,
+  banda: BANDA,
 };
 
 export function isPackId(value: unknown): value is PackId {
