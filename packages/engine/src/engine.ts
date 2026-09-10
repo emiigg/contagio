@@ -55,6 +55,7 @@ export function createGame(seeds: PlayerSeed[], seed = 1): GameState {
     seed: shuffled.seed,
     turnCount: 1,
     log: [],
+    lastMove: null,
   };
   pushLog(state, `Comienza la partida. Turno de ${players[0]!.name}.`);
   return state;
@@ -63,6 +64,27 @@ export function createGame(seeds: PlayerSeed[], seed = 1): GameState {
 function pushLog(state: GameState, text: string, playerId?: string): void {
   state.log.push({ id: state.log.length + 1, text, playerId });
   if (state.log.length > 200) state.log.splice(0, state.log.length - 200);
+}
+
+/** Registra la jugada en el log y la publica como ultimo movimiento visible. */
+function logMove(
+  state: GameState,
+  player: Player,
+  text: string,
+  kind: Action['type'],
+  cards: Card[],
+  targets: OrganRef[] = [],
+): void {
+  pushLog(state, text, player.id);
+  state.lastMove = {
+    serial: (state.lastMove?.serial ?? 0) + 1,
+    playerId: player.id,
+    playerName: player.name,
+    kind,
+    cards,
+    targets,
+    text,
+  };
 }
 
 function clone(state: GameState): GameState {
@@ -113,6 +135,11 @@ function currentPlayer(state: GameState): Player {
 
 function nameOf(state: GameState, playerId: string): string {
   return findPlayer(state, playerId)?.name ?? '?';
+}
+
+/** "su Corazon" cuando el organo es del propio jugador, "el Corazon de X" si no. */
+function organPhrase(state: GameState, actor: Player, ownerId: string, organ: Card): string {
+  return ownerId === actor.id ? `su ${cardName(organ)}` : `el ${cardName(organ)} de ${nameOf(state, ownerId)}`;
 }
 
 /**
@@ -220,11 +247,15 @@ function resolveDiscard(state: GameState, player: Player, cardIds: string[]): Ap
   if (unique.size !== cardIds.length) return fail('Cartas repetidas en el descarte');
   if (cardIds.some((id) => !cardById(player.hand, id))) return fail('No tienes esa carta');
 
+  const dropped: Card[] = [];
   for (const id of cardIds) {
     const card = takeCardFromHand(player, id);
-    if (card) state.discard.push(card);
+    if (!card) continue;
+    dropped.push(card);
+    state.discard.push(card);
   }
-  pushLog(state, `${player.name} descarta ${cardIds.length} carta(s).`, player.id);
+  const plural = dropped.length === 1 ? 'carta' : 'cartas';
+  logMove(state, player, `${player.name} descarta ${dropped.length} ${plural}.`, 'DISCARD', dropped);
   return { ok: true, state };
 }
 
@@ -235,7 +266,9 @@ function resolvePlayOrgan(state: GameState, player: Player, cardId: string): App
 
   takeCardFromHand(player, cardId);
   player.body.push({ organ: card, viruses: [], medicines: [] });
-  pushLog(state, `${player.name} coloca ${cardName(card)}.`, player.id);
+  logMove(state, player, `${player.name} coloca ${cardName(card)}.`, 'PLAY_ORGAN', [card], [
+    { playerId: player.id, organId: card.id },
+  ]);
   return { ok: true, state };
 }
 
@@ -255,7 +288,14 @@ function resolvePlayVirus(state: GameState, player: Player, cardId: string, targ
     pile.medicines.pop();
     takeCardFromHand(player, cardId);
     state.discard.push(card, medicine);
-    pushLog(state, `${player.name} destruye la vacuna de ${nameOf(state, target.playerId)}.`, player.id);
+    logMove(
+      state,
+      player,
+      `${player.name} destruye la vacuna de ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+      'PLAY_VIRUS',
+      [card, medicine],
+      [target],
+    );
     return { ok: true, state };
   }
 
@@ -268,12 +308,26 @@ function resolvePlayVirus(state: GameState, player: Player, cardId: string, targ
     const owner = findPlayer(state, target.playerId)!;
     discardPile(state, pile);
     removePile(owner, target.organId);
-    pushLog(state, `${player.name} extirpa ${cardName(pile.organ)} de ${owner.name}.`, player.id);
+    logMove(
+      state,
+      player,
+      `${player.name} extirpa ${organPhrase(state, player, owner.id, pile.organ)}.`,
+      'PLAY_VIRUS',
+      [card, pile.organ],
+      [target],
+    );
     return { ok: true, state };
   }
 
   pile.viruses.push(card);
-  pushLog(state, `${player.name} infecta ${cardName(pile.organ)} de ${nameOf(state, target.playerId)}.`, player.id);
+  logMove(
+    state,
+    player,
+    `${player.name} infecta ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+    'PLAY_VIRUS',
+    [card],
+    [target],
+  );
   return { ok: true, state };
 }
 
@@ -292,7 +346,14 @@ function resolvePlayMedicine(state: GameState, player: Player, cardId: string, t
     pile.viruses.pop();
     takeCardFromHand(player, cardId);
     state.discard.push(card, virus);
-    pushLog(state, `${player.name} cura ${cardName(pile.organ)} de ${nameOf(state, target.playerId)}.`, player.id);
+    logMove(
+      state,
+      player,
+      `${player.name} cura ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+      'PLAY_MEDICINE',
+      [card, virus],
+      [target],
+    );
     return { ok: true, state };
   }
 
@@ -300,7 +361,14 @@ function resolvePlayMedicine(state: GameState, player: Player, cardId: string, t
   takeCardFromHand(player, cardId);
   pile.medicines.push(card);
   const verb = status === 'vaccinated' ? 'inmuniza' : 'vacuna';
-  pushLog(state, `${player.name} ${verb} ${cardName(pile.organ)} de ${nameOf(state, target.playerId)}.`, player.id);
+  logMove(
+    state,
+    player,
+    `${player.name} ${verb} ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+    'PLAY_MEDICINE',
+    [card],
+    [target],
+  );
   return { ok: true, state };
 }
 
@@ -332,7 +400,14 @@ function resolveSwap(state: GameState, player: Player, cardId: string, mine: Org
   const idxB = b.body.findIndex((p) => p.organ.id === pileB.organ.id);
   a.body[idxA] = pileB;
   b.body[idxB] = pileA;
-  pushLog(state, `${player.name} intercambia organos entre ${a.name} y ${b.name}.`, player.id);
+  logMove(
+    state,
+    player,
+    `${player.name} cambia ${cardName(pileA.organ)} de ${a.name} por ${cardName(pileB.organ)} de ${b.name}.`,
+    'PLAY_SWAP',
+    [card],
+    [mine, theirs],
+  );
   return { ok: true, state };
 }
 
@@ -351,7 +426,9 @@ function resolveSteal(state: GameState, player: Player, cardId: string, target: 
   state.discard.push(card);
   removePile(victim, pile.organ.id);
   player.body.push(pile);
-  pushLog(state, `${player.name} roba ${cardName(pile.organ)} a ${victim.name}.`, player.id);
+  logMove(state, player, `${player.name} roba ${cardName(pile.organ)} a ${victim.name}.`, 'PLAY_STEAL', [card], [
+    { playerId: player.id, organId: pile.organ.id },
+  ]);
   return { ok: true, state };
 }
 
@@ -391,7 +468,15 @@ function resolveSpread(
     const dest = findPile(state, move.to)!;
     dest.viruses.push(source.viruses.pop()!);
   }
-  pushLog(state, `${player.name} propaga ${moves.length} virus a sus rivales.`, player.id);
+  const plural = moves.length === 1 ? 'virus' : 'virus';
+  logMove(
+    state,
+    player,
+    `${player.name} propaga ${moves.length} ${plural} a sus rivales.`,
+    'PLAY_SPREAD',
+    [card],
+    moves.map((m) => m.to),
+  );
   return { ok: true, state };
 }
 
@@ -406,7 +491,13 @@ function resolveQuarantine(state: GameState, player: Player, cardId: string): Ap
     state.discard.push(...other.hand);
     other.hand = [];
   }
-  pushLog(state, `${player.name} decreta una cuarentena: el resto descarta su mano.`, player.id);
+  logMove(
+    state,
+    player,
+    `${player.name} decreta una cuarentena: el resto descarta su mano.`,
+    'PLAY_QUARANTINE',
+    [card],
+  );
   return { ok: true, state };
 }
 
@@ -422,7 +513,14 @@ function resolveMalpractice(state: GameState, player: Player, cardId: string, ta
   const mine = player.body;
   player.body = victim.body;
   victim.body = mine;
-  pushLog(state, `${player.name} intercambia su cuerpo con ${victim.name}.`, player.id);
+  logMove(
+    state,
+    player,
+    `${player.name} intercambia su cuerpo entero con ${victim.name}.`,
+    'PLAY_MALPRACTICE',
+    [card],
+    victim.body.concat(player.body).map((pile) => ({ playerId: player.id, organId: pile.organ.id })),
+  );
   return { ok: true, state };
 }
 

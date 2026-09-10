@@ -1,5 +1,5 @@
 import { legalActions } from './legal.js';
-import type { Action, Card, GamePhase, GameState, LogEntry, OrganPile } from './types.js';
+import type { Action, Card, GamePhase, GameState, LogEntry, MoveSummary, OrganPile } from './types.js';
 
 /** Lo que un jugador puede ver de otro: cuerpo completo, mano solo en numero. */
 export interface PublicPlayer {
@@ -29,6 +29,8 @@ export interface PlayerView {
   winnerId: string | null;
   turnCount: number;
   log: LogEntry[];
+  /** Ultima jugada resuelta, para anunciarla antes de seguir. */
+  lastMove: MoveSummary | null;
   /** Jugadas validas ahora mismo; vacio si no es tu turno. */
   legalActions: Action[];
 }
@@ -57,6 +59,7 @@ export function toPlayerView(state: GameState, youId: string): PlayerView {
     winnerId: state.winnerId,
     turnCount: state.turnCount,
     log: state.log.slice(-40),
+    lastMove: state.lastMove,
     legalActions: turnPlayer?.id === youId ? legalActions(state, youId) : [],
   };
 }

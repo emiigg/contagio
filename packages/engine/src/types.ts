@@ -66,6 +66,24 @@ export interface GameState {
   seed: number;
   turnCount: number;
   log: LogEntry[];
+  lastMove: MoveSummary | null;
+}
+
+/**
+ * Resumen publico de la ultima jugada. El cliente lo usa para anunciarla y
+ * senalar los organos afectados antes de que la mesa cambie sola.
+ */
+export interface MoveSummary {
+  /** Numero creciente: permite detectar una jugada nueva aunque se repita. */
+  serial: number;
+  playerId: string;
+  playerName: string;
+  kind: Action['type'];
+  /** Cartas que quedan a la vista: la jugada o las descartadas. */
+  cards: Card[];
+  /** Organos afectados, para resaltarlos un instante. */
+  targets: OrganRef[];
+  text: string;
 }
 
 export interface LogEntry {
