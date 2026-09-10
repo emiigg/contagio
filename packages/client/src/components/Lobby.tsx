@@ -59,27 +59,27 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onStart, 
           </button>
         </header>
 
-        <ol className="seats">
+        <ol className="roster">
           {room.players.map((player, index) => (
-            <li key={player.id} className={`seat ${player.id === youId ? 'is-you' : ''}`}>
-              <span className="seat__index mono">{String(index + 1).padStart(2, '0')}</span>
-              <span className="seat__name">
+            <li key={player.id} className={`roster__row ${player.id === youId ? 'is-you' : ''}`}>
+              <span className="roster__index mono">{String(index + 1).padStart(2, '0')}</span>
+              <span className="roster__name">
                 {player.name}
                 {player.isHost && <span className="tag">anfitrion</span>}
                 {player.isBot && <span className="tag">bot</span>}
                 {player.id === youId && <span className="tag tag--you">tu</span>}
               </span>
               {isHost && player.id !== youId && (
-                <button type="button" className="seat__remove" onClick={() => void guard(() => onRemove(player.id))}>
+                <button type="button" className="roster__remove" onClick={() => void guard(() => onRemove(player.id))}>
                   Quitar
                 </button>
               )}
             </li>
           ))}
           {Array.from({ length: MAX_PLAYERS - room.players.length }).map((_, i) => (
-            <li key={`empty-${i}`} className="seat seat--empty">
-              <span className="seat__index mono">{String(room.players.length + i + 1).padStart(2, '0')}</span>
-              <span className="seat__name">Asiento libre</span>
+            <li key={`empty-${i}`} className="roster__row roster__row--empty">
+              <span className="roster__index mono">{String(room.players.length + i + 1).padStart(2, '0')}</span>
+              <span className="roster__name">Asiento libre</span>
             </li>
           ))}
         </ol>

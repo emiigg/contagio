@@ -359,14 +359,14 @@ button {
   text-transform: lowercase;
 }
 
-.seats {
+.roster {
   margin: 1.6rem 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--line);
 }
 
-.seat {
+.roster__row {
   display: flex;
   align-items: center;
   gap: 0.9rem;
@@ -374,21 +374,28 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
-.seat__index {
+.roster__index {
+  flex: none;
   color: var(--ink-faint);
 }
 
-.seat__name {
+.roster__name {
   flex: 1;
+  min-width: 0;
   font-weight: 600;
+  /* Un nombre largo se corta con puntos suspensivos en vez de salirse. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.seat--empty .seat__name {
+.roster__row--empty .roster__name {
   font-weight: 400;
   color: var(--ink-faint);
 }
 
-.seat__remove {
+.roster__remove {
+  flex: none;
   border: none;
   background: none;
   color: var(--ink-soft);
