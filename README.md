@@ -8,9 +8,11 @@ originales.
 
 ![La mesa en juego](docs/capturas/mesa.png)
 
-| Reparto inicial | Móvil |
+| Reparto inicial | Móvil, en oscuro |
 | --- | --- |
 | ![Barajando en el centro de la mesa](docs/capturas/reparto.png) | ![Vista en móvil](docs/capturas/movil.png) |
+
+![La misma mesa en tema oscuro](docs/capturas/mesa-oscura.png)
 
 ## Cómo se juega
 
@@ -35,6 +37,20 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
   estrechar la fila de arriba.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
+- **Quien abre sale por sorteo**, no es el anfitrión: abrir es una ventaja pequeña pero constante. El sorteo usa la
+  misma semilla que baraja y la mesa lo anuncia en el centro, ya repartidas las cartas.
+
+## Tema y fondo
+
+El tema arranca en **automático**: manda `prefers-color-scheme`, que es lo que ya tiene decidido quien juega. El botón
+de la barra recorre *automático → claro → oscuro* y solo entonces fija la elección en `localStorage`. La hoja de
+estilos conoce únicamente el resultado (`data-theme="light" | "dark"`), así que la paleta no se duplica en un `@media`;
+un script en línea de `index.html` la aplica antes del primer pintado para que la página no asome en claro.
+
+En oscuro los cuatro colores de órgano suben de luz: ahí el color es información, no adorno, y los tonos claros se
+apagan sobre fondo oscuro. El reverso de carta no cambia con el tema —verde de quirófano y la marca en naranja—
+porque es el mismo objeto sobre la mesa. De fondo, instrumental de hospital dibujado a línea, muy tenue y por los
+márgenes, sin ratón ni lector de pantalla.
 
 ## Arquitectura
 
@@ -87,12 +103,26 @@ docker compose up --build
 
 Variables: `PORT` (3001), `CORS_ORIGIN` (`*`), `VITE_SERVER_URL` para apuntar el proxy de desarrollo a otro servidor.
 
+### Cuidar el servidor
+
+Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay un techo de partidas simultáneas:
+
+- **`MAX_ROOMS` (5)**: al llegar al tope, crear sala responde con un aviso de volver más tarde en lugar de servir seis
+  partidas a tirones. Entrar con código a una sala existente sigue funcionando.
+- **`EMPTY_GRACE_MS` (60 000)**: una sala sin humanos conectados se cierra pasado ese margen. No es cero porque
+  recargar la página es una desconexión: quien vuelve dentro de ese minuto se reencuentra su partida donde la dejó.
+  Si no queda ni el asiento de un humano —todos se fueron del vestíbulo—, se cierra en el acto.
+
+`GET /health` responde con las salas abiertas y el tope.
+
 ## Tests
 
 - `packages/engine/test/engine.test.ts`: composición del mazo, cada efecto de carta, victoria, y una partida completa
   entre bots que comprueba en cada turno que las 68 cartas siguen existiendo, sin duplicados ni pérdidas.
 - `packages/server/test/smoke.test.mjs`: levanta el servidor real, juega una partida por socket con dos clientes y
-  un bot, y verifica que termina con un ganador con cuatro órganos sanos.
+  un bot, y verifica que termina con un ganador con cuatro órganos sanos. Comprueba además la política de salas: que
+  al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
+  cierra —y su código deja de existir— cuando pierde a todos sus humanos.
 
 ## Revisión visual
 
@@ -102,7 +132,11 @@ Sirve para revisar el diseño sin abrirlo a mano y para regenerar las imágenes 
 ```bash
 node tools/shots.mjs                      # capturas a 2x en tools/shots/
 SHOT_SCALE=1 node tools/shots.mjs docs/capturas
+SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs   # la misma partida en oscuro, con la mesa llena
 ```
+
+Avisa de cualquier desbordamiento durante la partida —la mesa tiene que caber en la ventana sin desplazador— y se
+planta si el puerto ya responde: si no, las capturas saldrían de otro servidor y hablarían de un código que ya no es.
 
 Necesita un Chromium accesible por CDP en `localhost:9222`. En una máquina sin las librerías de escritorio:
 
