@@ -188,6 +188,26 @@ const ORGAN_GLYPHS: Record<Color, (props: GlyphProps) => JSX.Element> = {
   wild: ChimeraGlyph,
 };
 
+/** Silueta tenue de un organo: marca el hueco que aun no has llenado. */
+export function OrganSilhouette({ color, className }: { color: Color; className?: string }) {
+  return ORGAN_GLYPHS[color]({ className });
+}
+
+/**
+ * Marca de Contagio: la misma muestra que aparece en la pestana del navegador.
+ * Vive aqui para que icono e interfaz no se separen nunca.
+ */
+export function Mark({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
+      <circle cx="16" cy="16" r="9" fill="currentColor" />
+      <g stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+        <path d="M16 2v5M16 25v5M2 16h5M25 16h5M6 6l3.5 3.5M22.5 22.5L26 26M26 6l-3.5 3.5M9.5 22.5L6 26" />
+      </g>
+    </svg>
+  );
+}
+
 /** Devuelve la ilustracion que corresponde a una carta. */
 export function CardGlyph({ card, className }: { card: Card; className?: string }) {
   switch (card.kind) {

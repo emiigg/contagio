@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 
-import { BrainGlyph, HeartGlyph, LiverGlyph, LungGlyph } from '../art';
+import { BrainGlyph, HeartGlyph, LiverGlyph, LungGlyph, Mark } from '../art';
 
 interface HomeProps {
   name: string;
@@ -38,7 +38,10 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules }: HomePro
     <div className="home">
       <div className="home__sheet">
         <div className="home__intro">
-          <h1 className="home__title">Contagio</h1>
+          <h1 className="home__title">
+            <Mark className="home__mark" />
+            Contagio
+          </h1>
           <p className="home__lead">
             Cuatro organos sanos sobre la mesa y la partida es tuya. El problema son los otros cinco laboratorios
             intentando lo mismo, con virus en la mano.
