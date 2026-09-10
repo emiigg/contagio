@@ -34,7 +34,13 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
   Hígado de Enf. Quiroga" — y el órgano afectado parpadea un instante.
 - **Cada cuerpo tiene cinco huecos fijos**, uno por color más el comodín, así que colocar una carta no mueve la mesa
   y se ve de un vistazo a quién le falta qué. Con cuatro rivales o más, los costados de la mesa se ocupan en lugar de
-  estrechar la fila de arriba.
+  estrechar la fila de arriba: ahí el asiento es grande, porque ese espacio no lo quiere nadie más.
+- **Todo se juega señalando su sitio**: el órgano cae en su hueco, el virus sobre el órgano que ataca y la negligencia
+  médica sobre la mesa entera del rival —esa, además, pregunta antes, porque cambiar el cuerpo completo no tiene
+  vuelta atrás.
+- **Un minuto por turno** (`TURN_LIMIT_MS`) cuando juega una persona, con un aro que se gasta junto al indicador de
+  turno. Si llega a cero, la mesa juega por ella con la misma heurística de los bots: nadie se queda esperando a
+  alguien que se ha levantado. Los bots no llevan reloj.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 - **Quien abre sale por sorteo**, no es el anfitrión: abrir es una ventaja pequeña pero constante. El sorteo usa la
@@ -109,6 +115,7 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 
 - **`MAX_ROOMS` (5)**: al llegar al tope, crear sala responde con un aviso de volver más tarde en lugar de servir seis
   partidas a tirones. Entrar con código a una sala existente sigue funcionando.
+- **`TURN_LIMIT_MS` (60 000)**: lo que dura el turno de una persona antes de que la mesa juegue por ella.
 - **`EMPTY_GRACE_MS` (60 000)**: una sala sin humanos conectados se cierra pasado ese margen. No es cero porque
   recargar la página es una desconexión: quien vuelve dentro de ese minuto se reencuentra su partida donde la dejó.
   Si no queda ni el asiento de un humano —todos se fueron del vestíbulo—, se cierra en el acto.
@@ -122,7 +129,8 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 - `packages/server/test/smoke.test.mjs`: levanta el servidor real, juega una partida por socket con dos clientes y
   un bot, y verifica que termina con un ganador con cuatro órganos sanos. Comprueba además la política de salas: que
   al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
-  cierra —y su código deja de existir— cuando pierde a todos sus humanos.
+  cierra —y su código deja de existir— cuando pierde a todos sus humanos. Y que el turno de una persona vence solo:
+  con un servidor aparte y un «minuto» de segundo y medio, la partida avanza sin que nadie juegue.
 
 ## Revisión visual
 
@@ -137,6 +145,14 @@ SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs   # la misma partida en oscuro,
 
 Avisa de cualquier desbordamiento durante la partida —la mesa tiene que caber en la ventana sin desplazador— y se
 planta si el puerto ya responde: si no, las capturas saldrían de otro servidor y hablarían de un código que ya no es.
+
+`tools/anchos.mjs` hace lo complementario: monta una partida de seis y recorre once tamaños de ventana, del monitor
+grande al móvil corto, comprobando que nada desborda y que la mesa sigue centrada. Salió de un fallo que solo se veía
+con pocos jugadores y en ventanas concretas.
+
+```bash
+node tools/anchos.mjs
+```
 
 Necesita un Chromium accesible por CDP en `localhost:9222`. En una máquina sin las librerías de escritorio:
 
