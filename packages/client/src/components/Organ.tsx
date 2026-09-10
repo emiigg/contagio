@@ -14,11 +14,13 @@ interface OrganProps {
   pile: OrganPile;
   targetable?: boolean;
   selected?: boolean;
+  /** Marca el organo que acaba de recibir una carta. */
+  hit?: boolean;
   onClick?: () => void;
   compact?: boolean;
 }
 
-export function Organ({ pile, targetable, selected, onClick, compact }: OrganProps) {
+export function Organ({ pile, targetable, selected, hit, onClick, compact }: OrganProps) {
   const status = organStatus(pile);
   const stamp = STAMP[status];
   const classes = [
@@ -27,6 +29,7 @@ export function Organ({ pile, targetable, selected, onClick, compact }: OrganPro
     `is-${status}`,
     targetable ? 'is-targetable' : '',
     selected ? 'is-selected' : '',
+    hit ? 'is-hit' : '',
     compact ? 'organ--compact' : '',
   ]
     .filter(Boolean)

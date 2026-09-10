@@ -12,11 +12,11 @@
   --grid-fine: rgba(190, 96, 96, 0.09);
   --grid-bold: rgba(190, 96, 96, 0.16);
 
-  --organ-red: #b8433c;
-  --organ-blue: #2c6193;
-  --organ-green: #35815b;
-  --organ-yellow: #a97a15;
-  --organ-wild: #6a4a8f;
+  --organ-red: #c3382c;
+  --organ-blue: #1f6cb0;
+  --organ-green: #2b8f58;
+  --organ-yellow: #c2870d;
+  --organ-wild: #7343a8;
   --treatment: #3c4b47;
 
   --danger: #b8433c;
@@ -424,9 +424,10 @@ button {
 /* --- mesa ---------------------------------------------------------------- */
 
 .table {
-  min-height: 100vh;
+  height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
 }
 
 .bar {
@@ -434,7 +435,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.6rem clamp(0.75rem, 2vw, 1.4rem);
+  padding: 0.55rem clamp(0.75rem, 2vw, 1.4rem);
   background: var(--card);
   border-bottom: 1px solid var(--line);
   flex-wrap: wrap;
@@ -470,167 +471,452 @@ button {
   gap: 0.4rem;
 }
 
-.bar__counter {
-  color: var(--ink-faint);
-}
-
 .pulse {
   width: 5.2rem;
   height: 1.4rem;
   color: var(--ink-faint);
 }
 
+.pulse__base {
+  stroke: currentColor;
+  opacity: 0.4;
+}
+
 .pulse.is-live {
   color: var(--danger);
 }
 
-.pulse.is-live path {
-  stroke-dasharray: 160;
-  animation: trace 2.4s linear infinite;
+.pulse.is-live .pulse__base {
+  opacity: 0.28;
+}
+
+/* Un tramo corto del trazo recorre la linea: la mesa respira en tu turno. */
+.pulse__spark {
+  stroke: currentColor;
+  stroke-dasharray: 22 320;
+  animation: trace 2.2s linear infinite;
 }
 
 @keyframes trace {
   from {
-    stroke-dashoffset: 160;
+    stroke-dashoffset: 342;
   }
   to {
-    stroke-dashoffset: -160;
+    stroke-dashoffset: 0;
   }
 }
 
-.table__main {
+/* El tapete: rivales arriba, centro de juego, tu cuerpo abajo. */
+.felt {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  gap: 1rem;
-  padding: 1rem clamp(0.75rem, 2vw, 1.4rem);
-  align-items: start;
+  grid-template-rows: auto auto;
+  align-content: start;
+  overflow-y: auto;
+  gap: clamp(0.5rem, 1.6vh, 1.1rem);
+  padding: clamp(0.5rem, 1.6vh, 1rem) clamp(0.75rem, 2vw, 1.4rem);
+  min-height: 0;
 }
 
-.rivals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 0.9rem;
-}
-
+/* La mesa: dentro caben el mazo, el descarte, la jugada y tu cuerpo. */
 .board {
+  position: relative;
+  width: min(1040px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(0.4rem, 1.4vh, 0.9rem);
+  padding: clamp(0.8rem, 2vh, 1.3rem) clamp(1rem, 3vw, 2.2rem) clamp(0.7rem, 1.8vh, 1.1rem);
+  border: 1px solid var(--line);
+  border-radius: clamp(2rem, 7vw, 7rem);
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.9), rgba(238, 241, 236, 0.3) 72%),
+    var(--card);
+  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.55), 0 2px 0 rgba(22, 33, 31, 0.05);
+}
+
+.seats {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(0.5rem, 1.6vw, 1.2rem);
+  flex-wrap: wrap;
+}
+
+.seat-board {
+  position: relative;
+  width: clamp(9.5rem, 15vw, 13rem);
+  padding: 0.5rem 0.6rem 0.7rem;
   background: var(--card);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
-  padding: 0.7rem 0.8rem 0.9rem;
+  border-top: 3px solid var(--line);
+  border-radius: 3px;
+  /* Los asientos de los extremos bajan un poco: la fila se curva. */
+  transform: translateY(calc(var(--arc, 0) * 1.1rem));
+  transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
-.board.is-turn {
-  border-left-color: var(--danger);
+.seat-board.is-turn {
+  border-top-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
 }
 
-.board.is-selectable {
+.seat-board.is-selectable {
   outline: 2px dashed var(--organ-wild);
   outline-offset: 3px;
 }
 
-.board__head {
+.seat-board__head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.board__name {
+.seat-board__name {
   border: none;
   background: none;
   padding: 0;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.92rem;
+  text-align: left;
   cursor: default;
 }
 
-.board.is-selectable .board__name {
+.seat-board.is-selectable .seat-board__name {
   cursor: pointer;
   text-decoration: underline;
 }
 
-.board__meta {
+.seat-board__meta {
   color: var(--ink-faint);
 }
 
-.board__body {
+.seat-board__hand {
+  display: flex;
+  justify-content: center;
+  height: 1.8rem;
+  margin: 0.3rem 0 0.4rem;
+  transition: opacity 300ms ease;
+}
+
+.seat-board__back {
+  --w: 1.35rem;
+  margin-left: -0.55rem;
+  transform: rotate(calc((var(--i) - 1) * 5deg));
+}
+
+.seat-board__back:first-child {
+  margin-left: 0;
+}
+
+.seat-board__body {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.7rem;
-  min-height: 4.6rem;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.6rem;
 }
 
-.board__empty {
-  margin: 0;
-  align-self: center;
+.seat-board__empty {
+  margin: auto;
   color: var(--ink-faint);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
 }
 
-.board--you {
-  border-left-width: 3px;
+/* Centro: mazo a la izquierda, descarte a la derecha, jugada en medio. */
+.center {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.8rem, 3vw, 2rem);
 }
 
-.board--you .board__body {
-  min-height: 6.4rem;
+.pile {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.pile__stack {
+  position: relative;
+  width: 4rem;
+  height: 5.6rem;
+}
+
+.pile__card {
+  position: absolute;
+  inset: 0;
+  --w: 4rem;
+}
+
+/* Durante el reparto, el mazo y el descarte todavia no estan en la mesa. */
+.table.is-dealing .pile {
+  opacity: 0;
+}
+
+.pile {
+  transition: opacity 400ms ease 200ms;
+}
+
+.pile__card--2 {
+  transform: translate(-3px, -3px) rotate(-2.5deg);
+  opacity: 0.75;
+}
+
+.pile__card--3 {
+  transform: translate(-6px, -6px) rotate(-5deg);
+  opacity: 0.5;
+}
+
+.pile__card--face {
+  display: grid;
+  place-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tone, var(--treatment));
+  border-radius: var(--radius-card);
+  color: var(--tone, var(--treatment));
+  text-align: center;
+}
+
+.pile__glyph {
+  width: 2.2rem;
+  height: 2.2rem;
+  justify-self: center;
+}
+
+.pile__name {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.pile__card--empty {
+  display: grid;
+  place-content: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-card);
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+}
+
+.pile__label {
+  color: var(--ink-faint);
+}
+
+/* Anuncio de la ultima jugada. */
+.announce {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  min-height: 5.6rem;
+  align-content: center;
+}
+
+.announce--empty {
+  visibility: hidden;
+}
+
+.announce__cards {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.announce__card {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  width: 4.2rem;
+  padding: 0.4rem 0.25rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tone, var(--treatment));
+  border-radius: var(--radius-card);
+  color: var(--tone, var(--treatment));
+  animation: land 380ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+.announce__glyph {
+  width: 2rem;
+  height: 2rem;
+}
+
+.announce__cardname {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.announce__text {
+  margin: 0;
+  max-width: 34ch;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.announce.is-mine .announce__text {
+  color: var(--ink);
+}
+
+@keyframes land {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.9) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Tu zona. */
+.mine {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: center;
+}
+
+.mine__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.mine__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mine__meta {
+  color: var(--ink-faint);
+}
+
+.mine__body {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 5.4rem;
+  transition: opacity 300ms ease;
+}
+
+.mine__empty {
+  margin: auto;
+  color: var(--ink-faint);
+  font-size: 0.86rem;
+}
+
+/* Registro discreto, para repasar lo que acaba de pasar. */
+.ticker {
+  width: 14rem;
+  margin: 0;
+  padding: 0 0 0.3rem;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+  align-content: end;
+}
+
+.ticker__item {
+  font-size: 0.74rem;
+  line-height: 1.25;
+  color: var(--ink-faint);
+}
+
+.ticker__item:first-child {
+  color: var(--ink-soft);
 }
 
 /* --- organos -------------------------------------------------------------- */
 
 .organ {
   position: relative;
-  width: 5.6rem;
-  padding: 0.5rem 0.3rem 1.4rem;
-  border: 1px solid var(--line);
+  width: 4.1rem;
+  padding: 0.35rem 0.25rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--ink)) 30%, var(--line));
   border-top: 3px solid var(--tone, var(--ink));
   border-radius: 2px;
-  background: var(--card);
+  background: color-mix(in srgb, var(--tone, var(--ink)) 7%, var(--card));
   color: var(--tone, var(--ink));
   cursor: default;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
-.board--you .organ {
-  width: 6.6rem;
+.mine .organ {
+  width: 5.6rem;
+  padding: 0.45rem 0.3rem 1.4rem;
 }
 
 .organ__glyph {
   width: 100%;
   height: auto;
-  max-height: 3.4rem;
+  max-height: 2.4rem;
+}
+
+.mine .organ__glyph {
+  max-height: 3.1rem;
 }
 
 .organ.is-targetable {
   cursor: pointer;
-  box-shadow: 0 0 0 2px var(--ink);
+  outline: 2px dashed color-mix(in srgb, var(--tone, var(--ink)) 70%, var(--ink));
+  outline-offset: 2px;
 }
 
 .organ.is-targetable:hover {
   transform: translateY(-3px);
+  outline-style: solid;
+  background: color-mix(in srgb, var(--tone, var(--ink)) 16%, var(--card));
 }
 
 .organ.is-selected {
   box-shadow: 0 0 0 3px var(--organ-wild);
 }
 
+.organ.is-hit {
+  animation: hit 900ms ease-out 2;
+}
+
+@keyframes hit {
+  0% {
+    box-shadow: 0 0 0 0 rgba(184, 67, 60, 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 7px rgba(184, 67, 60, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(184, 67, 60, 0);
+  }
+}
+
 .organ.is-infected {
-  background: repeating-linear-gradient(-45deg, rgba(184, 67, 60, 0.09) 0 6px, transparent 6px 12px), var(--card);
+  background:
+    repeating-linear-gradient(-45deg, rgba(195, 56, 44, 0.13) 0 5px, transparent 5px 10px),
+    color-mix(in srgb, var(--tone, var(--ink)) 5%, var(--card));
 }
 
 .organ__stamp {
   position: absolute;
   left: 50%;
-  bottom: 1.5rem;
+  bottom: 1.1rem;
   translate: -50% 0;
   rotate: -7deg;
   padding: 0.05rem 0.3rem;
   border: 2px solid currentColor;
   border-radius: 2px;
-  font-size: 0.58rem;
+  font-size: 0.5rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   opacity: 0.85;
   pointer-events: none;
@@ -650,11 +936,16 @@ button {
   rotate: 4deg;
 }
 
+.mine .organ .organ__stamp {
+  font-size: 0.56rem;
+  bottom: 1.4rem;
+}
+
 .organ__layers {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.3rem;
+  bottom: 0.24rem;
   display: flex;
   justify-content: center;
   gap: 0.2rem;
@@ -663,8 +954,8 @@ button {
 .chip {
   display: grid;
   place-items: center;
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1rem;
+  height: 1rem;
   border: 1px solid currentColor;
   border-radius: 50%;
   color: var(--tone, var(--ink));
@@ -672,66 +963,91 @@ button {
 }
 
 .chip__glyph {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 0.76rem;
+  height: 0.76rem;
 }
 
-/* --- registro ------------------------------------------------------------- */
+/* --- tonos por color ------------------------------------------------------
+   Cada carta y cada organo llevan la clase de su color; de aqui sale el --tone
+   que tinen borde, glifo y fondo. El color es informacion, no decoracion. */
 
-.log {
-  background: var(--card);
-  border: 1px solid var(--line);
-  padding: 0.7rem 0.85rem;
-  max-height: 46vh;
-  overflow: auto;
+.tone-red {
+  --tone: var(--organ-red);
 }
 
-.log__title {
-  margin: 0 0 0.5rem;
-  font-size: 0.82rem;
-  color: var(--ink-faint);
-  font-weight: 600;
+.tone-blue {
+  --tone: var(--organ-blue);
 }
 
-.log__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.tone-green {
+  --tone: var(--organ-green);
+}
+
+.tone-yellow {
+  --tone: var(--organ-yellow);
+}
+
+.tone-wild {
+  --tone: var(--organ-wild);
+}
+
+.tone-treatment {
+  --tone: var(--treatment);
+}
+
+/* --- reverso de carta ----------------------------------------------------- */
+
+.cardback {
   display: grid;
-  gap: 0.35rem;
+  place-items: center;
+  width: var(--w, 2.6rem);
+  aspect-ratio: 5 / 7;
+  border-radius: var(--radius-card);
+  border: 1px solid #0f1a18;
+  color: rgba(238, 241, 236, 0.85);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, #1d2b28, #16211f 60%, #223330);
+  box-shadow: inset 0 0 0 3px rgba(238, 241, 236, 0.12);
 }
 
-.log__item {
-  font-size: 0.83rem;
-  line-height: 1.35;
-  color: var(--ink-soft);
-  padding-left: 0.7rem;
-  border-left: 2px solid var(--line);
+.cardback__emblem {
+  width: 62%;
+  height: 62%;
 }
 
-.log__item:first-child {
-  color: var(--ink);
-  border-left-color: var(--danger);
-}
-
-/* --- tu zona y mano ------------------------------------------------------- */
-
-.you {
-  padding: 0 clamp(0.75rem, 2vw, 1.4rem);
-}
+/* --- mano ----------------------------------------------------------------- */
 
 .dock {
-  position: sticky;
-  bottom: 0;
   display: grid;
-  gap: 0.6rem;
-  padding: 0.8rem clamp(0.75rem, 2vw, 1.4rem) 1rem;
+  gap: 0.5rem;
+  padding: 0.5rem clamp(0.75rem, 2vw, 1.4rem) 0.9rem;
   background: var(--card);
   border-top: 1px solid var(--line);
 }
 
+.dock__legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  min-height: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dock__legendname {
+  font-weight: 800;
+  color: var(--tone, var(--ink));
+}
+
+.dock__legendtext {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  max-width: 70ch;
+}
+
 .dock__guide {
-  margin: 0;
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -741,13 +1057,39 @@ button {
   font-weight: 400;
 }
 
-.dock__hand {
+.dock__row {
   display: flex;
-  gap: 0.7rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-.dock__empty {
+.hand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-top: 1.2rem;
+  flex: 1;
+  transition: opacity 300ms ease;
+}
+
+.hand__slot {
+  /* Abanico: cada carta gira un poco respecto al centro de la mano. */
+  --angle: calc((var(--i) - (var(--n) - 1) / 2) * 5deg);
+  transform: rotate(var(--angle)) translateY(calc(var(--i) * 0px));
+  transform-origin: bottom center;
+  margin-inline: -0.6rem;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.hand__slot:hover,
+.hand__slot:focus-within {
+  transform: translateY(-1.1rem) scale(1.04);
+  z-index: 4;
+}
+
+.hand__empty {
   margin: 0;
   color: var(--ink-faint);
 }
@@ -756,16 +1098,17 @@ button {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  padding-bottom: 0.2rem;
 }
 
 .card {
   position: relative;
-  width: 7.4rem;
-  min-height: 9.6rem;
+  width: 6.2rem;
+  min-height: 8rem;
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  gap: 0.25rem;
-  padding: 0.5rem 0.5rem 0.4rem;
+  gap: 0.2rem;
+  padding: 0.45rem 0.45rem 0.35rem;
   background: var(--card);
   border: 1px solid var(--line);
   border-top: 4px solid var(--tone, var(--treatment));
@@ -773,6 +1116,7 @@ button {
   color: var(--tone, var(--treatment));
   cursor: pointer;
   text-align: center;
+  box-shadow: 0 1px 0 rgba(22, 33, 31, 0.08);
   transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
@@ -782,7 +1126,7 @@ button {
 
 .card__kind {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.1em;
   color: var(--ink-faint);
 }
@@ -793,12 +1137,12 @@ button {
 }
 
 .card__glyph {
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 2.9rem;
+  height: 2.9rem;
 }
 
 .card__name {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
@@ -806,21 +1150,15 @@ button {
 
 .card__code {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   color: var(--ink-faint);
 }
 
-.card.is-playable:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lift);
-}
-
 .card.is-idle:not(:disabled) {
-  opacity: 0.62;
+  opacity: 0.6;
 }
 
 .card.is-selected {
-  transform: translateY(-10px);
   box-shadow: 0 0 0 2px var(--ink), var(--shadow-lift);
 }
 
@@ -832,31 +1170,131 @@ button {
 .card.is-marked::after {
   content: 'al descarte';
   position: absolute;
-  inset: auto 0 2.2rem;
+  inset: auto 0 2rem;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--danger);
 }
 
-/* --- tonos por color ------------------------------------------------------ */
+/* --- reparto inicial ------------------------------------------------------ */
 
-.tone-red {
-  --tone: var(--organ-red);
+.deal {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
 }
-.tone-blue {
-  --tone: var(--organ-blue);
+
+.deal__stack,
+.deal__flight {
+  position: fixed;
+  translate: -50% -50%;
 }
-.tone-green {
-  --tone: var(--organ-green);
+
+.deal__stack {
+  --w: 4.4rem;
+  width: var(--w);
+  transition: transform 600ms cubic-bezier(0.3, 0.7, 0.3, 1), opacity 400ms ease;
 }
-.tone-yellow {
-  --tone: var(--organ-yellow);
+
+.deal__stackcard {
+  position: absolute;
+  inset: 0;
+  --w: 4.4rem;
 }
-.tone-wild {
-  --tone: var(--organ-wild);
+
+.deal--shuffle .deal__stackcard--1 {
+  animation: riffle-a 420ms ease-in-out infinite alternate;
 }
-.tone-treatment {
-  --tone: var(--treatment);
+
+.deal--shuffle .deal__stackcard--2 {
+  animation: riffle-b 420ms ease-in-out infinite alternate;
+}
+
+.deal--shuffle .deal__stackcard--3 {
+  animation: riffle-c 520ms ease-in-out infinite alternate;
+}
+
+@keyframes riffle-a {
+  from {
+    transform: translate(-14%, 0) rotate(-7deg);
+  }
+  to {
+    transform: translate(12%, -6%) rotate(6deg);
+  }
+}
+
+@keyframes riffle-b {
+  from {
+    transform: translate(10%, 4%) rotate(5deg);
+  }
+  to {
+    transform: translate(-12%, -2%) rotate(-6deg);
+  }
+}
+
+@keyframes riffle-c {
+  from {
+    transform: translate(0, 6%) rotate(2deg);
+  }
+  to {
+    transform: translate(2%, -8%) rotate(-3deg);
+  }
+}
+
+.deal--settle .deal__stack {
+  transform: translate(var(--deck-dx), var(--deck-dy)) scale(0.98);
+}
+
+.deal__flight {
+  --w: 3.4rem;
+  opacity: 1;
+  transition:
+    transform var(--flight, 520ms) cubic-bezier(0.25, 0.75, 0.3, 1) var(--delay, 0ms),
+    opacity 160ms linear calc(var(--delay, 0ms) + var(--flight, 520ms) - 120ms);
+}
+
+.deal__flight.is-flying {
+  transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.72);
+  opacity: 0;
+}
+
+.deal__caption {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  translate: -50% 5.2rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--ink-soft);
+}
+
+.deal__skip {
+  position: fixed;
+  right: 1.2rem;
+  top: 3.6rem;
+  pointer-events: auto;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+/* Durante el reparto las manos y los cuerpos aun no se muestran. */
+.table.is-dealing .hand,
+.table.is-dealing .mine__body,
+.table.is-dealing .mine__head,
+.table.is-dealing .ticker,
+.table.is-dealing .dock__actions,
+.table.is-dealing .seat-board__hand,
+.table.is-dealing .seat-board__body {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* --- modales y avisos ----------------------------------------------------- */
@@ -993,32 +1431,156 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .table__main {
-    grid-template-columns: 1fr;
+  .center {
+    grid-template-columns: auto 1fr auto;
+    gap: 0.7rem;
+    padding: 0.7rem;
+    border-radius: 18px;
   }
 
-  .log {
-    max-height: 20vh;
+  .pile__stack {
+    width: 3.4rem;
+    height: 4.8rem;
+  }
+
+  .pile__card,
+  .deal__stack,
+  .deal__stackcard {
+    --w: 3.4rem;
+  }
+
+  .ticker {
+    display: none;
   }
 }
 
-@media (max-width: 560px) {
-  .rivals {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 700px) {
+  .bar {
+    padding: 0.4rem 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .bar__turn {
+    font-size: 0.82rem;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pulse {
+    width: 3.4rem;
+  }
+
+  .felt {
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem 0.3rem;
+  }
+
+  /* Los rivales caben en una tira horizontal en vez de apilarse. */
+  .seats {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.3rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .seat-board {
+    flex: 0 0 auto;
+    width: 8.8rem;
+    transform: none;
+    scroll-snap-align: start;
+    padding: 0.4rem 0.45rem 0.5rem;
+  }
+
+  .seat-board__name {
+    font-size: 0.8rem;
+  }
+
+  .seat-board__hand {
+    height: 1.3rem;
+    margin: 0.2rem 0 0.3rem;
+  }
+
+  .seat-board__back {
+    --w: 1rem;
+  }
+
+  .seat-board .organ {
+    width: 3.3rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .seat-board .organ__glyph {
+    max-height: 1.9rem;
+  }
+
+  .seat-board .organ__stamp {
+    font-size: 0.4rem;
+    padding: 0.05rem 0.2rem;
+    border-width: 1.5px;
+    bottom: 0.95rem;
+  }
+
+  .board {
+    padding: 0.7rem 0.8rem 0.6rem;
+    border-radius: 1.6rem;
+    gap: 0.4rem;
+  }
+
+  .center {
+    gap: 0.6rem;
+  }
+
+  .announce {
+    min-height: 4.6rem;
+  }
+
+  .announce__card {
+    width: 3.4rem;
+  }
+
+  .announce__text {
+    font-size: 0.8rem;
+  }
+
+  .mine .organ {
+    width: 4.6rem;
+  }
+
+  .mine .organ__glyph {
+    max-height: 2.4rem;
+  }
+
+  .mine__body {
+    min-height: 4.4rem;
   }
 
   .card {
-    width: 6.2rem;
-    min-height: 8.4rem;
+    width: 5.4rem;
+    min-height: 7rem;
   }
 
   .card__glyph {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.3rem;
+    height: 2.3rem;
   }
 
-  .bar__counter {
-    display: none;
+  .card__name {
+    font-size: 0.7rem;
+  }
+
+  .hand__slot {
+    margin-inline: -0.35rem;
+  }
+
+  .dock__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dock__actions {
+    justify-content: center;
   }
 }
 
