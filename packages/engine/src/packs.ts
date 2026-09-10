@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita';
+export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -508,12 +508,99 @@ const ORBITA: Pack = {
   },
 };
 
+const ASEDIO: Pack = {
+  id: 'asedio',
+  name: 'Asedio',
+  tagline: 'Defiende tu castillo mientras asaltas el de los vecinos.',
+  kinds: { organ: 'Baluarte', virus: 'Asalto', medicine: 'Defensa', treatment: 'Estratagema' },
+  organs: {
+    red: { name: 'Armeria', art: 'la' },
+    blue: { name: 'Pozo', art: 'el' },
+    green: { name: 'Huerto', art: 'el' },
+    yellow: { name: 'Tesoro', art: 'el' },
+    wild: { name: 'Torre del homenaje', art: 'la' },
+  },
+  viruses: {
+    red: 'Incendio',
+    blue: 'Veneno',
+    green: 'Saqueo',
+    yellow: 'Soborno',
+    wild: 'Traicion',
+  },
+  medicines: {
+    red: 'Brigada de cubos',
+    blue: 'Catador',
+    green: 'Espantapajaros',
+    yellow: 'Cerrojo',
+    wild: 'Muralla',
+  },
+  treatments: {
+    swap: {
+      name: 'Tratado',
+      text: 'Cambias un baluarte tuyo por uno de otro jugador. Ninguno puede ser inexpugnable ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Conquista',
+      text: 'Tomas un baluarte de otro jugador y lo sumas a tu castillo. No sirve con baluartes inexpugnables ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Catapulta',
+      text: 'Lanzas los asaltos que sufre tu castillo sobre baluartes libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Cerco',
+      text: 'Cercas los castillos rivales: descartan su mano y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Golpe de estado',
+      text: 'Intercambias tu castillo entero con el de otro jugador, baluartes inexpugnables incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Levantalo en tu castillo. Uno por color.',
+    virus: 'Asalta un baluarte libre, arrasa uno asaltado o derriba una defensa.',
+    medicine: 'Rechaza un asalto, defiende un baluarte libre o hazlo inexpugnable si ya estaba defendido.',
+  },
+  stamps: { infected: 'Asaltado', vaccinated: 'Defendido', immunized: 'Invicto' },
+  words: {
+    organ: 'baluarte',
+    organs: 'baluartes',
+    the: 'el',
+    one: 'uno',
+    healthy: 'intactos',
+    threat: 'asalto',
+    threats: 'asaltos',
+    body: 'castillo',
+  },
+  lines: {
+    place: '{p} levanta {card} en su castillo.',
+    infect: '{p} asalta {organ}.',
+    remove: '{p} arrasa {organ}.',
+    breakShield: '{p} derriba la defensa de {organ}.',
+    cure: '{p} rechaza el asalto a {organ}.',
+    vaccinate: '{p} defiende {organ}.',
+    immunize: '{p} hace inexpugnable {organ}.',
+    spread: '{p} lanza {n} {threats} con la catapulta.',
+    quarantine: '{p} cerca los castillos rivales: el resto pierde su mano.',
+    malpractice: '{p} da un golpe de estado y cambia de castillo con {victim}.',
+    win: '{p} completa su castillo y gana la partida.',
+  },
+  buttons: { spread: 'Lanzar {n} {threats}', quarantine: 'Cercar castillos', malpractice: 'Dar el golpe' },
+  ending: {
+    winTitle: 'Castillo en pie. Ganas.',
+    winText: 'Cuatro baluartes intactos antes que nadie.',
+    loseTitle: '{p} completa su castillo.',
+    loseText: 'Tu castillo se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
   frutas: FRUTAS,
   cortafuegos: CORTAFUEGOS,
   orbita: ORBITA,
+  asedio: ASEDIO,
 };
 
 export function isPackId(value: unknown): value is PackId {
