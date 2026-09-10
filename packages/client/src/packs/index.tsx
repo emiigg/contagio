@@ -8,6 +8,7 @@ import { asedioArt } from './asedio';
 import { contagioArt } from './contagio';
 import { cortafuegosArt } from './cortafuegos';
 import { frutasArt } from './frutas';
+import { grimorioArt } from './grimorio';
 import { heroesArt } from './heroes';
 import { orbitaArt } from './orbita';
 import type { PackArt } from './types';
@@ -20,6 +21,7 @@ export const PACK_ART: Record<PackId, PackArt> = {
   orbita: orbitaArt,
   asedio: asedioArt,
   arrecife: arrecifeArt,
+  grimorio: grimorioArt,
 };
 
 /**

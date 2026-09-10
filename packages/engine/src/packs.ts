@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio' | 'arrecife';
+export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio' | 'arrecife' | 'grimorio';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio', 'arrecife'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio', 'arrecife', 'grimorio'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -680,6 +680,92 @@ const ARRECIFE: Pack = {
   },
 };
 
+const GRIMORIO: Pack = {
+  id: 'grimorio',
+  name: 'Grimorio',
+  tagline: 'Cuatro elementos, maldiciones y runas que las rompen.',
+  kinds: { organ: 'Elemento', virus: 'Maldicion', medicine: 'Runa', treatment: 'Conjuro' },
+  organs: {
+    red: { name: 'Fuego', art: 'el' },
+    blue: { name: 'Agua', art: 'el' },
+    green: { name: 'Bosque', art: 'el' },
+    yellow: { name: 'Rayo', art: 'el' },
+    wild: { name: 'Eter', art: 'el' },
+  },
+  viruses: {
+    red: 'Ceniza',
+    blue: 'Niebla negra',
+    green: 'Marchitez',
+    yellow: 'Estatica',
+    wild: 'Vacio',
+  },
+  medicines: {
+    red: 'Runa de brasa',
+    blue: 'Runa de marea',
+    green: 'Runa de raiz',
+    yellow: 'Runa de trueno',
+    wild: 'Runa maestra',
+  },
+  treatments: {
+    swap: {
+      name: 'Transmutacion',
+      text: 'Cambias un elemento tuyo por uno de otro jugador. Ninguno puede estar sellado ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Invocacion',
+      text: 'Invocas un elemento de otro jugador a tu grimorio. No sirve con elementos sellados ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Maleficio',
+      text: 'Las maldiciones de tus elementos saltan a elementos libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Silencio',
+      text: 'Un hechizo de silencio borra la mano de tus rivales: la descartan y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Espejo arcano',
+      text: 'Intercambias tu grimorio entero con el de otro jugador, elementos sellados incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Escribelo en tu grimorio. Uno por color.',
+    virus: 'Maldice un elemento libre, destierra uno maldito o borra una runa.',
+    medicine: 'Rompe una maldicion, graba una runa en un elemento libre o sellalo si ya tenia una.',
+  },
+  stamps: { infected: 'Maldito', vaccinated: 'Grabado', immunized: 'Sellado' },
+  words: {
+    organ: 'elemento',
+    organs: 'elementos',
+    the: 'el',
+    one: 'uno',
+    healthy: 'puros',
+    threat: 'maldicion',
+    threats: 'maldiciones',
+    body: 'grimorio',
+  },
+  lines: {
+    place: '{p} escribe {card} en su grimorio.',
+    infect: '{p} maldice {organ}.',
+    remove: '{p} destierra {organ}.',
+    breakShield: '{p} borra la runa de {organ}.',
+    cure: '{p} rompe la maldicion de {organ}.',
+    vaccinate: '{p} graba una runa en {organ}.',
+    immunize: '{p} sella {organ}.',
+    spread: '{p} lanza {n} {threats} sobre sus rivales.',
+    quarantine: '{p} conjura un silencio: el resto pierde su mano.',
+    malpractice: '{p} cruza el espejo arcano y cambia de grimorio con {victim}.',
+    win: '{p} completa su grimorio y gana la partida.',
+  },
+  buttons: { spread: 'Lanzar {n} {threats}', quarantine: 'Conjurar silencio', malpractice: 'Cruzar el espejo' },
+  ending: {
+    winTitle: 'Grimorio completo. Ganas.',
+    winText: 'Cuatro elementos puros antes que nadie.',
+    loseTitle: '{p} completa su grimorio.',
+    loseText: 'Tu grimorio se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
@@ -688,6 +774,7 @@ export const PACKS: Record<PackId, Pack> = {
   orbita: ORBITA,
   asedio: ASEDIO,
   arrecife: ARRECIFE,
+  grimorio: GRIMORIO,
 };
 
 export function isPackId(value: unknown): value is PackId {
