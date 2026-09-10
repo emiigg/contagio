@@ -483,6 +483,16 @@ test('los textos de los paquetes van sin tildes y no dejan huecos sin rellenar',
   }
 });
 
+test('la partida guarda su paquete y la vista lo publica', () => {
+  const seeds = [
+    { id: 'a', name: 'A' },
+    { id: 'b', name: 'B' },
+  ];
+  assert.equal(createGame(seeds).pack, 'contagio');
+  const state = createGame(seeds, 3, 'frutas');
+  assert.equal(state.pack, 'frutas');
+  assert.equal(toPlayerView(state, 'a').pack, 'frutas');
+});
 
 test('el registro cuenta la jugada con el vocabulario del paquete', () => {
   const state = scenario();

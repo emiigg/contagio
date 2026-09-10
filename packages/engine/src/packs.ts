@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes';
+export type PackId = 'contagio' | 'heroes' | 'frutas';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -250,9 +250,96 @@ const HEROES: Pack = {
   },
 };
 
+const FRUTAS: Pack = {
+  id: 'frutas',
+  name: 'Frutero',
+  tagline: 'Fruta fresca, plagas y conservas. Que no se te eche a perder nada.',
+  kinds: { organ: 'Fruta', virus: 'Plaga', medicine: 'Conserva', treatment: 'Imprevisto' },
+  organs: {
+    red: { name: 'Fresa', art: 'la' },
+    blue: { name: 'Arandano', art: 'el' },
+    green: { name: 'Kiwi', art: 'el' },
+    yellow: { name: 'Platano', art: 'el' },
+    wild: { name: 'Macedonia', art: 'la' },
+  },
+  viruses: {
+    red: 'Gusano',
+    blue: 'Moho',
+    green: 'Pulgon',
+    yellow: 'Mosca de la fruta',
+    wild: 'Plaga voraz',
+  },
+  medicines: {
+    red: 'Mermelada',
+    blue: 'Compota',
+    green: 'Escarchado',
+    yellow: 'Almibar',
+    wild: 'Nevera',
+  },
+  treatments: {
+    swap: {
+      name: 'Trueque',
+      text: 'Cambias una fruta tuya por una de otro jugador. Ninguna puede estar en conserva ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Mano larga',
+      text: 'Te llevas una fruta de otro jugador a tu frutero. No sirve con frutas en conserva ni si ya tienes una de ese color.',
+    },
+    spread: {
+      name: 'Manzana podrida',
+      text: 'Las plagas de tus frutas saltan a frutas libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Helada',
+      text: 'Una helada arruina la mano de tus rivales: la descartan y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Cambio de puesto',
+      text: 'Intercambias tu frutero entero con el de otro jugador, conservas incluidas.',
+    },
+  },
+  hints: {
+    organ: 'Ponla en tu frutero. Una por color.',
+    virus: 'Planta una plaga en una fruta libre, pudre una ya plagada o echa a perder una proteccion.',
+    medicine: 'Salva una fruta plagada, protege una libre o dejala en conserva si ya estaba protegida.',
+  },
+  stamps: { infected: 'Plagada', vaccinated: 'Protegida', immunized: 'Conserva' },
+  words: {
+    organ: 'fruta',
+    organs: 'frutas',
+    the: 'la',
+    one: 'una',
+    healthy: 'frescas',
+    threat: 'plaga',
+    threats: 'plagas',
+    body: 'frutero',
+  },
+  lines: {
+    place: '{p} pone {card} en su frutero.',
+    infect: '{p} planta una plaga en {organ}.',
+    remove: '{p} pudre {organ}.',
+    breakShield: '{p} desprotege {organ}.',
+    cure: '{p} salva {organ}.',
+    vaccinate: '{p} protege {organ}.',
+    immunize: '{p} deja en conserva {organ}.',
+    spread: '{p} pasa {n} {threats} a sus rivales.',
+    quarantine: '{p} trae una helada: el resto pierde su mano.',
+    malpractice: '{p} cambia de puesto con {victim}.',
+    win: '{p} llena su frutero y gana la partida.',
+  },
+  buttons: { spread: 'Pasar {n} {threats}', quarantine: 'Traer la helada', malpractice: 'Cambiar de puesto' },
+  ending: {
+    winTitle: 'Frutero lleno. Ganas.',
+    winText: 'Cuatro frutas frescas sobre la mesa antes que nadie.',
+    loseTitle: '{p} llena su frutero.',
+    loseText: 'Tu frutero se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
+  frutas: FRUTAS,
 };
 
 export function isPackId(value: unknown): value is PackId {

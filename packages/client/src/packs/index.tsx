@@ -4,12 +4,14 @@ import { DEFAULT_PACK, getPack } from '@contagio/engine';
 import type { Card, Color, Pack, PackId } from '@contagio/engine';
 
 import { contagioArt } from './contagio';
+import { frutasArt } from './frutas';
 import { heroesArt } from './heroes';
 import type { PackArt } from './types';
 
 export const PACK_ART: Record<PackId, PackArt> = {
   contagio: contagioArt,
   heroes: heroesArt,
+  frutas: frutasArt,
 };
 
 /**
