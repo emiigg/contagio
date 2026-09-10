@@ -72,6 +72,8 @@ export interface Pack {
   buttons: { spread: string; quarantine: string; malpractice: string };
   /** Cortina de fin de partida. {p} es quien gana. */
   ending: { winTitle: string; winText: string; loseTitle: string; loseText: string };
+  /** Nota de derechos para los paquetes con personajes ajenos; sale en las reglas. */
+  credit?: string;
 }
 
 const CONTAGIO: Pack = {
@@ -248,6 +250,7 @@ const HEROES: Pack = {
     loseTitle: '{p} reune a su equipo.',
     loseText: 'Tu equipo se quedo a medias. La proxima ronda empieza de cero.',
   },
+  credit: 'Los personajes de Heroes DC pertenecen a DC Comics; este paquete es un homenaje sin animo de lucro.',
 };
 
 const FRUTAS: Pack = {
