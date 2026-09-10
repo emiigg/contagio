@@ -202,17 +202,30 @@ export function CardGlyph({ card, className }: { card: Card; className?: string 
   }
 }
 
-/** Trazo de electrocardiograma: late cuando es tu turno, se aplana si no. */
+/** Trazo de electrocardiograma: un pulso lo recorre cuando es tu turno. */
 export function Pulse({ active }: { active: boolean }) {
+  const trace = 'M0 12h22l4-7 5 14 4-9 3 2h12l4-6 4 12 4-8 3 2h20l4-5 4 10 3-6h21';
   return (
     <svg className={`pulse ${active ? 'is-live' : ''}`} viewBox="0 0 120 24" fill="none" aria-hidden>
-      <path
-        d="M0 12h22l4-7 5 14 4-9 3 2h12l4-6 4 12 4-8 3 2h20l4-5 4 10 3-6h21"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path className="pulse__base" d={trace} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      {active && (
+        <path className="pulse__spark" d={trace} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
+/** Emblema del reverso: la muestra de laboratorio dentro de su placa. */
+export function Emblem({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <circle cx="24" cy="24" r="15" stroke="currentColor" strokeWidth="1.2" opacity="0.55" />
+      <circle cx="24" cy="24" r="9" stroke="currentColor" strokeWidth="1.2" opacity="0.8" />
+      <circle cx="24" cy="24" r="3.4" fill="currentColor" opacity="0.7" />
+      <g stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.8">
+        <path d="M24 6v4M24 38v4M6 24h4M38 24h4" />
+        <path d="M11.2 11.2l2.9 2.9M33.9 33.9l2.9 2.9M36.8 11.2l-2.9 2.9M14.1 33.9l-2.9 2.9" />
+      </g>
     </svg>
   );
 }
