@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio';
+export type PackId = 'contagio' | 'heroes';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -160,8 +160,99 @@ const CONTAGIO: Pack = {
   },
 };
 
+/**
+ * Paquete de aficionado con personajes de DC Comics, a peticion del autor. Los
+ * nombres son de sus duenos; los dibujos son emblemas propios, no sus logotipos.
+ */
+const HEROES: Pack = {
+  id: 'heroes',
+  name: 'Heroes DC',
+  tagline: 'Batman, Superman y Flash contra sus villanos de siempre.',
+  kinds: { organ: 'Heroe', virus: 'Villano', medicine: 'Refuerzo', treatment: 'Evento' },
+  organs: {
+    red: { name: 'Flash', art: 'el' },
+    blue: { name: 'Superman', art: 'el' },
+    green: { name: 'Linterna Verde', art: 'el' },
+    yellow: { name: 'Batman', art: 'el' },
+    wild: { name: 'Mujer Maravilla', art: 'la' },
+  },
+  viruses: {
+    red: 'Flash Reverso',
+    blue: 'Lex Luthor',
+    green: 'Sinestro',
+    yellow: 'Joker',
+    wild: 'Darkseid',
+  },
+  medicines: {
+    red: 'Fuerza de la Velocidad',
+    blue: 'Fortaleza de la Soledad',
+    green: 'Anillo de poder',
+    yellow: 'Cinturon multiusos',
+    wild: 'Atalaya de la Liga',
+  },
+  treatments: {
+    swap: {
+      name: 'Tubo Boom',
+      text: 'Abres un portal y cambias un heroe tuyo por uno de otro jugador. Ninguno puede ser invencible ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Reclutamiento',
+      text: 'Convences a un heroe de otro jugador para que se una a tu equipo. No funciona con heroes invencibles ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Fuga de Arkham',
+      text: 'Los villanos que tienes encima escapan y caen sobre heroes libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Zona Fantasma',
+      text: 'Tus rivales pierden su mano en la Zona Fantasma y gastan su siguiente turno en robar otra.',
+    },
+    malpractice: {
+      name: 'Crisis multiversal',
+      text: 'Intercambias tu equipo entero con el de otro jugador, invencibles incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Sumalo a tu equipo. Un color por equipo.',
+    virus: 'Captura a un heroe libre, derrota a uno capturado o rompe su proteccion.',
+    medicine: 'Rescata a un heroe capturado, protege a uno libre o vuelve invencible a uno protegido.',
+  },
+  stamps: { infected: 'Capturado', vaccinated: 'Protegido', immunized: 'Invencible' },
+  words: {
+    organ: 'heroe',
+    organs: 'heroes',
+    the: 'el',
+    one: 'uno',
+    healthy: 'en pie',
+    threat: 'villano',
+    threats: 'villanos',
+    body: 'equipo',
+  },
+  lines: {
+    place: '{p} suma a {card} a su equipo.',
+    infect: '{p} captura a {organ}.',
+    remove: '{p} derrota a {organ}.',
+    breakShield: '{p} rompe la proteccion de {organ}.',
+    cure: '{p} rescata a {organ}.',
+    vaccinate: '{p} protege a {organ}.',
+    immunize: '{p} vuelve invencible a {organ}.',
+    spread: '{p} suelta {n} {threats} sobre sus rivales.',
+    quarantine: '{p} abre la Zona Fantasma: el resto pierde su mano.',
+    malpractice: '{p} cambia de universo con {victim}: equipos intercambiados.',
+    win: '{p} reune a su equipo y gana la partida.',
+  },
+  buttons: { spread: 'Soltar {n} {threats}', quarantine: 'Abrir la Zona Fantasma', malpractice: 'Cambiar de universo' },
+  ending: {
+    winTitle: 'Equipo completo. Ganas.',
+    winText: 'Cuatro heroes en pie antes que nadie.',
+    loseTitle: '{p} reune a su equipo.',
+    loseText: 'Tu equipo se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
+  heroes: HEROES,
 };
 
 export function isPackId(value: unknown): value is PackId {

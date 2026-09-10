@@ -484,6 +484,18 @@ test('los textos de los paquetes van sin tildes y no dejan huecos sin rellenar',
 });
 
 
+test('el registro cuenta la jugada con el vocabulario del paquete', () => {
+  const state = scenario();
+  state.pack = 'heroes';
+  const bat = organ('yellow');
+  putOrgan(state, 1, bat);
+  const joker = virus('yellow');
+  give(state, 0, joker);
+  const next = expectOk(
+    applyAction(state, 'p0', { type: 'PLAY_VIRUS', cardId: joker.id, target: { playerId: 'p1', organId: bat.id } }),
+  );
+  assert.equal(next.lastMove?.text, 'J1 captura al Batman de J2.');
+});
 
 test('las frases contraen el articulo como en el habla', () => {
   const state = scenario();

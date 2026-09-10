@@ -115,6 +115,7 @@ export function Rules({ onClose }: { onClose: () => void }) {
           <p className="modal__note">
             Contagio es un proyecto de portafolio con reglas propias inspiradas en el genero de cartas de sabotaje.
             Ilustraciones y textos originales.
+            {text.id === 'heroes' && ' Los personajes del paquete Heroes DC pertenecen a DC Comics; es un homenaje sin animo de lucro.'}
           </p>
         </div>
       </div>
