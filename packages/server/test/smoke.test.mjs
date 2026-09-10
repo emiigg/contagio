@@ -19,21 +19,24 @@ const URL = `http://localhost:${PORT}`;
 let server;
 const sockets = [];
 
-before(async () => {
-  server = spawn(process.execPath, [entry], {
-    // Tope bajo y margen corto: lo que se prueba es la politica, no los numeros.
-    env: { ...process.env, PORT: String(PORT), MAX_ROOMS: '2', EMPTY_GRACE_MS: '1000' },
-    stdio: 'ignore',
-  });
+/** Arranca un servidor propio y espera a que responda. */
+async function startServer(port, env = {}) {
+  const child = spawn(process.execPath, [entry], { env: { ...process.env, PORT: String(port), ...env }, stdio: 'ignore' });
   for (let i = 0; i < 60; i++) {
     try {
-      if ((await fetch(`${URL}/health`)).ok) return;
+      if ((await fetch(`http://localhost:${port}/health`)).ok) return child;
     } catch {
       /* aun arrancando */
     }
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error('el servidor no arranco');
+  child.kill();
+  throw new Error(`el servidor no arranco en el puerto ${port}`);
+}
+
+before(async () => {
+  // Tope bajo y margen corto: lo que se prueba es la politica, no los numeros.
+  server = await startServer(PORT, { MAX_ROOMS: '2', EMPTY_GRACE_MS: '1000' });
 });
 
 after(() => {
@@ -160,6 +163,42 @@ test('una sala en partida se cierra cuando pierde a todos sus humanos', async ()
   const stranger = connect();
   await new Promise((r) => stranger.on('connect', r));
   await assert.rejects(ask(stranger, 'room:join', { code: room.code, name: 'Nadie' }), /no existe/i);
+});
+
+test('el turno de una persona se juega solo cuando se le acaba el tiempo', async () => {
+  // Servidor aparte con un "minuto" de segundo y medio: el resto de pruebas
+  // juegan a su ritmo y no deben notar este reloj.
+  const port = PORT + 1;
+  const quick = await startServer(port, { TURN_LIMIT_MS: '1500', BOT_DELAY_MS: '300', OPENING_DELAY_MS: '100' });
+  const socket = io(`http://localhost:${port}`, { transports: ['websocket'], forceNew: true });
+  sockets.push(socket);
+  await new Promise((r) => socket.on('connect', r));
+
+  try {
+    const views = [];
+    socket.on('game:view', (view) => views.push(view));
+    await ask(socket, 'room:create', { name: 'Ausente' });
+    await ask(socket, 'room:addBot', {});
+    await ask(socket, 'room:start', {});
+
+    // Nadie juega: el turno tiene que avanzar solo y volver a nosotros.
+    await new Promise((r) => setTimeout(r, 4000));
+
+    const mine = views.filter((v) => v.isYourTurn);
+    assert.ok(mine.length > 0, 'nunca llego un turno propio');
+    assert.equal(typeof mine[0].turnMsLeft, 'number', 'el turno de una persona lleva reloj');
+    assert.ok(mine[0].turnMsLeft <= 1600, 'el reloj no puede pasarse del limite');
+
+    const bots = views.filter((v) => !v.isYourTurn && v.phase === 'playing');
+    assert.ok(bots.length > 0, 'el turno nunca paso al bot');
+    assert.equal(bots.at(-1).turnMsLeft, null, 'los bots no llevan reloj');
+
+    const last = views.at(-1);
+    assert.ok(last.turnCount > 2, `la partida se quedo parada en el turno ${last.turnCount}`);
+  } finally {
+    socket.close();
+    quick.kill();
+  }
 });
 
 /** Reutiliza la heuristica del motor sobre la vista publica del jugador. */
