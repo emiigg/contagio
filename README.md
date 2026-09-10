@@ -6,6 +6,12 @@ el resto mientras les infectas, extirpas o robas los suyos.
 Proyecto de portafolio: reglas propias del género de cartas de sabotaje médico, con ilustraciones, textos y código
 originales.
 
+![La mesa en juego](docs/capturas/mesa.png)
+
+| Reparto inicial | Móvil |
+| --- | --- |
+| ![Barajando en el centro de la mesa](docs/capturas/reparto.png) | ![Vista en móvil](docs/capturas/movil.png) |
+
 ## Cómo se juega
 
 - **Objetivo**: cuatro órganos sanos de distinto color sobre la mesa. Sano = sin virus encima (libre, vacunado o inmune).
@@ -15,6 +21,17 @@ originales.
 - **Tratamientos**: intercambio quirúrgico, extracción ilegal, brote, cuarentena y negligencia médica.
 
 El mazo son 68 cartas: 21 órganos, 17 virus, 20 medicinas y 10 tratamientos.
+
+## El ritmo de la mesa
+
+Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos ajenos se entiendan:
+
+- **Los bots se toman su tiempo** (3 s por turno, ajustable con `BOT_DELAY_MS`). No es tiempo de cálculo: es tiempo de
+  lectura.
+- **Cada jugada se anuncia en el centro** con la carta que se ha jugado y una frase — "Dr. Pardo roba el Hígado de
+  Enf. Quiroga" — y el órgano afectado parpadea un instante.
+- **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
+  después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 
 ## Arquitectura
 
@@ -73,6 +90,23 @@ Variables: `PORT` (3001), `CORS_ORIGIN` (`*`), `VITE_SERVER_URL` para apuntar el
   entre bots que comprueba en cada turno que las 68 cartas siguen existiendo, sin duplicados ni pérdidas.
 - `packages/server/test/smoke.test.mjs`: levanta el servidor real, juega una partida por socket con dos clientes y
   un bot, y verifica que termina con un ganador con cuatro órganos sanos.
+
+## Revisión visual
+
+`tools/shots.mjs` levanta el servidor, juega una partida con bots en un navegador y guarda capturas de cada pantalla.
+Sirve para revisar el diseño sin abrirlo a mano y para regenerar las imágenes de este README:
+
+```bash
+node tools/shots.mjs                      # capturas a 2x en tools/shots/
+SHOT_SCALE=1 node tools/shots.mjs docs/capturas
+```
+
+Necesita un Chromium accesible por CDP en `localhost:9222`. En una máquina sin las librerías de escritorio:
+
+```bash
+docker run -d --rm --name contagio-chrome --network host zenika/alpine-chrome \
+  --no-sandbox --headless --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 about:blank
+```
 
 ## Créditos
 
