@@ -3,7 +3,9 @@
 Juego de cartas por turnos para 2–6 jugadores, en tiempo real y con bots. Es un **proyecto de portafolio**: la mecánica
 es la del género de cartas de sabotaje médico, pero las ilustraciones, los textos y el código son originales. No se
 copian ni nombres, ni arte, ni redacción de reglas de ningún juego publicado; si hace falta añadir una carta o un
-texto, se inventa.
+texto, se inventa. La única excepción consciente es el paquete **Héroes DC**, de aficionado y pedido por el autor: usa
+los nombres de los personajes de DC Comics, pero sus emblemas son dibujos propios (nada de la «S» ni del óvalo del
+murciélago). Queda anotado en las reglas del juego y en el README.
 
 El README cuenta el proyecto hacia fuera. Este archivo cuenta cómo se trabaja dentro: convenciones, invariantes y las
 trampas que ya nos han costado una tarde.
@@ -31,8 +33,8 @@ trampas que ya nos han costado una tarde.
 npm run dev          # tsc --watch + servidor + Vite, se apagan juntos con Ctrl+C
 npm run build        # engine -> client -> server
 npm run typecheck    # tsc -b de engine y server
-npm test             # 25 pruebas del motor (node:test)
-npm run test:e2e     # 4 pruebas de integración por socket; levanta servidores de verdad
+npm test             # 31 pruebas del motor (node:test)
+npm run test:e2e     # 5 pruebas de integración por socket; levanta servidores de verdad
 npm start            # producción: un solo proceso Node sirve cliente y socket
 ```
 
@@ -60,6 +62,18 @@ Cuatro fronteras que no conviene cruzar:
 4. **El azar es determinista** (mulberry32 sembrado). Baraja, sorteo de salida y ruido de los bots salen de semillas,
    lo que hace reproducibles las partidas y los tests.
 
+### Paquetes de cartas
+
+Un paquete es solo piel: la carta sigue siendo `{ kind, color | treatment }` y ninguna regla pregunta qué paquete se
+juega. El texto vive en el motor (`packs.ts`: nombres, descripciones, sellos, vocabulario y las plantillas del
+registro) y viaja en `GameState.pack`, `RoomView.pack` y `PlayerView.pack`. El dibujo vive en el cliente
+(`client/src/packs/<id>.tsx`, un `PackArt` por paquete) y lo reparte `usePack()`, que App alimenta con el paquete de
+la sala. El anfitrión lo cambia con `room:pack`, solo en la sala.
+
+Añadir uno: entrada en `PACKS` y `PACK_IDS`, un `PackArt` y su línea en `PACK_ART`. Las pruebas del motor ya
+comprueban nombres distintos, textos sin tildes y plantillas sin huecos. Los glifos se revisan a 16 px, porque así se
+ven como fichas sobre los órganos.
+
 ## Invariantes de la interfaz
 
 Romper cualquiera de estos es una regresión aunque compile:
@@ -76,8 +90,10 @@ Romper cualquiera de estos es una regresión aunque compile:
   bloque crece con el texto, la mesa se desplaza bajo el cursor.
 - **Cada carta se juega señalando su sitio**: el órgano en su hueco, el virus sobre el órgano, la negligencia médica
   sobre la mesa entera del rival. Los botones del pie son atajo, no el camino principal.
-- **El reverso de carta no cambia con el tema**: es el mismo objeto sobre la mesa. Verde de quirófano con la marca en
-  naranja, que es el complementario.
+- **El reverso de carta no cambia con el tema**, ni con el paquete: es el mismo objeto sobre la mesa. Verde de
+  quirófano con la marca en naranja, que es el complementario.
+- **El comodín de cada paquete lleva los cuatro colores** (`var(--organ-*)`), y es el único glifo que los nombra; el
+  resto hereda `currentColor`. El fondo usa los mismos diez huecos fijos en todos los paquetes.
 - Todo lo que se anima se salta con `prefers-reduced-motion`.
 
 ## Revisión visual
@@ -92,6 +108,7 @@ docker run -d --rm --name contagio-chrome --network host zenika/alpine-chrome \
 
 node tools/shots.mjs                                # capturas de cada pantalla + aviso de desbordes
 SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs    # la misma partida en oscuro y con la mesa llena
+SHOT_PACK=frutas node tools/shots.mjs               # con otro paquete de cartas
 node tools/anchos.mjs                               # once anchuras: desbordes y centrado
 
 docker rm -f contagio-chrome                        # al terminar
@@ -121,6 +138,9 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
   en `true` deja el reparto colgado.
 - **El reloj se programa antes de publicar la vista.** `scheduleAutoTurn()` va antes de `pushState()`, o la vista sale
   siempre con el tiempo del turno anterior.
+- **Una frase de interfaz no dice «órgano».** Sale de `pack.words` (con su género: `the`, `one`) o de las
+  plantillas, que contraen «de el» → «del» con `contract()`. Escribir `'el organo'` a mano deja «el organo» en la
+  mesa de Frutero, que es de frutas.
 - **Los tests del motor fijan `state.turn = 0`** en sus escenarios, porque la salida se sortea. Si se escribe un test
   nuevo que actúa como `p0`, hay que fijarlo igual.
 
@@ -134,6 +154,6 @@ desconexión y quien vuelve debe reencontrar su partida— y en el acto si no qu
 ## Pendiente
 
 - El glifo del tratamiento **Brote** se lee regular; merece un redibujo.
-- El repositorio es local: falta `git remote add origin` + push, y un workflow de CI si se quiere.
+- Falta un workflow de CI, si se quiere.
 - Despliegue: la máquina tiene un nginx en `/opt/infra` delante de otros proyectos; Contagio trae `Dockerfile` y
   `docker-compose.yml` pero todavía no está publicado.

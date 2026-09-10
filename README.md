@@ -24,6 +24,31 @@ originales.
 
 El mazo son 68 cartas: 21 órganos, 17 virus, 20 medicinas y 10 tratamientos.
 
+## Paquetes de cartas
+
+Antes de empezar, el anfitrión elige en la sala con qué mazo se juega; el resto ve la elección y el fondo cambia en el
+acto. La mecánica es siempre la misma: cambian los nombres, lo que dice cada carta, sus dibujos y la decoración de fondo.
+
+| Paquete | Lo que se protege (órganos + comodín) | Ataque | Defensa | Especiales |
+| --- | --- | --- | --- | --- |
+| **Contagio** (por defecto) | Corazón, Cerebro, Pulmón, Hígado, Órgano quimérico | Virus | Medicinas | Tratamientos |
+| **Héroes DC** | Flash, Superman, Linterna Verde, Batman, Mujer Maravilla | Villanos | Refuerzos | Eventos |
+| **Frutero** | Fresa, Arándano, Kiwi, Plátano, Macedonia | Plagas | Conservas | Imprevistos |
+| **Cortafuegos** | Procesador, Base de datos, Router, Fuente de poder, Nube híbrida | Malware | Parches | Comandos |
+| **Órbita** | Reactor, Soporte vital, Invernadero, Panel solar, Módulo prototipo | Averías | Reparaciones | Maniobras |
+| **Asedio** | Armería, Pozo, Huerto, Tesoro, Torre del homenaje | Asaltos | Defensas | Estratagemas |
+| **Arrecife** | Cangrejo, Ballena, Tortuga, Pez globo, Pulpo mimético | Amenazas | Rescates | Mareas |
+| **Grimorio** | Fuego, Agua, Bosque, Rayo, Éter | Maldiciones | Runas | Conjuros |
+
+Un paquete es texto en el motor (`packages/engine/src/packs.ts`) y dibujo en el cliente
+(`packages/client/src/packs/`). El texto incluye las plantillas con las que el registro cuenta cada jugada —«Ana
+captura al Batman de Luis», «Ana pudre la Fresa de Luis»— y el género de cada nombre, para que los artículos
+concuerden. Ninguna regla sabe qué paquete se juega. Los cuatro colores significan lo mismo en todos los mazos, y el
+comodín de cada uno lleva los cuatro.
+
+**Héroes DC es un paquete de aficionado**: los personajes pertenecen a DC Comics y aparecen con su nombre a petición
+del autor. Los emblemas son dibujos propios, no los logotipos oficiales.
+
 ## El ritmo de la mesa
 
 Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos ajenos se entiendan:
@@ -125,12 +150,15 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 ## Tests
 
 - `packages/engine/test/engine.test.ts`: composición del mazo, cada efecto de carta, victoria, y una partida completa
-  entre bots que comprueba en cada turno que las 68 cartas siguen existiendo, sin duplicados ni pérdidas.
+  entre bots que comprueba en cada turno que las 68 cartas siguen existiendo, sin duplicados ni pérdidas. De los
+  paquetes comprueba que cada uno nombra las 20 cartas distintas, que sus textos van sin tildes y sin huecos por
+  rellenar, y que el registro cuenta la jugada en su vocabulario.
 - `packages/server/test/smoke.test.mjs`: levanta el servidor real, juega una partida por socket con dos clientes y
   un bot, y verifica que termina con un ganador con cuatro órganos sanos. Comprueba además la política de salas: que
   al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
   cierra —y su código deja de existir— cuando pierde a todos sus humanos. Y que el turno de una persona vence solo:
-  con un servidor aparte y un «minuto» de segundo y medio, la partida avanza sin que nadie juegue.
+  con un servidor aparte y un «minuto» de segundo y medio, la partida avanza sin que nadie juegue. Y que solo el
+  anfitrión elige paquete, solo en la sala, y que la partida arranca con él.
 
 ## Revisión visual
 
@@ -141,6 +169,7 @@ Sirve para revisar el diseño sin abrirlo a mano y para regenerar las imágenes 
 node tools/shots.mjs                      # capturas a 2x en tools/shots/
 SHOT_SCALE=1 node tools/shots.mjs docs/capturas
 SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs   # la misma partida en oscuro, con la mesa llena
+SHOT_PACK=heroes node tools/shots.mjs              # la partida con otro paquete de cartas
 ```
 
 Avisa de cualquier desbordamiento durante la partida —la mesa tiene que caber en la ventana sin desplazador— y se
