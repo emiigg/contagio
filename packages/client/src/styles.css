@@ -504,6 +504,92 @@ button {
   padding-top: 0.8rem;
 }
 
+/* Selector de paquete. Cada ficha ensena sus cuatro organos en su color: es
+   la forma mas rapida de reconocer un mazo, y el color sigue siendo el suyo. */
+.packs {
+  margin: 0 0 1.3rem;
+}
+
+.packs__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.packs__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.packtile {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.packtile:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.packtile.is-active {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+/* Quien no es anfitrion ve la eleccion, no un control apagado entero. */
+.packtile:disabled {
+  cursor: default;
+}
+
+.packtile:disabled:not(.is-active) {
+  opacity: 0.5;
+}
+
+.packtile__glyphs {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.packtile__glyph {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--tone, var(--ink));
+}
+
+.packtile__name {
+  max-width: 100%;
+  font-weight: 700;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dos lineas reservadas: cambiar de paquete no puede mover los botones de abajo. */
+.packs__tagline {
+  margin: 0.55rem 0 0;
+  min-height: 2.5em;
+  line-height: 1.25;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 700px) {
+  .packs__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* --- mesa ---------------------------------------------------------------- */
 
 .table {

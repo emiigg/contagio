@@ -1,6 +1,7 @@
 import type { Action } from './types.js';
 import type { PlayerView } from './view.js';
 import type { BotDifficulty } from './bot.js';
+import type { PackId } from './packs.js';
 
 /** Contrato cliente <-> servidor. Vive en el motor para que ambos lo compartan. */
 
@@ -18,6 +19,8 @@ export interface RoomView {
   hostId: string;
   status: 'lobby' | 'playing' | 'finished';
   difficulty: BotDifficulty;
+  /** Paquete elegido en la sala; la partida arranca con el. */
+  pack: PackId;
   maxPlayers: number;
 }
 
@@ -35,6 +38,7 @@ export interface ClientToServerEvents {
   'room:addBot': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
   'room:removePlayer': (payload: { playerId: string }, ack: Ack<{ room: RoomView }>) => void;
   'room:difficulty': (payload: { difficulty: BotDifficulty }, ack: Ack<{ room: RoomView }>) => void;
+  'room:pack': (payload: { pack: PackId }, ack: Ack<{ room: RoomView }>) => void;
   'room:start': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
   'room:rematch': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
   'room:leave': (payload: Record<string, never>, ack: Ack<Record<string, never>>) => void;

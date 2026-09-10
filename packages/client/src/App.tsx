@@ -19,7 +19,9 @@ export default function App() {
   const inGame = room && view && room.status !== 'lobby';
 
   return (
-    <PackProvider value={DEFAULT_PACK}>
+    // El paquete de la sala viste toda la pantalla, fondo incluido, en cuanto
+    // el anfitrion lo elige: la sala sirve tambien de muestra.
+    <PackProvider value={room?.pack ?? DEFAULT_PACK}>
       <div className="app">
         <Backdrop />
 
@@ -40,6 +42,7 @@ export default function App() {
             onAddBot={actions.addBot}
             onRemove={actions.removePlayer}
             onDifficulty={actions.setDifficulty}
+            onPack={actions.setPack}
             onStart={actions.start}
             onLeave={() => void actions.leave()}
             onShowRules={() => setShowRules(true)}

@@ -165,6 +165,31 @@ test('una sala en partida se cierra cuando pierde a todos sus humanos', async ()
   await assert.rejects(ask(stranger, 'room:join', { code: room.code, name: 'Nadie' }), /no existe/i);
 });
 
+test('la partida arranca con el paquete que elige el anfitrion', async () => {
+  const host = connect();
+  const guest = connect();
+  await Promise.all([host, guest].map((s) => new Promise((r) => s.on('connect', r))));
+  const views = [];
+  host.on('game:view', (view) => views.push(view));
+
+  const { room } = await ask(host, 'room:create', { name: 'Anfitriona' });
+  assert.equal(room.pack, 'contagio', 'una sala nueva empieza con el paquete de siempre');
+  await ask(guest, 'room:join', { code: room.code, name: 'Invitado' });
+
+  await assert.rejects(ask(guest, 'room:pack', { pack: 'frutas' }), /anfitrion/i);
+  await assert.rejects(ask(host, 'room:pack', { pack: 'inventado' }), /no valido/i);
+  const chosen = await ask(host, 'room:pack', { pack: 'frutas' });
+  assert.equal(chosen.room.pack, 'frutas');
+
+  await ask(host, 'room:start', {});
+  for (let i = 0; i < 50 && views.length === 0; i++) await new Promise((r) => setTimeout(r, 100));
+  assert.equal(views[0]?.pack, 'frutas', 'la vista de la partida no trae el paquete elegido');
+  await assert.rejects(ask(host, 'room:pack', { pack: 'contagio' }), /empezado/i);
+
+  host.close();
+  guest.close();
+});
+
 test('el turno de una persona se juega solo cuando se le acaba el tiempo', async () => {
   // Servidor aparte con un "minuto" de segundo y medio: el resto de pruebas
   // juegan a su ritmo y no deben notar este reloj.

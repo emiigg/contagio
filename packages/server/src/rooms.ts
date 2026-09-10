@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
 import {
+  DEFAULT_PACK,
   MAX_PLAYERS,
   MIN_PLAYERS,
   applyAction,
@@ -11,7 +12,7 @@ import {
   setConnected,
   toPlayerView,
 } from '@contagio/engine';
-import type { Action, BotDifficulty, GameState, PlayerView, RoomView } from '@contagio/engine';
+import type { Action, BotDifficulty, GameState, PackId, PlayerView, RoomView } from '@contagio/engine';
 
 export interface RoomMember {
   id: string;
@@ -52,6 +53,7 @@ export class Room {
   hostId = '';
   state: GameState | null = null;
   difficulty: BotDifficulty = 'normal';
+  pack: PackId = DEFAULT_PACK;
   private botTimer: NodeJS.Timeout | null = null;
   private botSeed = randomSeed();
   /** Cuando vence el turno en curso, si es de una persona. */
@@ -82,6 +84,7 @@ export class Room {
       hostId: this.hostId,
       status: this.status,
       difficulty: this.difficulty,
+      pack: this.pack,
       maxPlayers: MAX_PLAYERS,
       players: this.members.map((m) => ({
         id: m.id,
@@ -140,6 +143,7 @@ export class Room {
     this.state = createGame(
       this.members.map((m) => ({ id: m.id, name: m.name, isBot: m.isBot })),
       randomSeed(),
+      this.pack,
     );
     this.scheduleAutoTurn();
     this.pushState();

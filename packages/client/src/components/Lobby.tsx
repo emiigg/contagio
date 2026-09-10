@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-import { MAX_PLAYERS, MIN_PLAYERS } from '@contagio/engine';
-import type { BotDifficulty, RoomView } from '@contagio/engine';
+import { COLORS, MAX_PLAYERS, MIN_PLAYERS, PACK_IDS, getPack } from '@contagio/engine';
+import type { BotDifficulty, PackId, RoomView } from '@contagio/engine';
 
 import { Mark } from '../art';
+import { PACK_ART } from '../packs';
 import { ThemeToggle } from './ThemeToggle';
 
 interface LobbyProps {
@@ -12,6 +13,7 @@ interface LobbyProps {
   onAddBot: () => Promise<unknown>;
   onRemove: (playerId: string) => Promise<unknown>;
   onDifficulty: (difficulty: BotDifficulty) => Promise<unknown>;
+  onPack: (pack: PackId) => Promise<unknown>;
   onStart: () => Promise<unknown>;
   onLeave: () => void;
   onShowRules: () => void;
@@ -23,7 +25,7 @@ const DIFFICULTY_LABEL: Record<BotDifficulty, string> = {
   hard: 'Dura',
 };
 
-export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onStart, onLeave, onShowRules }: LobbyProps) {
+export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, onStart, onLeave, onShowRules }: LobbyProps) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const isHost = room.players.some((p) => p.id === youId && p.isHost);
@@ -92,6 +94,40 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onStart, 
             </li>
           ))}
         </ol>
+
+        {/* Todos ven la eleccion; solo el anfitrion la cambia. */}
+        <section className="packs" aria-labelledby="packs-title">
+          <h2 id="packs-title" className="packs__title">
+            Paquete de cartas
+          </h2>
+          <div className="packs__grid" role="radiogroup" aria-labelledby="packs-title">
+            {PACK_IDS.map((id) => {
+              const art = PACK_ART[id];
+              const active = room.pack === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  data-pack={id}
+                  className={`packtile ${active ? 'is-active' : ''}`}
+                  disabled={!isHost}
+                  onClick={() => !active && void guard(() => onPack(id))}
+                >
+                  <span className="packtile__glyphs">
+                    {COLORS.map((color) => {
+                      const Glyph = art.organs[color];
+                      return <Glyph key={color} className={`packtile__glyph tone-${color}`} />;
+                    })}
+                  </span>
+                  <span className="packtile__name">{getPack(id).name}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="packs__tagline">{getPack(room.pack).tagline}</p>
+        </section>
 
         {isHost ? (
           <div className="lobby__controls">

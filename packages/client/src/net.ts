@@ -5,6 +5,7 @@ import type {
   Action,
   BotDifficulty,
   ClientToServerEvents,
+  PackId,
   PlayerView,
   RoomView,
   ServerToClientEvents,
@@ -136,6 +137,7 @@ export function useContagio() {
       addBot: () => call('room:addBot', {} as never),
       removePlayer: (playerId: string) => call('room:removePlayer', { playerId }),
       setDifficulty: (difficulty: BotDifficulty) => call('room:difficulty', { difficulty }),
+      setPack: (pack: PackId) => call('room:pack', { pack }),
       start: () => call('room:start', {} as never),
       rematch: () => call('room:rematch', {} as never),
       async leave() {

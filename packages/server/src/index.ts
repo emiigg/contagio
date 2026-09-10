@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
 
-import { MAX_PLAYERS } from '@contagio/engine';
+import { MAX_PLAYERS, isPackId } from '@contagio/engine';
 import type { BotDifficulty, ClientToServerEvents, ServerToClientEvents } from '@contagio/engine';
 
 import { Room, generateRoomCode } from './rooms.js';
@@ -157,6 +157,20 @@ io.on('connection', (socket) => {
     if (!allowed.includes(difficulty)) return ack({ ok: false, error: 'Dificultad no valida' });
 
     room.difficulty = difficulty;
+    room.pushState();
+    ack({ ok: true, data: { room: room.view() } });
+  });
+
+  /** El paquete se elige en la sala: con la partida en marcha ya no se toca. */
+  socket.on('room:pack', ({ pack }, ack) => {
+    const found = roomOf(socket.id);
+    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    const { room, playerId } = found;
+    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion elige el paquete' });
+    if (room.status !== 'lobby') return ack({ ok: false, error: 'La partida ya ha empezado' });
+    if (!isPackId(pack)) return ack({ ok: false, error: 'Paquete no valido' });
+
+    room.pack = pack;
     room.pushState();
     ack({ ok: true, data: { room: room.view() } });
   });

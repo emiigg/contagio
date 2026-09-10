@@ -25,6 +25,8 @@ const VIEWPORT = { width: 1440, height: 900 };
 const SCALE = Number(process.env.SHOT_SCALE ?? 2);
 /** 'dark' o 'light' fuerzan el tema; sin valor manda el del sistema. */
 const THEME = process.env.SHOT_THEME ?? '';
+/** Paquete de cartas con el que se juega ('heroes', 'frutas'...); sin valor, el de siempre. */
+const PACK = process.env.SHOT_PACK ?? '';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -90,6 +92,7 @@ async function main() {
   await page.waitForSelector('.lobby__sheet');
   const bots = Number(process.env.SHOT_BOTS ?? 3);
   for (let i = 0; i < bots; i++) await page.click('button:has-text("Anadir bot")');
+  if (PACK) await page.click(`.packtile[data-pack="${PACK}"]`);
   await wait(300);
   await shot('02-sala');
 
