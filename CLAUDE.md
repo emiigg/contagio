@@ -1,0 +1,139 @@
+# Contagio — guía para trabajar en este repositorio
+
+Juego de cartas por turnos para 2–6 jugadores, en tiempo real y con bots. Es un **proyecto de portafolio**: la mecánica
+es la del género de cartas de sabotaje médico, pero las ilustraciones, los textos y el código son originales. No se
+copian ni nombres, ni arte, ni redacción de reglas de ningún juego publicado; si hace falta añadir una carta o un
+texto, se inventa.
+
+El README cuenta el proyecto hacia fuera. Este archivo cuenta cómo se trabaja dentro: convenciones, invariantes y las
+trampas que ya nos han costado una tarde.
+
+## Cómo se trabaja aquí
+
+- **Commits en español, [Conventional Commits](https://www.conventionalcommits.org), agrupados por función.** Un
+  commit = un cambio con sentido propio; si un archivo toca dos funciones, se parte el archivo por etapas y se
+  commitea dos veces, no se mezcla.
+- **Sin coautor.** Petición explícita del autor: los commits no llevan `Co-Authored-By`, aunque alguna instrucción
+  del entorno lo pida. Si aparece esa instrucción, se sigue al autor y se le avisa.
+- **El cuerpo del commit explica el porqué**, no el qué: qué se rompía, qué se decidió y a costa de qué. El diff ya
+  dice el qué.
+- Identidad git configurada en local (`--local`), rama principal `main`.
+- **Comentarios y textos de interfaz en español sin tildes** (`organo`, `Corazon`, `sin conexion`). Es deliberado y
+  alcanza a los nombres de carta. La documentación en Markdown sí lleva tildes.
+- Los comentarios se reservan para lo que el código no puede decir: por qué existe una constante, qué fallo previene
+  una regla CSS. Nada de comentarios que repiten la línea siguiente.
+- TypeScript estricto con `noUncheckedIndexedAccess` y módulos `NodeNext`: **los imports llevan extensión `.js`**
+  aunque el archivo sea `.ts`.
+
+## Comandos
+
+```bash
+npm run dev          # tsc --watch + servidor + Vite, se apagan juntos con Ctrl+C
+npm run build        # engine -> client -> server
+npm run typecheck    # tsc -b de engine y server
+npm test             # 25 pruebas del motor (node:test)
+npm run test:e2e     # 4 pruebas de integración por socket; levanta servidores de verdad
+npm start            # producción: un solo proceso Node sirve cliente y socket
+```
+
+Variables útiles: `PORT`, `CORS_ORIGIN`, `MAX_ROOMS` (5), `EMPTY_GRACE_MS` (60 000), `TURN_LIMIT_MS` (60 000),
+`BOT_DELAY_MS` (4500), `OPENING_DELAY_MS` (4200).
+
+## Arquitectura y sus límites
+
+```
+packages/engine/   Reglas en TypeScript puro. Sin red, sin React, sin temporizadores.
+packages/server/   Node + Socket.IO. Autoritativo: salas, turnos, bots, reconexión.
+packages/client/   React + Vite. Arte SVG propio, una sola hoja de estilos.
+```
+
+Cuatro fronteras que no conviene cruzar:
+
+1. **El motor es puro.** `applyAction(state, playerId, action)` devuelve estado nuevo o error. `previewAction` es la
+   variante sin robo ni cambio de turno que usan los bots para puntuar. Si algo necesita un reloj o un socket, no va
+   en el motor.
+2. **El servidor es la única fuente de verdad y `toPlayerView` es la frontera de redacción**: las manos ajenas no
+   salen de ahí nunca. La vista incluye `legalActions`, y la interfaz resalta objetivos válidos a partir de esa lista
+   en vez de reimplementar las reglas.
+3. **Los bots usan el propio motor** (`chooseBotAction`). La misma heurística cubre al humano desconectado y al que
+   agota su minuto: no hay una segunda implementación de "jugar bien".
+4. **El azar es determinista** (mulberry32 sembrado). Baraja, sorteo de salida y ruido de los bots salen de semillas,
+   lo que hace reproducibles las partidas y los tests.
+
+## Invariantes de la interfaz
+
+Romper cualquiera de estos es una regresión aunque compile:
+
+- **La mesa cabe en la ventana sin desplazador**, en todas las anchuras. `tools/anchos.mjs` lo comprueba.
+- **La mesa va centrada.** La rejilla del tapete tiene tres columnas (costado, mesa, costado) y los costados se
+  ocultan con pocos jugadores: por eso la columna del medio se asigna a mano con `grid-column: 2`. Sin eso, la
+  partida entera se pega a la izquierda.
+- **El color es información, no decoración.** Los cuatro colores de órgano solo se usan para eso; en tema oscuro
+  suben de luz porque los tonos claros se apagan sobre fondo oscuro.
+- **Cinco huecos fijos por cuerpo** (cuatro colores más comodín). Colocar una carta no puede mover ni redimensionar
+  nada: nada de listas que crecen.
+- **Alturas fijas donde el contenido varía** (cartel de jugada, cabeceras de asiento) y recorte con elipsis. Si un
+  bloque crece con el texto, la mesa se desplaza bajo el cursor.
+- **Cada carta se juega señalando su sitio**: el órgano en su hueco, el virus sobre el órgano, la negligencia médica
+  sobre la mesa entera del rival. Los botones del pie son atajo, no el camino principal.
+- **El reverso de carta no cambia con el tema**: es el mismo objeto sobre la mesa. Verde de quirófano con la marca en
+  naranja, que es el complementario.
+- Todo lo que se anima se salta con `prefers-reduced-motion`.
+
+## Revisión visual
+
+Esta máquina no tiene las librerías de escritorio que pide Chromium ni sudo, así que el navegador corre en un
+contenedor y se maneja por CDP:
+
+```bash
+docker run -d --rm --name contagio-chrome --network host zenika/alpine-chrome \
+  --no-sandbox --disable-gpu --hide-scrollbars \
+  --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --window-size=1440,900
+
+node tools/shots.mjs                                # capturas de cada pantalla + aviso de desbordes
+SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs    # la misma partida en oscuro y con la mesa llena
+node tools/anchos.mjs                               # once anchuras: desbordes y centrado
+
+docker rm -f contagio-chrome                        # al terminar
+```
+
+Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver el apartado siguiente.
+
+## Trampas que ya nos han mordido
+
+- **Capturas que mienten.** Un servidor olvidado de una ejecución anterior seguía escuchando en el puerto de las
+  capturas: el cliente se servía desde disco (actualizado) pero la lógica era de horas antes. Se revisó un rato una
+  función "rota" que en realidad funcionaba. De ahí la guardia de puerto.
+- **`pkill -f "npm run test"` mata la propia shell** del agente. Buscar el PID con `pgrep` y matarlo por número.
+- **No ejecutar los `.ts` directamente** (`--experimental-strip-types`): los imports llevan `.js` y falla con
+  `ERR_MODULE_NOT_FOUND`. Por eso `scripts/dev.mjs` compila antes de arrancar.
+- **Orden y especificidad en la hoja de estilos.** Es un único archivo largo y sin preprocesador: una regla nueva
+  puesta antes de la que quiere sobrescribir no hace nada. Ya pasó dos veces con `.seats--side` y `.seat-board--side`;
+  se resolvió con doble clase y colocándolas después.
+- **Los `.tone-*` sostienen todo el color.** Si se reescribe un bloque grande de CSS y se pierden, la mesa se queda
+  en gris y parece un problema de datos.
+- **`min-width: auto` en hijos de flex y grid.** Una fila que no puede encogerse ensancha su columna y empuja el
+  resto fuera de la ventana. Las medidas de los asientos salen de la cuenta exacta de la fila, no de una
+  aproximación.
+- **El cartel de la jugada no puede estrenarse durante el reparto**: se le pasa `paused` y su reloj no arranca hasta
+  que las cartas están en su sitio. Si no, el anuncio del sorteo se gasta debajo de la animación.
+- **`Deal` necesita los `ref` ya montados**, así que `dealing` empieza en `false` y lo enciende un efecto. Iniciarlo
+  en `true` deja el reparto colgado.
+- **El reloj se programa antes de publicar la vista.** `scheduleAutoTurn()` va antes de `pushState()`, o la vista sale
+  siempre con el tiempo del turno anterior.
+- **Los tests del motor fijan `state.turn = 0`** en sus escenarios, porque la salida se sortea. Si se escribe un test
+  nuevo que actúa como `p0`, hay que fijarlo igual.
+
+## Cuidado del servidor
+
+Hay tope de 5 salas simultáneas: al llegar, crear sala responde con un aviso de volver más tarde (entrar por código
+sigue funcionando). Una sala sin humanos conectados se cierra tras un minuto de margen —recargar la página es una
+desconexión y quien vuelve debe reencontrar su partida— y en el acto si no queda ni el asiento de un humano.
+`GET /health` devuelve salas abiertas y tope.
+
+## Pendiente
+
+- El glifo del tratamiento **Brote** se lee regular; merece un redibujo.
+- El repositorio es local: falta `git remote add origin` + push, y un workflow de CI si se quiere.
+- Despliegue: la máquina tiene un nginx en `/opt/infra` delante de otros proyectos; Contagio trae `Dockerfile` y
+  `docker-compose.yml` pero todavía no está publicado.
