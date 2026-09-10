@@ -1729,6 +1729,27 @@ button {
   flex: none;
 }
 
+/* --- sorteo de salida ----------------------------------------------------- */
+
+/* El cartel de quien abre no lleva cartas, asi que se apoya en la marca y en
+   un cuerpo mayor: es el unico anuncio que no habla de una jugada. */
+.announce--start {
+  gap: 0.4rem;
+}
+
+.announce__mark {
+  width: clamp(1.9rem, 4.6vh, 2.9rem);
+  height: clamp(1.9rem, 4.6vh, 2.9rem);
+  color: var(--brand);
+}
+
+.announce--start .announce__text {
+  font-size: clamp(1.15rem, 3vh, 1.75rem);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
 @media (max-width: 900px) {
   .home__sheet {
     grid-template-columns: 1fr;
