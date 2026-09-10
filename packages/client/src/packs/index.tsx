@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react';
 import { DEFAULT_PACK, getPack } from '@contagio/engine';
 import type { Card, Color, Pack, PackId } from '@contagio/engine';
 
+import { arrecifeArt } from './arrecife';
 import { asedioArt } from './asedio';
 import { contagioArt } from './contagio';
 import { cortafuegosArt } from './cortafuegos';
@@ -18,6 +19,7 @@ export const PACK_ART: Record<PackId, PackArt> = {
   cortafuegos: cortafuegosArt,
   orbita: orbitaArt,
   asedio: asedioArt,
+  arrecife: arrecifeArt,
 };
 
 /**

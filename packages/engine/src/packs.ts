@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio';
+export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos' | 'orbita' | 'asedio' | 'arrecife';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos', 'orbita', 'asedio', 'arrecife'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -594,6 +594,92 @@ const ASEDIO: Pack = {
   },
 };
 
+const ARRECIFE: Pack = {
+  id: 'arrecife',
+  name: 'Arrecife',
+  tagline: 'Criaturas del mar, vertidos y rescates bajo el agua.',
+  kinds: { organ: 'Criatura', virus: 'Amenaza', medicine: 'Rescate', treatment: 'Marea' },
+  organs: {
+    red: { name: 'Cangrejo', art: 'el' },
+    blue: { name: 'Ballena', art: 'la' },
+    green: { name: 'Tortuga', art: 'la' },
+    yellow: { name: 'Pez globo', art: 'el' },
+    wild: { name: 'Pulpo mimetico', art: 'el' },
+  },
+  viruses: {
+    red: 'Anzuelo',
+    blue: 'Marea negra',
+    green: 'Alga toxica',
+    yellow: 'Plastico',
+    wild: 'Vertido quimico',
+  },
+  medicines: {
+    red: 'Veda de pesca',
+    blue: 'Limpieza de costa',
+    green: 'Vivero marino',
+    yellow: 'Red de recogida',
+    wild: 'Reserva marina',
+  },
+  treatments: {
+    swap: {
+      name: 'Simbiosis',
+      text: 'Cambias una criatura tuya por una de otro jugador. Ninguna puede ser intocable ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Migracion',
+      text: 'Una criatura de otro jugador migra a tu arrecife. No sirve con criaturas intocables ni si ya tienes una de ese color.',
+    },
+    spread: {
+      name: 'Corriente',
+      text: 'La corriente arrastra las amenazas de tus criaturas hasta criaturas libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Temporal',
+      text: 'Un temporal barre la mano de tus rivales: la descartan y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Tsunami',
+      text: 'Intercambias tu arrecife entero con el de otro jugador, criaturas intocables incluidas.',
+    },
+  },
+  hints: {
+    organ: 'Llevala a tu arrecife. Una por color.',
+    virus: 'Pon en peligro a una criatura libre, acaba con una en peligro o deshaz una proteccion.',
+    medicine: 'Rescata a una criatura en peligro, protege a una libre o vuelvela intocable si ya estaba protegida.',
+  },
+  stamps: { infected: 'En peligro', vaccinated: 'Protegida', immunized: 'Intocable' },
+  words: {
+    organ: 'criatura',
+    organs: 'criaturas',
+    the: 'la',
+    one: 'una',
+    healthy: 'a salvo',
+    threat: 'amenaza',
+    threats: 'amenazas',
+    body: 'arrecife',
+  },
+  lines: {
+    place: '{p} lleva {card} a su arrecife.',
+    infect: '{p} pone en peligro a {organ}.',
+    remove: '{p} acaba con {organ}.',
+    breakShield: '{p} desprotege a {organ}.',
+    cure: '{p} rescata a {organ}.',
+    vaccinate: '{p} protege a {organ}.',
+    immunize: '{p} vuelve intocable a {organ}.',
+    spread: '{p} arrastra {n} {threats} hasta sus rivales.',
+    quarantine: '{p} desata un temporal: el resto pierde su mano.',
+    malpractice: '{p} provoca un tsunami y cambia de arrecife con {victim}.',
+    win: '{p} pone a salvo su arrecife y gana la partida.',
+  },
+  buttons: { spread: 'Arrastrar {n} {threats}', quarantine: 'Desatar el temporal', malpractice: 'Cambiar de arrecife' },
+  ending: {
+    winTitle: 'Arrecife a salvo. Ganas.',
+    winText: 'Cuatro criaturas a salvo antes que nadie.',
+    loseTitle: '{p} pone a salvo su arrecife.',
+    loseText: 'Tu arrecife se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
@@ -601,6 +687,7 @@ export const PACKS: Record<PackId, Pack> = {
   cortafuegos: CORTAFUEGOS,
   orbita: ORBITA,
   asedio: ASEDIO,
+  arrecife: ARRECIFE,
 };
 
 export function isPackId(value: unknown): value is PackId {
