@@ -1,4 +1,5 @@
-import type { Card, Color, TreatmentKind } from './types.js';
+import { getPack, type PackId } from './packs.js';
+import type { Card, TreatmentKind } from './types.js';
 import { COLORS } from './types.js';
 
 /**
@@ -18,58 +19,25 @@ export const DECK_COMPOSITION = {
   treatments: { swap: 3, steal: 3, spread: 2, quarantine: 1, malpractice: 1 } as Record<TreatmentKind, number>,
 };
 
-/** Nombres propios de Contagio: la mecanica es la del genero, los textos son nuestros. */
-export const ORGAN_NAMES: Record<Color, string> = {
-  red: 'Corazon',
-  blue: 'Cerebro',
-  green: 'Pulmon',
-  yellow: 'Higado',
-  wild: 'Organo quimerico',
-};
-
-export const VIRUS_NAMES: Record<Color, string> = {
-  red: 'Cepa escarlata',
-  blue: 'Cepa cobalto',
-  green: 'Cepa esmeralda',
-  yellow: 'Cepa ambar',
-  wild: 'Cepa mutante',
-};
-
-export const MEDICINE_NAMES: Record<Color, string> = {
-  red: 'Antidoto escarlata',
-  blue: 'Antidoto cobalto',
-  green: 'Antidoto esmeralda',
-  yellow: 'Antidoto ambar',
-  wild: 'Antidoto universal',
-};
-
-export const TREATMENT_NAMES: Record<TreatmentKind, string> = {
-  swap: 'Intercambio quirurgico',
-  steal: 'Extraccion ilegal',
-  spread: 'Brote',
-  quarantine: 'Cuarentena',
-  malpractice: 'Negligencia medica',
-};
-
-export const TREATMENT_TEXT: Record<TreatmentKind, string> = {
-  swap: 'Intercambia un organo tuyo por el de otro jugador. Ninguno de los dos puede estar inmunizado, ni provocar organos repetidos.',
-  steal: 'Toma un organo de otro jugador y anadelo a tu cuerpo. No puedes robar organos inmunizados ni repetir color.',
-  spread: 'Traslada virus de tus organos infectados a organos libres de tus rivales.',
-  quarantine: 'Todos los rivales descartan su mano y pierden su siguiente turno robando de nuevo.',
-  malpractice: 'Intercambias tu cuerpo entero con el de otro jugador, inmunizados incluidos.',
-};
-
-export function cardName(card: Card): string {
+/** El nombre de una carta depende del paquete; la carta en si es la misma en todos. */
+export function cardName(card: Card, packId?: PackId): string {
+  const pack = getPack(packId);
   switch (card.kind) {
     case 'organ':
-      return ORGAN_NAMES[card.color!];
+      return pack.organs[card.color!].name;
     case 'virus':
-      return VIRUS_NAMES[card.color!];
+      return pack.viruses[card.color!];
     case 'medicine':
-      return MEDICINE_NAMES[card.color!];
+      return pack.medicines[card.color!];
     case 'treatment':
-      return TREATMENT_NAMES[card.treatment!];
+      return pack.treatments[card.treatment!].name;
   }
+}
+
+/** Que hace la carta, contado con el vocabulario del paquete. */
+export function cardText(card: Card, packId?: PackId): string {
+  const pack = getPack(packId);
+  return card.kind === 'treatment' ? pack.treatments[card.treatment!].text : pack.hints[card.kind];
 }
 
 /** Construye el mazo completo sin barajar; los ids son estables y unicos. */

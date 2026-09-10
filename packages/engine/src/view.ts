@@ -1,4 +1,5 @@
 import { legalActions } from './legal.js';
+import { getPack, type PackId } from './packs.js';
 import type { Action, Card, GamePhase, GameState, LogEntry, MoveSummary, OrganPile } from './types.js';
 
 /** Lo que un jugador puede ver de otro: cuerpo completo, mano solo en numero. */
@@ -17,6 +18,7 @@ export interface PublicPlayer {
  * ajenas: la vista es la unica forma en que el estado sale del motor.
  */
 export interface PlayerView {
+  pack: PackId;
   players: PublicPlayer[];
   youId: string;
   hand: Card[];
@@ -52,6 +54,7 @@ export function toPlayerView(state: GameState, youId: string, clock: TurnClock =
   const turnPlayer = state.players[state.turn];
   const you = state.players.find((p) => p.id === youId);
   return {
+    pack: getPack(state.pack).id,
     players: state.players.map((p) => ({
       id: p.id,
       name: p.name,

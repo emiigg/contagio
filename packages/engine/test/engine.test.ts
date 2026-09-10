@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { buildDeck } from '../src/cards.js';
+import { buildDeck, cardName } from '../src/cards.js';
 import { applyAction, createGame } from '../src/engine.js';
 import { legalActions } from '../src/legal.js';
 import { chooseBotAction } from '../src/bot.js';
+import { PACKS, PACK_IDS, fillTemplate, getPack } from '../src/packs.js';
 import { organStatus } from '../src/rules.js';
+import { toPlayerView } from '../src/view.js';
 import type { Card, Color, GameState, TreatmentKind } from '../src/types.js';
 
 // --- utilidades de test -----------------------------------------------------
@@ -451,4 +453,55 @@ test('un empate sin cartas no proclama ganador', () => {
   const next = expectOk(applyAction(state, 'p0', { type: 'PLAY_ORGAN', cardId: extra.id }));
   assert.equal(next.phase, 'finished');
   assert.equal(next.winnerId, null);
+});
+
+// --- paquetes ---------------------------------------------------------------
+
+/** Todas las cadenas de un paquete, para revisarlas de una vez. */
+function packStrings(value: unknown): string[] {
+  if (typeof value === 'string') return [value];
+  if (value && typeof value === 'object') return Object.values(value).flatMap(packStrings);
+  return [];
+}
+
+test('cada paquete da nombre propio a las 20 cartas distintas del mazo', () => {
+  for (const id of PACK_IDS) {
+    const names = new Set(buildDeck().map((card) => cardName(card, id)));
+    assert.equal(names.size, 20, `${id}: ${[...names].join(', ')}`);
+  }
+});
+
+test('los textos de los paquetes van sin tildes y no dejan huecos sin rellenar', () => {
+  const values = { p: 'Ana', card: 'Carta', organ: 'su Carta', n: 2, threats: 'amenazas', victim: 'Luis' };
+  for (const id of PACK_IDS) {
+    for (const text of packStrings(PACKS[id])) {
+      assert.doesNotMatch(text, /[áéíóúüñ¿¡]/i, `${id}: "${text}"`);
+    }
+    for (const line of Object.values(PACKS[id].lines)) {
+      assert.doesNotMatch(fillTemplate(line, values), /[{}]/, `${id}: ${line}`);
+    }
+  }
+});
+
+
+
+test('las frases contraen el articulo como en el habla', () => {
+  const state = scenario();
+  const heart = organ('red');
+  putOrgan(state, 1, heart, [], [medicine('red')]);
+  const strain = virus('red');
+  give(state, 0, strain);
+  const next = expectOk(
+    applyAction(state, 'p0', { type: 'PLAY_VIRUS', cardId: strain.id, target: { playerId: 'p1', organId: heart.id } }),
+  );
+  assert.equal(next.lastMove?.text, 'J1 destruye la vacuna del Corazon de J2.');
+});
+
+test('un paquete desconocido cae en Contagio en vez de dejar cartas sin nombre', () => {
+  assert.equal(getPack('inventado').id, 'contagio');
+  assert.equal(getPack(undefined).id, 'contagio');
+  const state = scenario();
+  (state as { pack: string }).pack = 'inventado';
+  assert.equal(toPlayerView(state, 'p0').pack, 'contagio');
+  assert.equal(cardName(organ('red'), state.pack), 'Corazon');
 });

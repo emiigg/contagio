@@ -5,6 +5,8 @@
  * Todo el flujo de una partida es (estado, accion) -> estado nuevo + eventos.
  */
 
+import type { PackId } from './packs.js';
+
 /** Los cuatro colores de organo mas el comodin. */
 export type Color = 'red' | 'blue' | 'green' | 'yellow' | 'wild';
 
@@ -55,6 +57,8 @@ export interface Player {
 export type GamePhase = 'playing' | 'finished';
 
 export interface GameState {
+  /** Paquete de cartas: solo cambia nombres y textos, nunca las reglas. */
+  pack: PackId;
   players: Player[];
   /** Indice del jugador al que le toca. */
   turn: number;

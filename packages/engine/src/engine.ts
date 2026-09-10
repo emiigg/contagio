@@ -1,4 +1,5 @@
 import { buildDeck, cardName } from './cards.js';
+import { DEFAULT_PACK, contract, fillTemplate, getPack, type PackId, type PackLine } from './packs.js';
 import { nextRandom, shuffle } from './rng.js';
 import {
   HAND_SIZE,
@@ -22,7 +23,7 @@ export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
 
 /** Reparte, baraja y deja la partida lista para el primer turno. */
-export function createGame(seeds: PlayerSeed[], seed = 1): GameState {
+export function createGame(seeds: PlayerSeed[], seed = 1, pack: PackId = DEFAULT_PACK): GameState {
   if (seeds.length < MIN_PLAYERS || seeds.length > MAX_PLAYERS) {
     throw new Error(`Contagio admite de ${MIN_PLAYERS} a ${MAX_PLAYERS} jugadores`);
   }
@@ -52,6 +53,7 @@ export function createGame(seeds: PlayerSeed[], seed = 1): GameState {
   const opener = players[turn]!;
 
   const state: GameState = {
+    pack,
     players,
     turn,
     deck,
@@ -151,9 +153,19 @@ function nameOf(state: GameState, playerId: string): string {
   return findPlayer(state, playerId)?.name ?? '?';
 }
 
-/** "su Corazon" cuando el organo es del propio jugador, "el Corazon de X" si no. */
+/** "su Corazon" cuando el organo es del propio jugador, "la Fresa de X" si no. */
 function organPhrase(state: GameState, actor: Player, ownerId: string, organ: Card): string {
-  return ownerId === actor.id ? `su ${cardName(organ)}` : `el ${cardName(organ)} de ${nameOf(state, ownerId)}`;
+  const { name, art } = getPack(state.pack).organs[organ.color!];
+  return ownerId === actor.id ? `su ${name}` : `${art} ${name} de ${nameOf(state, ownerId)}`;
+}
+
+/**
+ * Frase del registro en el vocabulario del paquete. Carta y organo entran
+ * primero y se contraen ("de el" -> "del"); los nombres de jugador llegan
+ * despues, para que un nombre cualquiera no se contraiga por accidente.
+ */
+function say(state: GameState, line: PackLine, names: Record<string, string>, details: Record<string, string | number> = {}): string {
+  return fillTemplate(contract(fillTemplate(getPack(state.pack).lines[line], details)), names);
 }
 
 /**
@@ -168,7 +180,7 @@ function endTurn(state: GameState): void {
   if (winner) {
     state.phase = 'finished';
     state.winnerId = winner.id;
-    pushLog(state, `${winner.name} completa un cuerpo sano y gana la partida.`, winner.id);
+    pushLog(state, say(state, 'win', { p: winner.name }), winner.id);
     return;
   }
 
@@ -206,11 +218,12 @@ function finishByOrganCount(state: GameState): void {
   const best = ranked[0];
   const tied = ranked.filter((r) => r.healthy === best?.healthy).length > 1;
   state.winnerId = best && !tied ? best.player.id : null;
+  const { words } = getPack(state.pack);
   pushLog(
     state,
     tied || !best
       ? 'Se acaban las cartas y nadie tiene ventaja: la partida queda en tablas.'
-      : `Se acaban las cartas. Gana ${best.player.name} con ${best.healthy} organos sanos.`,
+      : `Se acaban las cartas. Gana ${best.player.name} con ${best.healthy} ${words.organs} ${words.healthy}.`,
     state.winnerId ?? undefined,
   );
 }
@@ -280,7 +293,7 @@ function resolvePlayOrgan(state: GameState, player: Player, cardId: string): App
 
   takeCardFromHand(player, cardId);
   player.body.push({ organ: card, viruses: [], medicines: [] });
-  logMove(state, player, `${player.name} coloca ${cardName(card)}.`, 'PLAY_ORGAN', [card], [
+  logMove(state, player, say(state, 'place', { p: player.name }, { card: cardName(card, state.pack) }), 'PLAY_ORGAN', [card], [
     { playerId: player.id, organId: card.id },
   ]);
   return { ok: true, state };
@@ -305,7 +318,7 @@ function resolvePlayVirus(state: GameState, player: Player, cardId: string, targ
     logMove(
       state,
       player,
-      `${player.name} destruye la vacuna de ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+      say(state, 'breakShield', { p: player.name }, { organ: organPhrase(state, player, target.playerId, pile.organ) }),
       'PLAY_VIRUS',
       [card, medicine],
       [target],
@@ -325,7 +338,7 @@ function resolvePlayVirus(state: GameState, player: Player, cardId: string, targ
     logMove(
       state,
       player,
-      `${player.name} extirpa ${organPhrase(state, player, owner.id, pile.organ)}.`,
+      say(state, 'remove', { p: player.name }, { organ: organPhrase(state, player, owner.id, pile.organ) }),
       'PLAY_VIRUS',
       [card, pile.organ],
       [target],
@@ -337,7 +350,7 @@ function resolvePlayVirus(state: GameState, player: Player, cardId: string, targ
   logMove(
     state,
     player,
-    `${player.name} infecta ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+    say(state, 'infect', { p: player.name }, { organ: organPhrase(state, player, target.playerId, pile.organ) }),
     'PLAY_VIRUS',
     [card],
     [target],
@@ -363,7 +376,7 @@ function resolvePlayMedicine(state: GameState, player: Player, cardId: string, t
     logMove(
       state,
       player,
-      `${player.name} cura ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+      say(state, 'cure', { p: player.name }, { organ: organPhrase(state, player, target.playerId, pile.organ) }),
       'PLAY_MEDICINE',
       [card, virus],
       [target],
@@ -374,11 +387,11 @@ function resolvePlayMedicine(state: GameState, player: Player, cardId: string, t
   if (!colorsMatch(card.color, pile.organ.color)) return fail('La medicina no coincide con el color del organo');
   takeCardFromHand(player, cardId);
   pile.medicines.push(card);
-  const verb = status === 'vaccinated' ? 'inmuniza' : 'vacuna';
+  const line = status === 'vaccinated' ? 'immunize' : 'vaccinate';
   logMove(
     state,
     player,
-    `${player.name} ${verb} ${organPhrase(state, player, target.playerId, pile.organ)}.`,
+    say(state, line, { p: player.name }, { organ: organPhrase(state, player, target.playerId, pile.organ) }),
     'PLAY_MEDICINE',
     [card],
     [target],
@@ -417,7 +430,7 @@ function resolveSwap(state: GameState, player: Player, cardId: string, mine: Org
   logMove(
     state,
     player,
-    `${player.name} cambia ${cardName(pileA.organ)} de ${a.name} por ${cardName(pileB.organ)} de ${b.name}.`,
+    `${player.name} cambia ${cardName(pileA.organ, state.pack)} de ${a.name} por ${cardName(pileB.organ, state.pack)} de ${b.name}.`,
     'PLAY_SWAP',
     [card],
     [mine, theirs],
@@ -440,7 +453,7 @@ function resolveSteal(state: GameState, player: Player, cardId: string, target: 
   state.discard.push(card);
   removePile(victim, pile.organ.id);
   player.body.push(pile);
-  logMove(state, player, `${player.name} roba ${cardName(pile.organ)} a ${victim.name}.`, 'PLAY_STEAL', [card], [
+  logMove(state, player, `${player.name} roba ${cardName(pile.organ, state.pack)} a ${victim.name}.`, 'PLAY_STEAL', [card], [
     { playerId: player.id, organId: pile.organ.id },
   ]);
   return { ok: true, state };
@@ -482,11 +495,11 @@ function resolveSpread(
     const dest = findPile(state, move.to)!;
     dest.viruses.push(source.viruses.pop()!);
   }
-  const plural = moves.length === 1 ? 'virus' : 'virus';
+  const { words } = getPack(state.pack);
   logMove(
     state,
     player,
-    `${player.name} propaga ${moves.length} ${plural} a sus rivales.`,
+    say(state, 'spread', { p: player.name }, { n: moves.length, threats: moves.length === 1 ? words.threat : words.threats }),
     'PLAY_SPREAD',
     [card],
     moves.map((m) => m.to),
@@ -508,7 +521,7 @@ function resolveQuarantine(state: GameState, player: Player, cardId: string): Ap
   logMove(
     state,
     player,
-    `${player.name} decreta una cuarentena: el resto descarta su mano.`,
+    say(state, 'quarantine', { p: player.name }),
     'PLAY_QUARANTINE',
     [card],
   );
@@ -530,7 +543,7 @@ function resolveMalpractice(state: GameState, player: Player, cardId: string, ta
   logMove(
     state,
     player,
-    `${player.name} intercambia su cuerpo entero con ${victim.name}.`,
+    say(state, 'malpractice', { p: player.name, victim: victim.name }),
     'PLAY_MALPRACTICE',
     [card],
     victim.body.concat(player.body).map((pile) => ({ playerId: player.id, organId: pile.organ.id })),

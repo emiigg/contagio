@@ -1,4 +1,4 @@
-import { TREATMENT_TEXT, cardName } from '@contagio/engine';
+import { cardName, cardText } from '@contagio/engine';
 import type { Card } from '@contagio/engine';
 
 import { CardGlyph } from '../art';
@@ -10,15 +10,8 @@ const KIND_LABEL: Record<Card['kind'], string> = {
   treatment: 'Tratamiento',
 };
 
-const KIND_HINT: Record<Card['kind'], string> = {
-  organ: 'Colocalo en tu cuerpo. Un color por cuerpo.',
-  virus: 'Infecta un organo libre, extirpa uno infectado o rompe una vacuna.',
-  medicine: 'Cura un virus, vacuna un organo libre o inmuniza uno vacunado.',
-  treatment: '',
-};
-
 export function cardHint(card: Card): string {
-  return card.kind === 'treatment' ? TREATMENT_TEXT[card.treatment!] : KIND_HINT[card.kind];
+  return cardText(card);
 }
 
 /** Codigo de muestra: identifica la carta como una ficha de laboratorio. */
