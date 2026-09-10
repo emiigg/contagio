@@ -1,5 +1,3 @@
-import type { Card, Color, TreatmentKind } from '@contagio/engine';
-
 /**
  * Ilustraciones propias, dibujadas como diagramas anatomicos de linea: trazo
  * uniforme, relleno tenue del color del organo. Todas heredan `currentColor`.
@@ -124,7 +122,7 @@ export function MedicineGlyph({ className }: GlyphProps) {
   );
 }
 
-function SwapGlyph({ className }: GlyphProps) {
+export function SwapGlyph({ className }: GlyphProps) {
   return (
     <svg {...base} className={className}>
       <path d="M10 18h20l-5-5M38 30H18l5 5" />
@@ -134,7 +132,7 @@ function SwapGlyph({ className }: GlyphProps) {
   );
 }
 
-function StealGlyph({ className }: GlyphProps) {
+export function StealGlyph({ className }: GlyphProps) {
   return (
     <svg {...base} className={className}>
       <path d="M14 12l6 9M34 12l-6 9" />
@@ -144,7 +142,7 @@ function StealGlyph({ className }: GlyphProps) {
   );
 }
 
-function SpreadGlyph({ className }: GlyphProps) {
+export function SpreadGlyph({ className }: GlyphProps) {
   return (
     <svg {...base} className={className}>
       <circle cx="15" cy="24" r="5" fill="currentColor" fillOpacity="0.2" />
@@ -153,7 +151,7 @@ function SpreadGlyph({ className }: GlyphProps) {
   );
 }
 
-function QuarantineGlyph({ className }: GlyphProps) {
+export function QuarantineGlyph({ className }: GlyphProps) {
   return (
     <svg {...base} className={className}>
       <path d="M17 20V13a2.5 2.5 0 0 1 5 0v6M22 19v-8.5a2.5 2.5 0 0 1 5 0V19M27 19v-6a2.5 2.5 0 0 1 5 0v11" fill="currentColor" fillOpacity="0.14" />
@@ -162,7 +160,7 @@ function QuarantineGlyph({ className }: GlyphProps) {
   );
 }
 
-function MalpracticeGlyph({ className }: GlyphProps) {
+export function MalpracticeGlyph({ className }: GlyphProps) {
   return (
     <svg {...base} className={className}>
       <rect x="8" y="12" width="14" height="18" rx="2" fill="currentColor" fillOpacity="0.16" />
@@ -170,27 +168,6 @@ function MalpracticeGlyph({ className }: GlyphProps) {
       <path d="M22 16h8M26 34h-8M28 13l3 3-3 3M20 31l-3 3 3 3" />
     </svg>
   );
-}
-
-const TREATMENT_GLYPHS: Record<TreatmentKind, (props: GlyphProps) => JSX.Element> = {
-  swap: SwapGlyph,
-  steal: StealGlyph,
-  spread: SpreadGlyph,
-  quarantine: QuarantineGlyph,
-  malpractice: MalpracticeGlyph,
-};
-
-const ORGAN_GLYPHS: Record<Color, (props: GlyphProps) => JSX.Element> = {
-  red: HeartGlyph,
-  blue: BrainGlyph,
-  green: LungGlyph,
-  yellow: LiverGlyph,
-  wild: ChimeraGlyph,
-};
-
-/** Silueta tenue de un organo: marca el hueco que aun no has llenado. */
-export function OrganSilhouette({ color, className }: { color: Color; className?: string }) {
-  return ORGAN_GLYPHS[color]({ className });
 }
 
 /**
@@ -206,20 +183,6 @@ export function Mark({ className }: GlyphProps) {
       </g>
     </svg>
   );
-}
-
-/** Devuelve la ilustracion que corresponde a una carta. */
-export function CardGlyph({ card, className }: { card: Card; className?: string }) {
-  switch (card.kind) {
-    case 'organ':
-      return ORGAN_GLYPHS[card.color!]({ className });
-    case 'virus':
-      return <VirusGlyph className={className} />;
-    case 'medicine':
-      return <MedicineGlyph className={className} />;
-    case 'treatment':
-      return TREATMENT_GLYPHS[card.treatment!]({ className });
-  }
 }
 
 /** Trazo de electrocardiograma: un pulso lo recorre cuando es tu turno. */

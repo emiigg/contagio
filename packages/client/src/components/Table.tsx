@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cardName } from '@contagio/engine';
-import type { Action, Card, Color, OrganPile, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
+import { cardName, cardText, fillTemplate } from '@contagio/engine';
+import type { Action, Card, Color, OrganPile, Pack, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
 
-import { CardGlyph, Mark, Pulse } from '../art';
+import { Mark, Pulse } from '../art';
+import { CardGlyph, usePack } from '../packs';
 import { Announce } from './Announce';
 import { CardBack } from './CardBack';
-import { CardFace, cardHint } from './Card';
+import { CardFace } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
 import { ThemeToggle } from './ThemeToggle';
@@ -76,6 +77,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   /** Jugada a la espera de un si: hoy solo la negligencia medica. */
   const [confirming, setConfirming] = useState<{ text: string; action: Action } | null>(null);
   const narrow = useNarrow();
+  const { id: packId, text: pack } = usePack();
+  const { words } = pack;
 
   const centerRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
@@ -212,7 +215,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     setSelectedCardId((prev) => (prev === card.id ? null : card.id));
   }
 
-  const guidance = getGuidance({ view, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding });
+  const guidance = getGuidance({ view, pack, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding });
   const legendCard = hoveredCard ?? selectedCard;
   const winner = view.winnerId ? view.players.find((p) => p.id === view.winnerId) : null;
   const turnName = view.players.find((p) => p.id === view.turnPlayerId)?.name ?? '';
@@ -242,7 +245,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         // Cambiar el cuerpo entero es irreversible y se juega de un clic:
         // aqui si conviene preguntar antes.
         setConfirming({
-          text: `Intercambias tu cuerpo entero con ${rival.name}: te llevas sus organos con lo que tengan encima, y el se lleva los tuyos.`,
+          text: `Cambias toda tu mesa por la de ${rival.name}: te llevas lo suyo con todo lo que tenga encima, y le dejas lo tuyo.`,
           action,
         });
       }}
@@ -305,7 +308,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               {view.topDiscard ? (
                 <span className={`pile__card pile__card--face tone-${view.topDiscard.color ?? 'treatment'}`}>
                   <CardGlyph card={view.topDiscard} className="pile__glyph" />
-                  <span className="pile__name">{cardName(view.topDiscard)}</span>
+                  <span className="pile__name">{cardName(view.topDiscard, packId)}</span>
                 </span>
               ) : (
                 <span className="pile__card pile__card--empty">vacia</span>
@@ -315,12 +318,14 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           </div>
           </div>
 
-        <section className="mine" aria-label="Tu cuerpo">
+        <section className="mine" aria-label={`Tu ${words.body}`}>
           <header className="mine__head">
             <h2 className="mine__name">
               {you.name} <span className="tag tag--you">tu</span>
             </h2>
-            <span className="mine__meta mono">{you.healthyOrgans}/4 organos sanos</span>
+            <span className="mine__meta mono">
+              {you.healthyOrgans}/4 {words.organs} {words.healthy}
+            </span>
           </header>
           <div className="mine__body">
             {bodySlots(you.body).map(({ color, pile }) => {
@@ -364,8 +369,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             <span className="dock__guide is-muted">Repartiendo cartas.</span>
           ) : legendCard ? (
             <>
-              <span className={`dock__legendname tone-${legendCard.color ?? 'treatment'}`}>{cardName(legendCard)}</span>
-              <span className="dock__legendtext">{cardHint(legendCard)}</span>
+              <span className={`dock__legendname tone-${legendCard.color ?? 'treatment'}`}>{cardName(legendCard, packId)}</span>
+              <span className="dock__legendtext">{cardText(legendCard, packId)}</span>
             </>
           ) : (
             <span className={`dock__guide ${view.isYourTurn ? '' : 'is-muted'}`}>{guidance}</span>
@@ -410,14 +415,18 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           <div className="dock__actions">
             {selectedCard && directAction && (
               <button type="button" className="btn btn--primary" onClick={() => void run(directAction)}>
-                {directAction.type === 'PLAY_ORGAN' && `Colocar ${cardName(selectedCard)}`}
-                {directAction.type === 'PLAY_SPREAD' && `Propagar ${directAction.moves.length} virus`}
-                {directAction.type === 'PLAY_QUARANTINE' && 'Decretar cuarentena'}
+                {directAction.type === 'PLAY_ORGAN' && `Colocar ${cardName(selectedCard, packId)}`}
+                {directAction.type === 'PLAY_SPREAD' &&
+                  fillTemplate(pack.buttons.spread, {
+                    n: directAction.moves.length,
+                    threats: directAction.moves.length === 1 ? words.threat : words.threats,
+                  })}
+                {directAction.type === 'PLAY_QUARANTINE' && pack.buttons.quarantine}
               </button>
             )}
             {swapMineId && (
               <button type="button" className="btn btn--ghost" onClick={() => setSwapMineId(null)}>
-                Cambiar mi organo
+                Cambiar mi {words.organ}
               </button>
             )}
             {view.isYourTurn && !discarding && view.hand.length > 0 && (
@@ -472,7 +481,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       {confirming && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Confirmar jugada">
           <div className="modal__panel modal__panel--ask">
-            <h2 className="modal__title">Negligencia medica</h2>
+            <h2 className="modal__title">{pack.treatments.malpractice.name}</h2>
             <p className="curtain__text">{confirming.text}</p>
             <div className="curtain__actions">
               <button
@@ -484,7 +493,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                   void run(action);
                 }}
               >
-                Intercambiar cuerpos
+                {pack.buttons.malpractice}
               </button>
               <button type="button" className="btn btn--ghost" onClick={() => setConfirming(null)}>
                 Cancelar
@@ -502,15 +511,15 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               {!winner
                 ? 'Se acaban las cartas. Tablas.'
                 : winner.id === view.youId
-                  ? 'Cuerpo completo. Ganas.'
-                  : `${winner.name} completa su cuerpo.`}
+                  ? pack.ending.winTitle
+                  : fillTemplate(pack.ending.loseTitle, { p: winner.name })}
             </h2>
             <p className="curtain__text">
               {!winner
                 ? 'Nadie reunio ventaja suficiente antes de que se agotara el mazo.'
                 : winner.id === view.youId
-                  ? 'Cuatro organos sanos sobre la mesa antes que nadie.'
-                  : 'Tus organos se quedaron a medias. La proxima ronda empieza de cero.'}
+                  ? pack.ending.winText
+                  : pack.ending.loseText}
             </p>
             <div className="curtain__actions">
               {isHost && (
@@ -556,6 +565,7 @@ function RivalSeat({
   onSelectPlayer,
   registerSeat,
 }: RivalSeatProps) {
+  const { text: pack } = usePack();
   // Los asientos centrales se elevan un poco: la fila se lee como un arco.
   const arc = variant === 'top' && total > 1 ? Math.abs(index - (total - 1) / 2) / ((total - 1) / 2) : 0;
 
@@ -567,7 +577,7 @@ function RivalSeat({
       // se senala con el dedo cuando se juega una negligencia medica.
       role={selectable ? 'button' : undefined}
       tabIndex={selectable ? 0 : undefined}
-      title={selectable ? `Intercambiar cuerpos con ${player.name}` : undefined}
+      title={selectable ? `${pack.treatments.malpractice.name}: cambiarlo todo con ${player.name}` : undefined}
       onClick={selectable ? onSelectPlayer : undefined}
       onKeyDown={
         selectable
@@ -616,13 +626,15 @@ function RivalSeat({
 
 function getGuidance(args: {
   view: PlayerView;
+  pack: Pack;
   selectedCard: Card | null;
   selectedActions: Action[];
   swapMineId: string | null;
   canPlaySomething: boolean;
   discarding: boolean;
 }): string {
-  const { view, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding } = args;
+  const { view, pack, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding } = args;
+  const { words: w } = pack;
   if (view.phase === 'finished') return 'Partida terminada.';
   if (!view.isYourTurn) return `Esperando a ${view.players.find((p) => p.id === view.turnPlayerId)?.name ?? 'el rival'}.`;
   if (discarding) return 'Marca las cartas que quieras soltar y confirma el descarte.';
@@ -631,15 +643,17 @@ function getGuidance(args: {
       ? 'Elige una carta de tu mano.'
       : 'Ninguna carta se puede jugar: descarta las que no te sirvan.';
   }
-  if (selectedActions.length === 0) return `${cardName(selectedCard)} no tiene objetivo valido. Prueba con otra carta.`;
+  if (selectedActions.length === 0) {
+    return `${cardName(selectedCard, pack.id)} no tiene objetivo valido. Prueba con otra carta.`;
+  }
 
   const kinds = new Set(selectedActions.map((a) => a.type));
-  if (kinds.has('PLAY_SWAP') && !swapMineId) return 'Elige primero uno de tus organos para el intercambio.';
-  if (kinds.has('PLAY_SWAP')) return 'Ahora elige el organo rival que quieres a cambio.';
-  if (kinds.has('PLAY_VIRUS')) return 'Elige el organo que quieres atacar.';
-  if (kinds.has('PLAY_MEDICINE')) return 'Elige el organo que quieres tratar.';
-  if (kinds.has('PLAY_STEAL')) return 'Elige el organo rival que te llevas.';
-  if (kinds.has('PLAY_MALPRACTICE')) return 'Elige la mesa del jugador con quien intercambias tu cuerpo entero.';
-  if (kinds.has('PLAY_ORGAN')) return 'Coloca el organo en su hueco de tu cuerpo.';
-  return cardHint(selectedCard);
+  if (kinds.has('PLAY_SWAP') && !swapMineId) return `Elige primero ${w.one} de tus ${w.organs} para el intercambio.`;
+  if (kinds.has('PLAY_SWAP')) return `Ahora elige ${w.the} ${w.organ} rival que quieres a cambio.`;
+  if (kinds.has('PLAY_VIRUS')) return `Elige ${w.the} ${w.organ} que quieres atacar.`;
+  if (kinds.has('PLAY_MEDICINE')) return `Elige ${w.the} ${w.organ} que quieres proteger.`;
+  if (kinds.has('PLAY_STEAL')) return `Elige ${w.the} ${w.organ} rival que te llevas.`;
+  if (kinds.has('PLAY_MALPRACTICE')) return 'Elige la mesa del jugador con quien lo cambias todo.';
+  if (kinds.has('PLAY_ORGAN')) return `Coloca ${w.the} ${w.organ} en su hueco de tu ${w.body}.`;
+  return cardText(selectedCard, pack.id);
 }

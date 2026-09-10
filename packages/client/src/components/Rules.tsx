@@ -1,10 +1,27 @@
 import { useEffect, useRef } from 'react';
 
-import { MedicineGlyph, VirusGlyph } from '../art';
+import { DEFAULT_PACK } from '@contagio/engine';
+import type { CardKind, TreatmentKind } from '@contagio/engine';
+
+import { usePack } from '../packs';
+
+const TREATMENTS: TreatmentKind[] = ['swap', 'steal', 'spread', 'quarantine', 'malpractice'];
+
+/** Los nombres de las reglas: cada paquete los traduce, pero se explican con estos. */
+const BASE_KINDS: Record<CardKind, string> = {
+  organ: 'Organo',
+  virus: 'Virus',
+  medicine: 'Medicina',
+  treatment: 'Tratamiento',
+};
 
 /** Reglas resumidas, redactadas para esta version. */
 export function Rules({ onClose }: { onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { text, art } = usePack();
+  const renamed = text.id !== DEFAULT_PACK;
+  const Virus = art.virus;
+  const Medicine = art.medicine;
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -26,6 +43,20 @@ export function Rules({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="modal__body">
+          {renamed && (
+            <section className="rule">
+              <h3>Paquete {text.name}</h3>
+              <p>Cambian los nombres y los dibujos, no las reglas. Cada carta equivale a una de siempre:</p>
+              <ul>
+                {(Object.keys(BASE_KINDS) as CardKind[]).map((kind) => (
+                  <li key={kind}>
+                    <strong>{text.kinds[kind]}</strong> juega como {BASE_KINDS[kind].toLowerCase()}.
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section className="rule">
             <h3>Objetivo</h3>
             <p>
@@ -41,7 +72,7 @@ export function Rules({ onClose }: { onClose: () => void }) {
 
           <section className="rule">
             <h3>
-              <VirusGlyph className="rule__glyph" /> Virus
+              <Virus className="rule__glyph" /> Virus{renamed && ` · ${text.kinds.virus}`}
             </h3>
             <ul>
               <li>Sobre un organo libre: lo infecta.</li>
@@ -52,7 +83,7 @@ export function Rules({ onClose }: { onClose: () => void }) {
 
           <section className="rule">
             <h3>
-              <MedicineGlyph className="rule__glyph" /> Medicinas
+              <Medicine className="rule__glyph" /> Medicinas{renamed && ` · ${text.kinds.medicine}`}
             </h3>
             <ul>
               <li>Sobre un organo infectado: lo cura.</li>
@@ -62,23 +93,13 @@ export function Rules({ onClose }: { onClose: () => void }) {
           </section>
 
           <section className="rule">
-            <h3>Tratamientos</h3>
+            <h3>Tratamientos{renamed && ` · ${text.kinds.treatment}`}</h3>
             <ul>
-              <li>
-                <strong>Intercambio quirurgico:</strong> cambias un organo tuyo por uno rival.
-              </li>
-              <li>
-                <strong>Extraccion ilegal:</strong> te llevas un organo rival a tu cuerpo.
-              </li>
-              <li>
-                <strong>Brote:</strong> repartes tus virus entre organos libres de los demas.
-              </li>
-              <li>
-                <strong>Cuarentena:</strong> el resto descarta su mano y pierde el turno robando.
-              </li>
-              <li>
-                <strong>Negligencia medica:</strong> intercambias tu cuerpo entero con otro jugador.
-              </li>
+              {TREATMENTS.map((kind) => (
+                <li key={kind}>
+                  <strong>{text.treatments[kind].name}:</strong> {text.treatments[kind].text}
+                </li>
+              ))}
             </ul>
           </section>
 
@@ -86,7 +107,7 @@ export function Rules({ onClose }: { onClose: () => void }) {
             <h3>Detalles que deciden partidas</h3>
             <ul>
               <li>Nunca puedes tener dos organos del mismo color.</li>
-              <li>El organo quimerico vale como cualquier color; los virus y medicinas comodin, tambien.</li>
+              <li>El organo comodin vale como cualquier color; los virus y medicinas comodin, tambien.</li>
               <li>Un organo inmune no se roba, no se intercambia y no se infecta.</li>
             </ul>
           </section>

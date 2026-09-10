@@ -1,15 +1,7 @@
 import { cardName, organStatus } from '@contagio/engine';
-import type { Color, OrganPile, OrganStatus } from '@contagio/engine';
+import type { Color, OrganPile } from '@contagio/engine';
 
-import { CardGlyph, MedicineGlyph, OrganSilhouette, VirusGlyph } from '../art';
-
-const SLOT_LABEL: Record<Color, string> = {
-  red: 'Corazon',
-  blue: 'Cerebro',
-  green: 'Pulmon',
-  yellow: 'Higado',
-  wild: 'Organo quimerico',
-};
+import { CardGlyph, OrganSilhouette, usePack } from '../packs';
 
 /**
  * Hueco de un organo que todavia no esta en la mesa. Existe para que el cuerpo
@@ -28,6 +20,7 @@ export function OrganSlot({
   targetable?: boolean;
   onClick?: () => void;
 }) {
+  const label = usePack().text.organs[color].name;
   const className = `slot tone-${color} ${compact ? 'slot--compact' : ''} ${targetable ? 'is-targetable' : ''}`;
   const glyph = <OrganSilhouette color={color} className="slot__glyph" />;
 
@@ -38,8 +31,8 @@ export function OrganSlot({
         type="button"
         className={className}
         onClick={onClick}
-        title={`Colocar aqui: ${SLOT_LABEL[color]}`}
-        aria-label={`Colocar ${SLOT_LABEL[color]} en su hueco`}
+        title={`Colocar aqui: ${label}`}
+        aria-label={`Colocar ${label} en su hueco`}
       >
         {glyph}
       </button>
@@ -47,18 +40,11 @@ export function OrganSlot({
   }
 
   return (
-    <span className={className} title={`${SLOT_LABEL[color]}: sin colocar`} aria-label={`${SLOT_LABEL[color]} sin colocar`}>
+    <span className={className} title={`${label}: sin colocar`} aria-label={`${label} sin colocar`}>
       {glyph}
     </span>
   );
 }
-
-const STAMP: Record<OrganStatus, string | null> = {
-  free: null,
-  infected: 'Infectado',
-  vaccinated: 'Vacunado',
-  immunized: 'Inmune',
-};
 
 interface OrganProps {
   pile: OrganPile;
@@ -71,8 +57,9 @@ interface OrganProps {
 }
 
 export function Organ({ pile, targetable, selected, hit, onClick, compact }: OrganProps) {
+  const { id, text, art } = usePack();
   const status = organStatus(pile);
-  const stamp = STAMP[status];
+  const stamp = status === 'free' ? null : text.stamps[status];
   const classes = [
     'organ',
     `tone-${pile.organ.color}`,
@@ -85,7 +72,9 @@ export function Organ({ pile, targetable, selected, hit, onClick, compact }: Org
     .filter(Boolean)
     .join(' ');
 
-  const label = `${cardName(pile.organ)}, ${stamp ? stamp.toLowerCase() : 'sano'}`;
+  const label = `${cardName(pile.organ, id)}, ${stamp ? stamp.toLowerCase() : 'libre'}`;
+  const Virus = art.virus;
+  const Medicine = art.medicine;
 
   return (
     <button type="button" className={classes} onClick={onClick} disabled={!onClick} aria-label={label} title={label}>
@@ -93,13 +82,13 @@ export function Organ({ pile, targetable, selected, hit, onClick, compact }: Org
       {stamp && <span className={`organ__stamp organ__stamp--${status}`}>{stamp}</span>}
       <span className="organ__layers">
         {pile.viruses.map((virus) => (
-          <span key={virus.id} className={`chip tone-${virus.color}`} title={cardName(virus)}>
-            <VirusGlyph className="chip__glyph" />
+          <span key={virus.id} className={`chip tone-${virus.color}`} title={cardName(virus, id)}>
+            <Virus className="chip__glyph" />
           </span>
         ))}
         {pile.medicines.map((medicine) => (
-          <span key={medicine.id} className={`chip tone-${medicine.color}`} title={cardName(medicine)}>
-            <MedicineGlyph className="chip__glyph" />
+          <span key={medicine.id} className={`chip tone-${medicine.color}`} title={cardName(medicine, id)}>
+            <Medicine className="chip__glyph" />
           </span>
         ))}
       </span>

@@ -99,7 +99,7 @@ export function useContagio() {
     socket.on('disconnect', () => setConnected(false));
     socket.on('room:state', setRoom);
     socket.on('game:view', setView);
-    socket.on('game:over', ({ winnerName }) => pushToast(`${winnerName} completa un cuerpo sano.`));
+    socket.on('game:over', ({ winnerName }) => pushToast(`${winnerName} gana la partida.`));
     socket.on('toast', ({ message, kind }) => pushToast(message, kind));
 
     return () => {

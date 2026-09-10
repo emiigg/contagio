@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { cardName } from '@contagio/engine';
 import type { MoveSummary } from '@contagio/engine';
 
-import { CardGlyph, Mark } from '../art';
+import { Mark } from '../art';
+import { CardGlyph, usePack } from '../packs';
 
 /**
  * Anuncia la ultima jugada en el centro de la mesa. Existe porque los turnos
@@ -20,6 +21,7 @@ interface AnnounceProps {
 
 export function Announce({ move, youId, holdMs = 3800, paused = false }: AnnounceProps) {
   const [shown, setShown] = useState<MoveSummary | null>(null);
+  const { id: packId } = usePack();
 
   useEffect(() => {
     if (!move || paused) return;
@@ -39,7 +41,7 @@ export function Announce({ move, youId, holdMs = 3800, paused = false }: Announc
         {shown.cards.slice(0, 3).map((card, index) => (
           <span key={card.id} className={`announce__card tone-${card.color ?? 'treatment'}`} style={{ '--i': index } as React.CSSProperties}>
             <CardGlyph card={card} className="announce__glyph" />
-            <span className="announce__cardname">{cardName(card)}</span>
+            <span className="announce__cardname">{cardName(card, packId)}</span>
           </span>
         ))}
       </div>

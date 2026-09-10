@@ -1,23 +1,14 @@
-import { cardName, cardText } from '@contagio/engine';
+import { cardName } from '@contagio/engine';
 import type { Card } from '@contagio/engine';
 
-import { CardGlyph } from '../art';
+import { CardGlyph, usePack } from '../packs';
 
-const KIND_LABEL: Record<Card['kind'], string> = {
-  organ: 'Organo',
-  virus: 'Virus',
-  medicine: 'Medicina',
-  treatment: 'Tratamiento',
-};
-
-export function cardHint(card: Card): string {
-  return cardText(card);
-}
-
-/** Codigo de muestra: identifica la carta como una ficha de laboratorio. */
-export function specimenCode(card: Card): string {
-  const prefix = card.kind === 'organ' ? 'ORG' : card.kind === 'virus' ? 'VIR' : card.kind === 'medicine' ? 'MED' : 'TRT';
-  return `${prefix}-${card.id.replace(/\D/g, '').padStart(3, '0')}`;
+/**
+ * Codigo de muestra: identifica la carta como una ficha de laboratorio. El
+ * prefijo sale del tipo de carta en el paquete en uso (ORG, HER, FRU...).
+ */
+export function specimenCode(card: Card, kindLabel: string): string {
+  return `${kindLabel.slice(0, 3).toUpperCase()}-${card.id.replace(/\D/g, '').padStart(3, '0')}`;
 }
 
 interface CardProps {
@@ -29,6 +20,7 @@ interface CardProps {
 }
 
 export function CardFace({ card, selected, playable, marked, onClick }: CardProps) {
+  const { id, text } = usePack();
   const color = card.color ?? 'treatment';
   const classes = [
     'card',
@@ -43,12 +35,12 @@ export function CardFace({ card, selected, playable, marked, onClick }: CardProp
 
   return (
     <button type="button" className={classes} onClick={onClick} disabled={!onClick} aria-pressed={selected}>
-      <span className="card__kind">{KIND_LABEL[card.kind]}</span>
+      <span className="card__kind">{text.kinds[card.kind]}</span>
       <span className="card__art">
         <CardGlyph card={card} className="card__glyph" />
       </span>
-      <span className="card__name">{cardName(card)}</span>
-      <span className="card__code">{specimenCode(card)}</span>
+      <span className="card__name">{cardName(card, id)}</span>
+      <span className="card__code">{specimenCode(card, text.kinds[card.kind])}</span>
     </button>
   );
 }
