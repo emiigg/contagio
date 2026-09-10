@@ -72,6 +72,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [hitKeys, setHitKeys] = useState<Set<OrganKey>>(new Set());
   const [dealing, setDealing] = useState(false);
+  /** Jugada a la espera de un si: hoy solo la negligencia medica. */
+  const [confirming, setConfirming] = useState<{ text: string; action: Action } | null>(null);
   const narrow = useNarrow();
 
   const centerRef = useRef<HTMLDivElement | null>(null);
@@ -89,6 +91,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     setSwapMineId(null);
     setDiscardIds([]);
     setDiscarding(false);
+    setConfirming(null);
   }, [view.turnPlayerId, view.turnCount]);
 
   // Reparto animado al empezar la partida (y al empezar la revancha).
@@ -234,7 +237,13 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       onOrganClick={onOrganClick}
       onSelectPlayer={() => {
         const action = playerTargets.get(rival.id);
-        if (action) void run(action);
+        if (!action) return;
+        // Cambiar el cuerpo entero es irreversible y se juega de un clic:
+        // aqui si conviene preguntar antes.
+        setConfirming({
+          text: `Intercambias tu cuerpo entero con ${rival.name}: te llevas sus organos con lo que tengan encima, y el se lleva los tuyos.`,
+          action,
+        });
       }}
       registerSeat={registerSeat}
     />
@@ -458,6 +467,31 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         />
       )}
 
+      {confirming && (
+        <div className="modal" role="dialog" aria-modal="true" aria-label="Confirmar jugada">
+          <div className="modal__panel modal__panel--ask">
+            <h2 className="modal__title">Negligencia medica</h2>
+            <p className="curtain__text">{confirming.text}</p>
+            <div className="curtain__actions">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => {
+                  const { action } = confirming;
+                  setConfirming(null);
+                  void run(action);
+                }}
+              >
+                Intercambiar cuerpos
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={() => setConfirming(null)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {view.phase === 'finished' && (
         <div className="curtain" role="dialog" aria-modal="true">
           <div className="curtain__panel">
@@ -527,19 +561,28 @@ function RivalSeat({
     <article
       className={`seat-board seat-board--${variant} ${isTurn ? 'is-turn' : ''} ${selectable ? 'is-selectable' : ''}`}
       style={{ '--arc': arc } as React.CSSProperties}
+      // La mesa entera del rival es el objetivo, no solo su nombre: es lo que
+      // se senala con el dedo cuando se juega una negligencia medica.
+      role={selectable ? 'button' : undefined}
+      tabIndex={selectable ? 0 : undefined}
+      title={selectable ? `Intercambiar cuerpos con ${player.name}` : undefined}
+      onClick={selectable ? onSelectPlayer : undefined}
+      onKeyDown={
+        selectable
+          ? (event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              onSelectPlayer();
+            }
+          : undefined
+      }
     >
       <header className="seat-board__head">
-        <button
-          type="button"
-          className="seat-board__name"
-          onClick={selectable ? onSelectPlayer : undefined}
-          disabled={!selectable}
-          title={selectable ? 'Intercambiar cuerpos con este jugador' : undefined}
-        >
+        <span className="seat-board__name">
           {player.name}
           {player.isBot && <span className="tag">bot</span>}
           {!player.connected && !player.isBot && <span className="tag tag--warn">sin conexion</span>}
-        </button>
+        </span>
         <span className="seat-board__meta mono">{player.healthyOrgans}/4</span>
       </header>
 
@@ -594,7 +637,7 @@ function getGuidance(args: {
   if (kinds.has('PLAY_VIRUS')) return 'Elige el organo que quieres atacar.';
   if (kinds.has('PLAY_MEDICINE')) return 'Elige el organo que quieres tratar.';
   if (kinds.has('PLAY_STEAL')) return 'Elige el organo rival que te llevas.';
-  if (kinds.has('PLAY_MALPRACTICE')) return 'Elige con que jugador intercambias tu cuerpo entero.';
+  if (kinds.has('PLAY_MALPRACTICE')) return 'Elige la mesa del jugador con quien intercambias tu cuerpo entero.';
   if (kinds.has('PLAY_ORGAN')) return 'Coloca el organo en su hueco de tu cuerpo.';
   return cardHint(selectedCard);
 }

@@ -799,6 +799,19 @@ button {
 .seat-board.is-selectable {
   outline: 2px dashed var(--organ-wild);
   outline-offset: 3px;
+  cursor: pointer;
+}
+
+.seat-board.is-selectable:hover,
+.seat-board.is-selectable:focus-visible {
+  outline-style: solid;
+  background: color-mix(in srgb, var(--organ-wild) 9%, var(--card));
+}
+
+/* El objetivo es la mesa entera, asi que lo de dentro no intercepta el clic. */
+.seat-board.is-selectable .organ,
+.seat-board.is-selectable .slot {
+  pointer-events: none;
 }
 
 .seat-board__head {
@@ -828,7 +841,6 @@ button {
 }
 
 .seat-board.is-selectable .seat-board__name {
-  cursor: pointer;
   text-decoration: underline;
 }
 
@@ -1604,6 +1616,10 @@ button {
   padding: 1rem;
   background: var(--veil);
   z-index: 20;
+}
+
+.modal__panel--ask {
+  width: min(460px, 100%);
 }
 
 .modal__panel,
