@@ -5,10 +5,10 @@ import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
  * nombres, descripciones y la forma de contar cada jugada. Por eso vive en el
  * motor como texto puro; los dibujos son cosa del cliente.
  */
-export type PackId = 'contagio' | 'heroes' | 'frutas';
+export type PackId = 'contagio' | 'heroes' | 'frutas' | 'cortafuegos';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
-export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas'];
+export const PACK_IDS: PackId[] = ['contagio', 'heroes', 'frutas', 'cortafuegos'];
 
 export const DEFAULT_PACK: PackId = 'contagio';
 
@@ -336,10 +336,97 @@ const FRUTAS: Pack = {
   },
 };
 
+const CORTAFUEGOS: Pack = {
+  id: 'cortafuegos',
+  name: 'Cortafuegos',
+  tagline: 'Servidores, malware y parches. Que el sistema no se caiga.',
+  kinds: { organ: 'Componente', virus: 'Malware', medicine: 'Parche', treatment: 'Comando' },
+  organs: {
+    red: { name: 'Procesador', art: 'el' },
+    blue: { name: 'Base de datos', art: 'la' },
+    green: { name: 'Router', art: 'el' },
+    yellow: { name: 'Fuente de poder', art: 'la' },
+    wild: { name: 'Nube hibrida', art: 'la' },
+  },
+  viruses: {
+    red: 'Ransomware',
+    blue: 'Troyano',
+    green: 'Gusano de red',
+    yellow: 'Pico de tension',
+    wild: 'Dia cero',
+  },
+  medicines: {
+    red: 'Parche de kernel',
+    blue: 'Copia de seguridad',
+    green: 'Cortafuegos',
+    yellow: 'Regulador',
+    wild: 'Actualizacion',
+  },
+  treatments: {
+    swap: {
+      name: 'Migracion',
+      text: 'Cambias un componente tuyo por uno de otro jugador. Ninguno puede estar cifrado ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Secuestro de sesion',
+      text: 'Tomas el control de un componente de otro jugador y lo sumas a tu sistema. No funciona con componentes cifrados ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Correo en cadena',
+      text: 'Reenvias los ataques de tus componentes a componentes libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Apagon',
+      text: 'Se va la luz en las demas mesas: tus rivales descartan su mano y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Clonado de disco',
+      text: 'Intercambias tu sistema entero con el de otro jugador, componentes cifrados incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Instalalo en tu sistema. Uno por color.',
+    virus: 'Hackea un componente libre, tumba uno ya hackeado o revienta un parche.',
+    medicine: 'Limpia un componente hackeado, parchea uno libre o cifra uno ya parcheado.',
+  },
+  stamps: { infected: 'Hackeado', vaccinated: 'Parcheado', immunized: 'Cifrado' },
+  words: {
+    organ: 'componente',
+    organs: 'componentes',
+    the: 'el',
+    one: 'uno',
+    healthy: 'en linea',
+    threat: 'ataque',
+    threats: 'ataques',
+    body: 'sistema',
+  },
+  lines: {
+    place: '{p} instala {card}.',
+    infect: '{p} hackea {organ}.',
+    remove: '{p} tumba {organ}.',
+    breakShield: '{p} revienta el parche de {organ}.',
+    cure: '{p} limpia {organ}.',
+    vaccinate: '{p} parchea {organ}.',
+    immunize: '{p} cifra {organ}.',
+    spread: '{p} reenvia {n} {threats} a sus rivales.',
+    quarantine: '{p} provoca un apagon: el resto pierde su mano.',
+    malpractice: '{p} clona su disco con el de {victim}: sistemas intercambiados.',
+    win: '{p} levanta su sistema completo y gana la partida.',
+  },
+  buttons: { spread: 'Reenviar {n} {threats}', quarantine: 'Provocar apagon', malpractice: 'Clonar disco' },
+  ending: {
+    winTitle: 'Sistema en linea. Ganas.',
+    winText: 'Cuatro componentes en linea antes que nadie.',
+    loseTitle: '{p} levanta su sistema.',
+    loseText: 'Tu sistema se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
   frutas: FRUTAS,
+  cortafuegos: CORTAFUEGOS,
 };
 
 export function isPackId(value: unknown): value is PackId {
