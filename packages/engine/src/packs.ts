@@ -14,7 +14,8 @@ export type PackId =
   | 'orbita'
   | 'asedio'
   | 'arrecife'
-  | 'grimorio';
+  | 'grimorio'
+  | 'jurasico';
 
 /** Orden en que se ofrecen en la sala. El primero es el de siempre. */
 export const PACK_IDS: PackId[] = [
@@ -27,6 +28,7 @@ export const PACK_IDS: PackId[] = [
   'asedio',
   'arrecife',
   'grimorio',
+  'jurasico',
 ];
 
 export const DEFAULT_PACK: PackId = 'contagio';
@@ -876,6 +878,92 @@ const GRIMORIO: Pack = {
   },
 };
 
+const JURASICO: Pack = {
+  id: 'jurasico',
+  name: 'Jurasico',
+  tagline: 'Dinosaurios, volcanes y una manada que no quiere extinguirse.',
+  kinds: { organ: 'Dinosaurio', virus: 'Peligro', medicine: 'Refugio', treatment: 'Fenomeno' },
+  organs: {
+    red: { name: 'Tiranosaurio', art: 'el' },
+    blue: { name: 'Pterodactilo', art: 'el' },
+    green: { name: 'Diplodocus', art: 'el' },
+    yellow: { name: 'Triceratops', art: 'el' },
+    wild: { name: 'Huevo misterioso', art: 'el' },
+  },
+  viruses: {
+    red: 'Lava',
+    blue: 'Glaciacion',
+    green: 'Pantano',
+    yellow: 'Sequia',
+    wild: 'Meteorito',
+  },
+  medicines: {
+    red: 'Cueva',
+    blue: 'Plumaje',
+    green: 'Helechal',
+    yellow: 'Oasis',
+    wild: 'Instinto de manada',
+  },
+  treatments: {
+    swap: {
+      name: 'Cruce de manadas',
+      text: 'Cambias un dinosaurio tuyo por uno de otro jugador. Ninguno puede ser intocable ni dejar a nadie con dos del mismo color.',
+    },
+    steal: {
+      name: 'Territorio',
+      text: 'Invades el territorio de otro jugador y uno de sus dinosaurios se pasa a tu manada. No sirve con dinosaurios intocables ni si ya tienes uno de ese color.',
+    },
+    spread: {
+      name: 'Erupcion',
+      text: 'Los peligros de tus dinosaurios estallan y caen sobre dinosaurios libres de tus rivales.',
+    },
+    quarantine: {
+      name: 'Rugido',
+      text: 'Un rugido espanta a tus rivales: sueltan su mano y pierden su siguiente turno robando otra.',
+    },
+    malpractice: {
+      name: 'Deriva continental',
+      text: 'Intercambias tu manada entera con la de otro jugador, dinosaurios intocables incluidos.',
+    },
+  },
+  hints: {
+    organ: 'Llevalo a tu manada. Uno por color.',
+    virus: 'Acorrala a un dinosaurio libre, extingue a uno acorralado o destruye un refugio.',
+    medicine: 'Salva a un dinosaurio acorralado, dale refugio a uno libre o hazlo intocable si ya tenia refugio.',
+  },
+  stamps: { infected: 'Acorralado', vaccinated: 'Refugiado', immunized: 'Intocable' },
+  words: {
+    organ: 'dinosaurio',
+    organs: 'dinosaurios',
+    the: 'el',
+    one: 'uno',
+    healthy: 'vivos',
+    threat: 'peligro',
+    threats: 'peligros',
+    body: 'manada',
+  },
+  lines: {
+    place: '{p} suma {card} a su manada.',
+    infect: '{p} acorrala a {organ}.',
+    remove: '{p} extingue a {organ}.',
+    breakShield: '{p} destruye el refugio de {organ}.',
+    cure: '{p} salva a {organ}.',
+    vaccinate: '{p} da refugio a {organ}.',
+    immunize: '{p} vuelve intocable a {organ}.',
+    spread: '{p} desata {n} {threats} sobre sus rivales.',
+    quarantine: '{p} lanza un rugido: el resto suelta su mano.',
+    malpractice: '{p} provoca una deriva continental y cambia de manada con {victim}.',
+    win: '{p} reune su manada y gana la partida.',
+  },
+  buttons: { spread: 'Desatar {n} {threats}', quarantine: 'Rugir', malpractice: 'Mover continentes' },
+  ending: {
+    winTitle: 'Manada completa. Ganas.',
+    winText: 'Cuatro dinosaurios vivos antes que nadie.',
+    loseTitle: '{p} reune su manada.',
+    loseText: 'Tu manada se quedo a medias. La proxima ronda empieza de cero.',
+  },
+};
+
 export const PACKS: Record<PackId, Pack> = {
   contagio: CONTAGIO,
   heroes: HEROES,
@@ -886,6 +974,7 @@ export const PACKS: Record<PackId, Pack> = {
   asedio: ASEDIO,
   arrecife: ARRECIFE,
   grimorio: GRIMORIO,
+  jurasico: JURASICO,
 };
 
 export function isPackId(value: unknown): value is PackId {
