@@ -23,11 +23,25 @@ const URL = `http://localhost:${PORT}`;
 const VIEWPORT = { width: 1440, height: 900 };
 /** 2 para revisar detalle, 1 para las imagenes del README. */
 const SCALE = Number(process.env.SHOT_SCALE ?? 2);
+/** 'dark' o 'light' fuerzan el tema; sin valor manda el del sistema. */
+const THEME = process.env.SHOT_THEME ?? '';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
   await mkdir(OUT, { recursive: true });
+
+  // Si el puerto ya responde, las capturas saldrian de OTRO servidor (por
+  // ejemplo uno olvidado de una ejecucion anterior) y mentirian sobre el
+  // codigo actual. Mejor parar aqui que revisar un diseno que no es el tuyo.
+  try {
+    if ((await fetch(`${URL}/health`)).ok) {
+      throw new Error(`el puerto ${PORT} ya esta ocupado: cierra ese proceso o usa SHOT_PORT`);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('el puerto')) throw err;
+  }
+
   const server = spawn(process.execPath, ['packages/server/dist/index.js'], {
     env: { ...process.env, PORT: String(PORT), BOT_DELAY_MS: '3000' },
     stdio: 'ignore',
@@ -44,6 +58,11 @@ async function main() {
 
   const browser = await chromium.connectOverCDP(CDP_URL);
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: SCALE });
+  if (THEME) {
+    // La preferencia se siembra antes de que cargue la pagina, igual que la
+    // encontraria el navegador de alguien que ya eligio tema.
+    await context.addInitScript((value) => localStorage.setItem('contagio.theme', value), THEME);
+  }
   const page = await context.newPage();
   const errors = [];
   page.on('console', (msg) => msg.type() === 'error' && errors.push(msg.text()));
@@ -51,6 +70,14 @@ async function main() {
 
   const shot = async (name) => {
     await page.screenshot({ path: resolve(OUT, `${name}.png`) });
+    if (process.env.SHOT_DEBUG) {
+      const info = await page.evaluate(() => ({
+        dealing: !!document.querySelector('.table.is-dealing'),
+        announce: document.querySelector('.announce__text')?.textContent ?? null,
+        log: [...document.querySelectorAll('.ticker__item')].map((n) => n.textContent),
+      }));
+      console.log('     ', JSON.stringify(info));
+    }
     console.log('  ->', `${name}.png`);
   };
 
@@ -76,6 +103,16 @@ async function main() {
   await page.waitForSelector('.table:not(.is-dealing)', { timeout: 15000 });
   await wait(400);
   await shot('05-mesa');
+
+  // El boton de tema: desde automatico, dos pulsaciones dejan la mesa oscura.
+  if (!THEME) {
+    await page.click('.themeswitch');
+    await page.click('.themeswitch');
+    await wait(400);
+    await shot('05b-mesa-oscura');
+    await page.click('.themeswitch');
+    await wait(300);
+  }
 
   // Mano: pasar el raton por una carta para ver la leyenda.
   const cards = page.locator('.hand__slot');
