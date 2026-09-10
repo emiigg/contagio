@@ -2114,6 +2114,46 @@ button {
   }
 }
 
+/* Moviles cortos (un telefono normal en vertical, sin barra del navegador):
+   sobran unas decenas de pixeles y hay que sacarlas de algun sitio. Cede el
+   cartel de la jugada, que es lo unico que puede encoger sin perder dato. */
+@media (max-width: 700px) and (max-height: 820px) {
+  .announce {
+    height: 6.8rem;
+  }
+
+  .announce__card {
+    width: 3.2rem;
+    padding: 0.3rem 0.25rem;
+  }
+
+  .announce__glyph {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  .seat-board__hand {
+    height: 1rem;
+  }
+
+  .mine__body {
+    --organ-h: 4rem;
+  }
+
+  .hand {
+    padding-top: 0.45rem;
+  }
+
+  .card {
+    min-height: 7.6rem;
+  }
+
+  .dock__actions .btn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.84rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
