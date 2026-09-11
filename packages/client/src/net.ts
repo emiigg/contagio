@@ -54,10 +54,10 @@ function request<K extends keyof ClientToServerEvents>(
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('El servidor no responde')), 8000);
-    (socket.emit as any)(event, payload, (response: { ok: boolean; data?: unknown; error?: string }) => {
+    (socket.emit as any)(event, payload, (response: { ok: boolean; data?: unknown; error?: { es: string } }) => {
       clearTimeout(timeout);
       if (response.ok) resolve(response.data);
-      else reject(new Error(response.error ?? 'Error desconocido'));
+      else reject(new Error(response.error?.es ?? 'Error desconocido'));
     });
   });
 }
@@ -101,7 +101,7 @@ export function useContagio() {
     socket.on('room:state', setRoom);
     socket.on('game:view', setView);
     socket.on('game:over', ({ winnerName }) => pushToast(`${winnerName} gana la partida.`));
-    socket.on('toast', ({ message, kind }) => pushToast(message, kind));
+    socket.on('toast', ({ message, kind }) => pushToast(message.es, kind));
 
     return () => {
       socket.close();

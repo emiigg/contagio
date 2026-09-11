@@ -55,7 +55,7 @@ function ask(socket, event, payload) {
     const timer = setTimeout(() => reject(new Error(`sin respuesta a ${event}`)), 5000);
     socket.emit(event, payload, (res) => {
       clearTimeout(timer);
-      res.ok ? resolve(res.data) : reject(new Error(res.error));
+      res.ok ? resolve(res.data) : reject(new Error(res.error.es));
     });
   });
 }
@@ -93,7 +93,7 @@ test('una partida completa por socket termina con un ganador', async () => {
         if (!view.isYourTurn || view.legalActions.length === 0) return;
         const action = pickAction(view, seedBase + n++);
         socket.emit('game:action', { action }, (res) => {
-          if (!res.ok) rejected.push(`${label}: ${action.type} -> ${res.error}`);
+          if (!res.ok) rejected.push(`${label}: ${action.type} -> ${res.error.es}`);
         });
       });
     };

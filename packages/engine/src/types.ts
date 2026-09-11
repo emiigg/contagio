@@ -1,3 +1,4 @@
+import type { Localized } from './lang.js';
 /**
  * Contagio - modelo de dominio.
  *
@@ -88,12 +89,13 @@ export interface MoveSummary {
   cards: Card[];
   /** Organos afectados, para resaltarlos un instante. */
   targets: OrganRef[];
-  text: string;
+  /** La jugada contada, en cada idioma: cada jugador lee la suya. */
+  text: Localized;
 }
 
 export interface LogEntry {
   id: number;
-  text: string;
+  text: Localized;
   playerId?: string;
 }
 

@@ -10,6 +10,7 @@ import { MAX_PLAYERS, isPackId } from '@contagio/engine';
 import type { BotDifficulty, ClientToServerEvents, ServerToClientEvents } from '@contagio/engine';
 
 import { Room, generateRoomCode } from './rooms.js';
+import { MSG } from './messages.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const ORIGIN = process.env.CORS_ORIGIN ?? '*';
@@ -25,7 +26,6 @@ const MAX_ROOMS = Number(process.env.MAX_ROOMS ?? 5);
  * de este minuto se reencuentra su partida donde la dejo.
  */
 const EMPTY_GRACE_MS = Number(process.env.EMPTY_GRACE_MS ?? 60_000);
-const FULL_MESSAGE = `Ahora mismo hay ${MAX_ROOMS} partidas en marcha, que es el tope de este servidor. Intentalo dentro de un rato.`;
 /** Cada cuanto se pasa la escoba. Nunca mas lento que el propio margen. */
 const SWEEP_MS = Math.max(1_000, Math.min(10_000, EMPTY_GRACE_MS));
 
@@ -86,7 +86,7 @@ function roomOf(socketId: string): { room: Room; playerId: string } | null {
 
 io.on('connection', (socket) => {
   socket.on('room:create', ({ name }, ack) => {
-    if (rooms.size >= MAX_ROOMS) return ack({ ok: false, error: FULL_MESSAGE });
+    if (rooms.size >= MAX_ROOMS) return ack({ ok: false, error: MSG.full(MAX_ROOMS) });
     const room = makeRoom();
     const member = room.addHuman(name, socket.id);
     sessions.set(socket.id, { code: room.code, playerId: member.id });
@@ -97,9 +97,9 @@ io.on('connection', (socket) => {
 
   socket.on('room:join', ({ code, name }, ack) => {
     const room = rooms.get(code.trim().toUpperCase());
-    if (!room) return ack({ ok: false, error: 'No existe ninguna sala con ese codigo' });
-    if (room.status !== 'lobby') return ack({ ok: false, error: 'La partida ya ha empezado' });
-    if (room.members.length >= MAX_PLAYERS) return ack({ ok: false, error: 'La sala esta llena' });
+    if (!room) return ack({ ok: false, error: MSG.noSuchRoom });
+    if (room.status !== 'lobby') return ack({ ok: false, error: MSG.alreadyStarted });
+    if (room.members.length >= MAX_PLAYERS) return ack({ ok: false, error: MSG.roomFull });
 
     const member = room.addHuman(name, socket.id);
     sessions.set(socket.id, { code: room.code, playerId: member.id });
@@ -112,9 +112,9 @@ io.on('connection', (socket) => {
   /** Reconexion: el cliente guarda su token y vuelve a su asiento. */
   socket.on('room:resume', ({ code, playerId, token }, ack) => {
     const room = rooms.get(code.trim().toUpperCase());
-    if (!room) return ack({ ok: false, error: 'La sala ya no existe' });
+    if (!room) return ack({ ok: false, error: MSG.roomGone });
     const member = room.findByToken(playerId, token);
-    if (!member) return ack({ ok: false, error: 'Credenciales no validas para esta sala' });
+    if (!member) return ack({ ok: false, error: MSG.badCredentials });
 
     sessions.set(socket.id, { code: room.code, playerId });
     socket.join(room.code);
@@ -125,11 +125,11 @@ io.on('connection', (socket) => {
 
   socket.on('room:addBot', (_payload, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion puede anadir bots' });
-    if (room.status !== 'lobby') return ack({ ok: false, error: 'La partida ya ha empezado' });
-    if (room.members.length >= MAX_PLAYERS) return ack({ ok: false, error: 'La sala esta llena' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostAddsBots });
+    if (room.status !== 'lobby') return ack({ ok: false, error: MSG.alreadyStarted });
+    if (room.members.length >= MAX_PLAYERS) return ack({ ok: false, error: MSG.roomFull });
 
     room.addBot();
     room.pushState();
@@ -138,10 +138,10 @@ io.on('connection', (socket) => {
 
   socket.on('room:removePlayer', ({ playerId: targetId }, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion puede expulsar' });
-    if (room.status !== 'lobby') return ack({ ok: false, error: 'La partida ya ha empezado' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostKicks });
+    if (room.status !== 'lobby') return ack({ ok: false, error: MSG.alreadyStarted });
 
     room.remove(targetId);
     room.pushState();
@@ -150,11 +150,11 @@ io.on('connection', (socket) => {
 
   socket.on('room:difficulty', ({ difficulty }, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion decide la dificultad' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostSetsDifficulty });
     const allowed: BotDifficulty[] = ['easy', 'normal', 'hard'];
-    if (!allowed.includes(difficulty)) return ack({ ok: false, error: 'Dificultad no valida' });
+    if (!allowed.includes(difficulty)) return ack({ ok: false, error: MSG.badDifficulty });
 
     room.difficulty = difficulty;
     room.pushState();
@@ -164,11 +164,11 @@ io.on('connection', (socket) => {
   /** El paquete se elige en la sala: con la partida en marcha ya no se toca. */
   socket.on('room:pack', ({ pack }, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion elige el paquete' });
-    if (room.status !== 'lobby') return ack({ ok: false, error: 'La partida ya ha empezado' });
-    if (!isPackId(pack)) return ack({ ok: false, error: 'Paquete no valido' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostPicksPack });
+    if (room.status !== 'lobby') return ack({ ok: false, error: MSG.alreadyStarted });
+    if (!isPackId(pack)) return ack({ ok: false, error: MSG.badPack });
 
     room.pack = pack;
     room.pushState();
@@ -177,9 +177,9 @@ io.on('connection', (socket) => {
 
   socket.on('room:start', (_payload, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion puede empezar' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostStarts });
 
     const result = room.start();
     if (!result.ok) return ack({ ok: false, error: result.error! });
@@ -188,9 +188,9 @@ io.on('connection', (socket) => {
 
   socket.on('room:rematch', (_payload, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: 'Solo el anfitrion puede repetir' });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostRematches });
 
     const result = room.rematch();
     if (!result.ok) return ack({ ok: false, error: result.error! });
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
 
   socket.on('game:action', ({ action }, ack) => {
     const found = roomOf(socket.id);
-    if (!found) return ack({ ok: false, error: 'No estas en ninguna sala' });
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
 
     const result = room.handleAction(playerId, action);

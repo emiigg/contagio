@@ -12,7 +12,8 @@ import {
   setConnected,
   toPlayerView,
 } from '@contagio/engine';
-import type { Action, BotDifficulty, GameState, PackId, PlayerView, RoomView } from '@contagio/engine';
+import type { Action, BotDifficulty, GameState, Localized, PackId, PlayerView, RoomView } from '@contagio/engine';
+import { MSG } from './messages.js';
 
 export interface RoomMember {
   id: string;
@@ -45,7 +46,7 @@ export type RoomBroadcast = {
   room: (room: RoomView) => void;
   view: (socketId: string, view: PlayerView) => void;
   gameOver: (payload: { winnerId: string; winnerName: string }) => void;
-  toast: (socketId: string, message: string) => void;
+  toast: (socketId: string, message: Localized) => void;
 };
 
 export class Room {
@@ -140,9 +141,9 @@ export class Room {
     return this.members.find((m) => m.socketId === socketId);
   }
 
-  start(): { ok: boolean; error?: string } {
-    if (this.members.length < MIN_PLAYERS) return { ok: false, error: `Hacen falta al menos ${MIN_PLAYERS} jugadores` };
-    if (this.members.length > MAX_PLAYERS) return { ok: false, error: `El maximo son ${MAX_PLAYERS} jugadores` };
+  start(): { ok: boolean; error?: Localized } {
+    if (this.members.length < MIN_PLAYERS) return { ok: false, error: MSG.tooFew(MIN_PLAYERS) };
+    if (this.members.length > MAX_PLAYERS) return { ok: false, error: MSG.tooMany(MAX_PLAYERS) };
     this.state = createGame(
       this.members.map((m) => ({ id: m.id, name: m.name, isBot: m.isBot })),
       randomSeed(),
@@ -154,16 +155,16 @@ export class Room {
   }
 
   /** Nueva partida con los mismos jugadores. */
-  rematch(): { ok: boolean; error?: string } {
+  rematch(): { ok: boolean; error?: Localized } {
     this.clearTimer();
     this.state = null;
     return this.start();
   }
 
-  handleAction(playerId: string, action: Action): { ok: boolean; error?: string } {
-    if (!this.state) return { ok: false, error: 'La partida no ha empezado' };
+  handleAction(playerId: string, action: Action): { ok: boolean; error?: Localized } {
+    if (!this.state) return { ok: false, error: MSG.notStarted };
     const result = applyAction(this.state, playerId, action);
-    if (!result.ok) return { ok: false, error: result.error };
+    if (!result.ok) return { ok: false, error: MSG.invalidMove };
     this.state = result.state;
     this.scheduleAutoTurn();
     this.pushState();
@@ -246,7 +247,7 @@ export class Room {
 
     if (timedOut) {
       const socketId = this.members.find((m) => m.id === playerId)?.socketId;
-      if (socketId) this.broadcast.toast(socketId, 'Se agoto tu tiempo: la mesa ha jugado por ti.');
+      if (socketId) this.broadcast.toast(socketId, MSG.timedOut);
     }
 
     this.scheduleAutoTurn();

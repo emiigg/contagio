@@ -1,6 +1,7 @@
 import type { Action } from './types.js';
 import type { PlayerView } from './view.js';
 import type { BotDifficulty } from './bot.js';
+import type { Localized } from './lang.js';
 import type { PackId } from './packs.js';
 
 /** Contrato cliente <-> servidor. Vive en el motor para que ambos lo compartan. */
@@ -29,7 +30,7 @@ export interface Credentials {
   token: string;
 }
 
-export type Ack<T> = (response: { ok: true; data: T } | { ok: false; error: string }) => void;
+export type Ack<T> = (response: { ok: true; data: T } | { ok: false; error: Localized }) => void;
 
 export interface ClientToServerEvents {
   'room:create': (payload: { name: string }, ack: Ack<{ room: RoomView } & Credentials>) => void;
@@ -49,5 +50,5 @@ export interface ServerToClientEvents {
   'room:state': (room: RoomView) => void;
   'game:view': (view: PlayerView) => void;
   'game:over': (payload: { winnerId: string; winnerName: string }) => void;
-  'toast': (payload: { message: string; kind: 'info' | 'error' }) => void;
+  'toast': (payload: { message: Localized; kind: 'info' | 'error' }) => void;
 }

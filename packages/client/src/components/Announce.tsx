@@ -45,7 +45,7 @@ export function Announce({ move, youId, holdMs = 3800, paused = false }: Announc
           </span>
         ))}
       </div>
-      <p className="announce__text">{shown.text}</p>
+      <p className="announce__text">{shown.text.es}</p>
     </div>
   );
 }

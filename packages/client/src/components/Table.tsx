@@ -486,7 +486,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               .reverse()
               .map((entry) => (
                 <li key={entry.id} className="ticker__item">
-                  {entry.text}
+                  {entry.text.es}
                 </li>
               ))}
           </ol>

@@ -356,7 +356,8 @@ test('la salida se sortea y queda anunciada', () => {
     openers.add(opener.id);
     assert.equal(state.lastMove?.kind, 'START');
     assert.equal(state.lastMove?.playerId, opener.id);
-    assert.match(state.lastMove!.text, new RegExp(opener.name + '\\.$'));
+    assert.match(state.lastMove!.text.es, new RegExp(opener.name + '\\.$'));
+    assert.match(state.lastMove!.text.en, new RegExp(`${opener.name} to open\\.$`));
   }
   // Con cuarenta semillas los tres asientos tienen que haber abierto alguna vez.
   assert.equal(openers.size, 3);
@@ -526,7 +527,8 @@ test('el registro cuenta la jugada con el vocabulario del paquete', () => {
   const next = expectOk(
     applyAction(state, 'p0', { type: 'PLAY_VIRUS', cardId: joker.id, target: { playerId: 'p1', organId: bat.id } }),
   );
-  assert.equal(next.lastMove?.text, 'J1 captura al Batman de J2.');
+  assert.equal(next.lastMove?.text.es, 'J1 captura al Batman de J2.');
+  assert.match(next.lastMove?.text.en ?? '', /J2's Batman/);
 });
 
 test('las frases contraen el articulo como en el habla', () => {
@@ -538,7 +540,25 @@ test('las frases contraen el articulo como en el habla', () => {
   const next = expectOk(
     applyAction(state, 'p0', { type: 'PLAY_VIRUS', cardId: strain.id, target: { playerId: 'p1', organId: heart.id } }),
   );
-  assert.equal(next.lastMove?.text, 'J1 destruye la vacuna del Corazon de J2.');
+  assert.equal(next.lastMove?.text.es, 'J1 destruye la vacuna del Corazon de J2.');
+  // En ingles no hay articulo que contraer: el dueno va en genitivo.
+  assert.equal(next.lastMove?.text.en, "J1 destroys the vaccine on J2's Heart.");
+});
+
+test('el organo propio se cuenta como suyo en los dos idiomas', () => {
+  const state = scenario();
+  const heart = organ('red');
+  putOrgan(state, 0, heart, [virus('red')]);
+  const cure = medicine('red');
+  give(state, 0, cure);
+  const next = expectOk(
+    applyAction(state, 'p0', { type: 'PLAY_MEDICINE', cardId: cure.id, target: { playerId: 'p0', organId: heart.id } }),
+  );
+  assert.equal(next.lastMove?.text.es, 'J1 cura su Corazon.');
+  assert.equal(next.lastMove?.text.en, 'J1 cures their Heart.');
+  const up = next.players[next.turn]!.name;
+  assert.equal(next.log.at(-1)?.text.es, `Turno de ${up}.`);
+  assert.equal(next.log.at(-1)?.text.en, `${up}'s turn.`);
 });
 
 test('un paquete desconocido cae en Contagio en vez de dejar cartas sin nombre', () => {
