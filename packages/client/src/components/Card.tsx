@@ -20,7 +20,7 @@ interface CardProps {
 }
 
 export function CardFace({ card, selected, playable, marked, onClick }: CardProps) {
-  const { id, text } = usePack();
+  const { id, text, lang } = usePack();
   const color = card.color ?? 'treatment';
   const classes = [
     'card',
@@ -39,7 +39,7 @@ export function CardFace({ card, selected, playable, marked, onClick }: CardProp
       <span className="card__art">
         <CardGlyph card={card} className="card__glyph" />
       </span>
-      <span className="card__name">{cardName(card, id)}</span>
+      <span className="card__name">{cardName(card, id, lang)}</span>
       <span className="card__code">{specimenCode(card, text.kinds[card.kind])}</span>
     </button>
   );

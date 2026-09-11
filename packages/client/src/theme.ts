@@ -13,12 +13,6 @@ export const THEME_KEY = 'contagio.theme';
 
 const ORDER: ThemeChoice[] = ['system', 'light', 'dark'];
 
-export const THEME_LABEL: Record<ThemeChoice, string> = {
-  system: 'Tema del sistema',
-  light: 'Tema claro',
-  dark: 'Tema oscuro',
-};
-
 function read(): ThemeChoice {
   try {
     const raw = localStorage.getItem(THEME_KEY);

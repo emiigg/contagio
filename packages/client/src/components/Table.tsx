@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cardName, cardText, fillTemplate } from '@contagio/engine';
-import type { Action, Card, Color, OrganPile, Pack, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
+import type { Action, Card, Color, Lang, OrganPile, Pack, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
 
 import { Mark, Pulse } from '../art';
 import { CardGlyph, usePack } from '../packs';
@@ -10,9 +10,12 @@ import { CardBack } from './CardBack';
 import { CardFace } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
+import { LangToggle } from './LangToggle';
 import { SoundMenu } from './SoundMenu';
 import { ThemeToggle } from './ThemeToggle';
 import { TurnClock } from './TurnClock';
+import { useT } from '../i18n';
+import type { Strings } from '../i18n';
 import { buzz, play } from '../sound';
 import type { SoundName } from '../sound';
 
@@ -96,12 +99,13 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   const [hitKeys, setHitKeys] = useState<Set<OrganKey>>(new Set());
   const [dealing, setDealing] = useState(false);
   /** Jugada a la espera de un si: hoy solo la negligencia medica. */
-  const [confirming, setConfirming] = useState<{ text: string; action: Action } | null>(null);
+  const [confirming, setConfirming] = useState<{ name: string; action: Action } | null>(null);
   /** Franja que cruza la mesa para decirte que juegas. La clave la vuelve a animar. */
-  const [flash, setFlash] = useState<{ key: number; text: string } | null>(null);
+  const [flash, setFlash] = useState<{ key: number; kind: 'turn' | 'remind' } | null>(null);
   const narrow = useNarrow();
-  const { id: packId, text: pack } = usePack();
+  const { id: packId, text: pack, lang } = usePack();
   const { words } = pack;
+  const t = useT();
 
   const centerRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
@@ -140,7 +144,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     chimedRef.current = view.turnCount;
     play('turn');
     buzz([90, 60, 90]);
-    setFlash({ key: view.turnCount, text: 'Tu turno' });
+    setFlash({ key: view.turnCount, kind: 'turn' });
   }, [myTurn, view.turnCount]);
 
   // Si el turno se alarga sin que toques nada, la mesa lo recuerda una vez.
@@ -151,7 +155,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       if (busyRef.current) return;
       play('nudge');
       buzz([60]);
-      setFlash({ key: -view.turnCount, text: 'Te toca jugar' });
+      setFlash({ key: -view.turnCount, kind: 'remind' });
     }, view.turnLimitMs * REMIND_SHARE);
     return () => clearTimeout(timer);
   }, [myTurn, view.turnCount, view.turnLimitMs]);
@@ -164,8 +168,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
 
   // La pestana tambien avisa, para quien espera su turno mirando otra.
   useEffect(() => {
-    document.title = myTurn ? '● Tu turno · Contagio' : 'Contagio';
-  }, [myTurn]);
+    document.title = myTurn ? t.table.tabTitle : 'Contagio';
+  }, [myTurn, t]);
   useEffect(
     () => () => {
       document.title = 'Contagio';
@@ -303,7 +307,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     setSelectedCardId((prev) => (prev === card.id ? null : card.id));
   }
 
-  const guidance = getGuidance({ view, pack, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding });
+  const guidance = getGuidance({ view, pack, lang, t, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding });
   const legendCard = hoveredCard ?? selectedCard;
   const winner = view.winnerId ? view.players.find((p) => p.id === view.winnerId) : null;
   const turnName = view.players.find((p) => p.id === view.turnPlayerId)?.name ?? '';
@@ -332,10 +336,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         if (!action) return;
         // Cambiar el cuerpo entero es irreversible y se juega de un clic:
         // aqui si conviene preguntar antes.
-        setConfirming({
-          text: `Cambias toda tu mesa por la de ${rival.name}: te llevas lo suyo con todo lo que tenga encima, y le dejas lo tuyo.`,
-          action,
-        });
+        setConfirming({ name: rival.name, action });
       }}
       registerSeat={registerSeat}
     />
@@ -347,13 +348,13 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         <div className="bar__brand">
           <Mark className="bar__mark" />
           <span className="bar__title">Contagio</span>
-          <span className="bar__code mono">sala {room.code}</span>
+          <span className="bar__code mono">{t.table.room(room.code)}</span>
         </div>
         <div className="bar__turn">
           <span className={`turnpill ${myTurn ? 'is-live' : ''}`}>
             <Pulse active={view.isYourTurn} />
             <span className="turnpill__text" aria-live="polite">
-              {view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}
+              {view.isYourTurn ? t.table.yourTurn : t.table.plays(turnName)}
             </span>
           </span>
           {/* Un reloj por turno: la clave lo monta de cero cada vez que arranca uno. */}
@@ -367,25 +368,26 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           )}
         </div>
         <div className="bar__tools">
+          <LangToggle />
           <SoundMenu />
           <ThemeToggle compact />
           <button type="button" className="btn btn--ghost" onClick={onShowRules}>
-            Reglas
+            {t.common.rules}
           </button>
           <button type="button" className="btn btn--ghost" onClick={onLeave}>
-            Salir
+            {t.common.leave}
           </button>
         </div>
       </header>
 
       <div className="felt">
         <div className={`arena ${seats.left.length + seats.right.length > 0 ? 'has-sides' : ''}`}>
-          <aside className="seats seats--side" aria-label="Rivales a tu izquierda">
+          <aside className="seats seats--side" aria-label={t.table.rivalsLeft}>
             {seats.left.map((rival, index) => renderSeat(rival, index, seats.left.length, 'side'))}
           </aside>
 
           <div className="arena__middle">
-            <section className="seats seats--top" data-count={seats.top.length} aria-label="Rivales enfrente">
+            <section className="seats seats--top" data-count={seats.top.length} aria-label={t.table.rivalsTop}>
               {seats.top.map((rival, index) => renderSeat(rival, index, seats.top.length, 'top'))}
             </section>
 
@@ -397,7 +399,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               <CardBack className="pile__card pile__card--2" />
               <CardBack className="pile__card" />
             </div>
-            <p className="pile__label mono">mazo · {view.deckCount}</p>
+            <p className="pile__label mono">{t.table.deck(view.deckCount)}</p>
           </div>
 
           {/* En pausa mientras se reparte: el cartel del sorteo no puede gastar
@@ -409,24 +411,24 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               {view.topDiscard ? (
                 <span className={`pile__card pile__card--face tone-${view.topDiscard.color ?? 'treatment'}`}>
                   <CardGlyph card={view.topDiscard} className="pile__glyph" />
-                  <span className="pile__name">{cardName(view.topDiscard, packId)}</span>
+                  <span className="pile__name">{cardName(view.topDiscard, packId, lang)}</span>
                 </span>
               ) : (
-                <span className="pile__card pile__card--empty">vacia</span>
+                <span className="pile__card pile__card--empty">{t.table.empty}</span>
               )}
             </div>
-            <p className="pile__label mono">descarte · {view.discardCount}</p>
+            <p className="pile__label mono">{t.table.discard(view.discardCount)}</p>
           </div>
           </div>
 
-        <section className="mine" aria-label={`Tu ${words.body}`}>
+        <section className="mine" aria-label={t.table.yourBody(words)}>
           <header className="mine__head">
             <h2 className="mine__name">
               {you.name}{' '}
-              {myTurn ? <span className="tag tag--turn">tu turno</span> : <span className="tag tag--you">tu</span>}
+              {myTurn ? <span className="tag tag--turn">{t.table.yourTurnTag}</span> : <span className="tag tag--you">{t.common.you}</span>}
             </h2>
             <span className="mine__meta mono">
-              {you.healthyOrgans}/4 {words.organs} {words.healthy}
+              {t.table.healthy(you.healthyOrgans, words)}
             </span>
           </header>
           <div className="mine__body">
@@ -459,7 +461,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             </div>
           </div>
 
-          <aside className="seats seats--side" aria-label="Rivales a tu derecha">
+          <aside className="seats seats--side" aria-label={t.table.rivalsRight}>
             {seats.right.map((rival, index) => renderSeat(rival, index, seats.right.length, 'side'))}
           </aside>
         </div>
@@ -468,11 +470,11 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       <footer className="dock">
         <div className="dock__legend">
           {dealing ? (
-            <span className="dock__guide is-muted">Repartiendo cartas.</span>
+            <span className="dock__guide is-muted">{t.table.dealing}</span>
           ) : legendCard ? (
             <>
-              <span className={`dock__legendname tone-${legendCard.color ?? 'treatment'}`}>{cardName(legendCard, packId)}</span>
-              <span className="dock__legendtext">{cardText(legendCard, packId)}</span>
+              <span className={`dock__legendname tone-${legendCard.color ?? 'treatment'}`}>{cardName(legendCard, packId, lang)}</span>
+              <span className="dock__legendtext">{cardText(legendCard, packId, lang)}</span>
             </>
           ) : (
             <span className={`dock__guide ${view.isYourTurn ? '' : 'is-muted'}`}>{guidance}</span>
@@ -480,13 +482,13 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         </div>
 
         <div className="dock__row">
-          <ol className="ticker" aria-label="Ultimas jugadas">
+          <ol className="ticker" aria-label={t.table.lastMoves}>
             {view.log
               .slice(-3)
               .reverse()
               .map((entry) => (
                 <li key={entry.id} className="ticker__item">
-                  {entry.text.es}
+                  {entry.text[lang]}
                 </li>
               ))}
           </ol>
@@ -515,13 +517,13 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                 />
               </div>
             ))}
-            {view.hand.length === 0 && <p className="hand__empty">Sin cartas: robaras al empezar tu turno.</p>}
+            {view.hand.length === 0 && <p className="hand__empty">{t.table.noCards}</p>}
           </div>
 
           <div className="dock__actions">
             {selectedCard && directAction && (
               <button type="button" className="btn btn--primary" onClick={() => void run(directAction)}>
-                {directAction.type === 'PLAY_ORGAN' && `Colocar ${cardName(selectedCard, packId)}`}
+                {directAction.type === 'PLAY_ORGAN' && t.table.place(cardName(selectedCard, packId, lang))}
                 {directAction.type === 'PLAY_SPREAD' &&
                   fillTemplate(pack.buttons.spread, {
                     n: directAction.moves.length,
@@ -532,7 +534,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             )}
             {swapMineId && (
               <button type="button" className="btn btn--ghost" onClick={() => setSwapMineId(null)}>
-                Cambiar mi {words.organ}
+                {t.table.changeMine(words)}
               </button>
             )}
             {view.isYourTurn && !discarding && view.hand.length > 0 && (
@@ -545,7 +547,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                   setSwapMineId(null);
                 }}
               >
-                Descartar cartas
+                {t.table.discardCards}
               </button>
             )}
             {discarding && (
@@ -556,7 +558,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                   onClick={() => void run({ type: 'DISCARD', cardIds: discardIds })}
                   disabled={discardIds.length === 0}
                 >
-                  Soltar {discardIds.length || ''} {discardIds.length === 1 ? 'carta' : 'cartas'}
+                  {t.table.drop(discardIds.length)}
                 </button>
                 <button
                   type="button"
@@ -566,7 +568,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                     setDiscardIds([]);
                   }}
                 >
-                  Cancelar
+                  {t.common.cancel}
                 </button>
               </>
             )}
@@ -579,7 +581,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         <div key={flash.key} className="turnflash" aria-hidden>
           <div className="turnflash__band">
             <Pulse active />
-            <span className="turnflash__text">{flash.text}</span>
+            <span className="turnflash__text">{flash.kind === 'turn' ? t.table.yourTurn : t.table.remind}</span>
           </div>
         </div>
       )}
@@ -595,10 +597,10 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       )}
 
       {confirming && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Confirmar jugada">
+        <div className="modal" role="dialog" aria-modal="true" aria-label={t.table.confirmLabel}>
           <div className="modal__panel modal__panel--ask">
             <h2 className="modal__title">{pack.treatments.malpractice.name}</h2>
-            <p className="curtain__text">{confirming.text}</p>
+            <p className="curtain__text">{t.table.malpracticeAsk(confirming.name)}</p>
             <div className="curtain__actions">
               <button
                 type="button"
@@ -612,7 +614,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                 {pack.buttons.malpractice}
               </button>
               <button type="button" className="btn btn--ghost" onClick={() => setConfirming(null)}>
-                Cancelar
+                {t.common.cancel}
               </button>
             </div>
           </div>
@@ -622,17 +624,17 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       {view.phase === 'finished' && (
         <div className="curtain" role="dialog" aria-modal="true">
           <div className="curtain__panel">
-            <p className="curtain__eyebrow mono">fin de la partida</p>
+            <p className="curtain__eyebrow mono">{t.table.ended}</p>
             <h2 className="curtain__title">
               {!winner
-                ? 'Se acaban las cartas. Tablas.'
+                ? t.table.tieTitle
                 : winner.id === view.youId
                   ? pack.ending.winTitle
                   : fillTemplate(pack.ending.loseTitle, { p: winner.name })}
             </h2>
             <p className="curtain__text">
               {!winner
-                ? 'Nadie reunio ventaja suficiente antes de que se agotara el mazo.'
+                ? t.table.tieText
                 : winner.id === view.youId
                   ? pack.ending.winText
                   : pack.ending.loseText}
@@ -640,11 +642,11 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
             <div className="curtain__actions">
               {isHost && (
                 <button type="button" className="btn btn--primary" onClick={onRematch}>
-                  Otra partida
+                  {t.table.rematch}
                 </button>
               )}
               <button type="button" className="btn btn--ghost" onClick={onLeave}>
-                Volver al inicio
+                {t.table.home}
               </button>
             </div>
           </div>
@@ -682,6 +684,7 @@ function RivalSeat({
   registerSeat,
 }: RivalSeatProps) {
   const { text: pack } = usePack();
+  const t = useT();
   // Los asientos centrales se elevan un poco: la fila se lee como un arco.
   const arc = variant === 'top' && total > 1 ? Math.abs(index - (total - 1) / 2) / ((total - 1) / 2) : 0;
 
@@ -693,7 +696,7 @@ function RivalSeat({
       // se senala con el dedo cuando se juega una negligencia medica.
       role={selectable ? 'button' : undefined}
       tabIndex={selectable ? 0 : undefined}
-      title={selectable ? `${pack.treatments.malpractice.name}: cambiarlo todo con ${player.name}` : undefined}
+      title={selectable ? t.table.seatTarget(pack.treatments.malpractice.name, player.name) : undefined}
       onClick={selectable ? onSelectPlayer : undefined}
       onKeyDown={
         selectable
@@ -708,13 +711,13 @@ function RivalSeat({
       <header className="seat-board__head">
         <span className="seat-board__name">
           {player.name}
-          {player.isBot && <span className="tag">bot</span>}
-          {!player.connected && !player.isBot && <span className="tag tag--warn">sin conexion</span>}
+          {player.isBot && <span className="tag">{t.common.bot}</span>}
+          {!player.connected && !player.isBot && <span className="tag tag--warn">{t.common.offline}</span>}
         </span>
         <span className="seat-board__meta mono">{player.healthyOrgans}/4</span>
       </header>
 
-      <div className="seat-board__hand" ref={(el) => registerSeat(player.id, el)} aria-label={`${player.handCount} cartas en mano`}>
+      <div className="seat-board__hand" ref={(el) => registerSeat(player.id, el)} aria-label={t.table.handCount(player.handCount)}>
         {Array.from({ length: player.handCount }).map((_, i) => (
           <CardBack key={i} className="seat-board__back" style={{ '--i': i } as React.CSSProperties} />
         ))}
@@ -743,33 +746,30 @@ function RivalSeat({
 function getGuidance(args: {
   view: PlayerView;
   pack: Pack;
+  lang: Lang;
+  t: Strings;
   selectedCard: Card | null;
   selectedActions: Action[];
   swapMineId: string | null;
   canPlaySomething: boolean;
   discarding: boolean;
 }): string {
-  const { view, pack, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding } = args;
+  const { view, pack, lang, t, selectedCard, selectedActions, swapMineId, canPlaySomething, discarding } = args;
   const { words: w } = pack;
-  if (view.phase === 'finished') return 'Partida terminada.';
-  if (!view.isYourTurn) return `Esperando a ${view.players.find((p) => p.id === view.turnPlayerId)?.name ?? 'el rival'}.`;
-  if (discarding) return 'Marca las cartas que quieras soltar y confirma el descarte.';
-  if (!selectedCard) {
-    return canPlaySomething
-      ? 'Elige una carta de tu mano.'
-      : 'Ninguna carta se puede jugar: descarta las que no te sirvan.';
-  }
-  if (selectedActions.length === 0) {
-    return `${cardName(selectedCard, pack.id)} no tiene objetivo valido. Prueba con otra carta.`;
-  }
+  const g = t.guide;
+  if (view.phase === 'finished') return g.over;
+  if (!view.isYourTurn) return g.waiting(view.players.find((p) => p.id === view.turnPlayerId)?.name ?? g.rival);
+  if (discarding) return g.discarding;
+  if (!selectedCard) return canPlaySomething ? g.pick : g.stuck;
+  if (selectedActions.length === 0) return g.noTarget(cardName(selectedCard, pack.id, lang));
 
   const kinds = new Set(selectedActions.map((a) => a.type));
-  if (kinds.has('PLAY_SWAP') && !swapMineId) return `Elige primero ${w.one} de tus ${w.organs} para el intercambio.`;
-  if (kinds.has('PLAY_SWAP')) return `Ahora elige ${w.the} ${w.organ} rival que quieres a cambio.`;
-  if (kinds.has('PLAY_VIRUS')) return `Elige ${w.the} ${w.organ} que quieres atacar.`;
-  if (kinds.has('PLAY_MEDICINE')) return `Elige ${w.the} ${w.organ} que quieres proteger.`;
-  if (kinds.has('PLAY_STEAL')) return `Elige ${w.the} ${w.organ} rival que te llevas.`;
-  if (kinds.has('PLAY_MALPRACTICE')) return 'Elige la mesa del jugador con quien lo cambias todo.';
-  if (kinds.has('PLAY_ORGAN')) return `Coloca ${w.the} ${w.organ} en su hueco de tu ${w.body}.`;
-  return cardText(selectedCard, pack.id);
+  if (kinds.has('PLAY_SWAP') && !swapMineId) return g.swapFirst(w);
+  if (kinds.has('PLAY_SWAP')) return g.swapSecond(w);
+  if (kinds.has('PLAY_VIRUS')) return g.virus(w);
+  if (kinds.has('PLAY_MEDICINE')) return g.medicine(w);
+  if (kinds.has('PLAY_STEAL')) return g.steal(w);
+  if (kinds.has('PLAY_MALPRACTICE')) return g.malpractice;
+  if (kinds.has('PLAY_ORGAN')) return g.organ(w);
+  return cardText(selectedCard, pack.id, lang);
 }

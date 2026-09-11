@@ -83,7 +83,7 @@ async function main() {
         }
         // Float32Array no cruza a Node tal cual: se manda como lista de numeros.
         return {
-          title: SCORES[id].title,
+          title: SCORES[id].title.es,
           loop: loopSeconds(id),
           peak,
           rms: Math.sqrt(sum / left.length),

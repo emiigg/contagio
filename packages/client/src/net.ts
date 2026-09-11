@@ -5,11 +5,14 @@ import type {
   Action,
   BotDifficulty,
   ClientToServerEvents,
+  Localized,
   PackId,
   PlayerView,
   RoomView,
   ServerToClientEvents,
 } from '@contagio/engine';
+
+import { pick, strings } from './i18n';
 
 type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -53,11 +56,11 @@ function request<K extends keyof ClientToServerEvents>(
   payload: Parameters<ClientToServerEvents[K]>[0],
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('El servidor no responde')), 8000);
-    (socket.emit as any)(event, payload, (response: { ok: boolean; data?: unknown; error?: { es: string } }) => {
+    const timeout = setTimeout(() => reject(new Error(strings().net.noResponse)), 8000);
+    (socket.emit as any)(event, payload, (response: { ok: boolean; data?: unknown; error?: Localized }) => {
       clearTimeout(timeout);
       if (response.ok) resolve(response.data);
-      else reject(new Error(response.error?.es ?? 'Error desconocido'));
+      else reject(new Error(response.error ? pick(response.error) : strings().net.unknown));
     });
   });
 }
@@ -100,8 +103,8 @@ export function useContagio() {
     socket.on('disconnect', () => setConnected(false));
     socket.on('room:state', setRoom);
     socket.on('game:view', setView);
-    socket.on('game:over', ({ winnerName }) => pushToast(`${winnerName} gana la partida.`));
-    socket.on('toast', ({ message, kind }) => pushToast(message.es, kind));
+    socket.on('game:over', ({ winnerName }) => pushToast(strings().net.wins(winnerName)));
+    socket.on('toast', ({ message, kind }) => pushToast(pick(message), kind));
 
     return () => {
       socket.close();
@@ -112,7 +115,7 @@ export function useContagio() {
   const call = useCallback(
     async <K extends keyof ClientToServerEvents>(event: K, payload: Parameters<ClientToServerEvents[K]>[0]) => {
       const socket = socketRef.current;
-      if (!socket) throw new Error('Sin conexion con el servidor');
+      if (!socket) throw new Error(strings().net.offline);
       return request(socket, event, payload);
     },
     [],

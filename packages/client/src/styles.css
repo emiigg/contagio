@@ -1945,6 +1945,20 @@ button {
   line-height: 1;
 }
 
+/* ES / EN: mismo boton redondo que el tema y el sonido, con el codigo del
+   idioma en lugar de un icono. La altura sale del icono de sus vecinos. */
+.langswitch {
+  min-width: 2.05rem;
+  justify-content: center;
+}
+
+.langswitch__code {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15rem;
+  letter-spacing: 0.04em;
+}
+
 .home__tools {
   display: flex;
   align-items: center;

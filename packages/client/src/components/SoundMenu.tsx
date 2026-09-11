@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { SoundOffGlyph, SoundOnGlyph } from '../art';
+import { useLang, useT } from '../i18n';
 import { useTrackTitle } from '../music';
 import { play, useSound } from '../sound';
 
@@ -14,6 +15,8 @@ const percent = (value: number) => Math.round(value * 100);
 export function SoundMenu() {
   const { muted, music, effects, set } = useSound();
   const track = useTrackTitle();
+  const t = useT();
+  const lang = useLang();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -71,12 +74,12 @@ export function SoundMenu() {
   }
 
   const status = muted
-    ? 'Todo en silencio.'
+    ? t.sound.muted
     : music === 0
-      ? 'Musica apagada.'
+      ? t.sound.musicOff
       : track
-        ? `Suena: ${track}`
-        : 'La musica suena dentro de una sala.';
+        ? t.sound.playing(track[lang])
+        : t.sound.outside;
 
   return (
     <div className="soundmenu" ref={rootRef}>
@@ -87,18 +90,18 @@ export function SoundMenu() {
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label="Sonido y musica"
-        title="Sonido y musica"
+        aria-label={t.sound.button}
+        title={t.sound.button}
       >
         <Icon className="themeswitch__icon" />
       </button>
 
       {open && (
-        <div ref={panelRef} id={panelId} className={`soundmenu__panel ${muted ? 'is-muted' : ''}`} role="group" aria-label="Volumen">
-          <p className="soundmenu__title">Sonido</p>
+        <div ref={panelRef} id={panelId} className={`soundmenu__panel ${muted ? 'is-muted' : ''}`} role="group" aria-label={t.sound.group}>
+          <p className="soundmenu__title">{t.sound.title}</p>
 
           <label className="soundmenu__row">
-            <span className="soundmenu__label">Musica</span>
+            <span className="soundmenu__label">{t.sound.music}</span>
             <input
               className="soundmenu__range"
               type="range"
@@ -112,7 +115,7 @@ export function SoundMenu() {
           </label>
 
           <label className="soundmenu__row">
-            <span className="soundmenu__label">Efectos</span>
+            <span className="soundmenu__label">{t.sound.effects}</span>
             <input
               className="soundmenu__range"
               type="range"
@@ -133,7 +136,7 @@ export function SoundMenu() {
             aria-pressed={muted}
             onClick={() => set({ muted: !muted })}
           >
-            {muted ? 'Activar sonido' : 'Silenciar todo'}
+            {muted ? t.sound.unmute : t.sound.mute}
           </button>
         </div>
       )}

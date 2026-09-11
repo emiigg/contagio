@@ -17,6 +17,9 @@
           var dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.dataset.theme = dark ? 'dark' : 'light';
           document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+          var lang = localStorage.getItem('contagio.lang');
+          if (lang !== 'es' && lang !== 'en') lang = /^es/i.test(navigator.language || '') ? 'es' : 'en';
+          document.documentElement.lang = lang;
         } catch (e) {
           document.documentElement.dataset.theme = 'light';
         }

@@ -1,7 +1,9 @@
 import { createContext, useContext } from 'react';
 
 import { DEFAULT_PACK, getPack } from '@contagio/engine';
-import type { Card, Color, Pack, PackId } from '@contagio/engine';
+import type { Card, Color, Lang, Pack, PackId } from '@contagio/engine';
+
+import { useLang } from '../i18n';
 
 import { arrecifeArt } from './arrecife';
 import { asedioArt } from './asedio';
@@ -40,9 +42,11 @@ const PackContext = createContext<PackId>(DEFAULT_PACK);
 
 export const PackProvider = PackContext.Provider;
 
-export function usePack(): { id: PackId; text: Pack; art: PackArt } {
-  const text = getPack(useContext(PackContext));
-  return { id: text.id, text, art: PACK_ART[text.id] };
+/** El paquete en uso, con sus textos en el idioma de quien juega. */
+export function usePack(): { id: PackId; text: Pack; art: PackArt; lang: Lang } {
+  const lang = useLang();
+  const text = getPack(useContext(PackContext), lang);
+  return { id: text.id, text, art: PACK_ART[text.id], lang };
 }
 
 /** Devuelve la ilustracion que corresponde a una carta en el paquete en uso. */

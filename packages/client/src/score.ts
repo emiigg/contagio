@@ -1,4 +1,4 @@
-import type { PackId } from '@contagio/engine';
+import type { Localized, PackId } from '@contagio/engine';
 
 /**
  * Musica de fondo, compuesta para este juego y escrita como partitura: cada
@@ -44,7 +44,7 @@ interface Voice {
 }
 
 interface Piece {
-  title: string;
+  title: Localized;
   /**
    * Volumen propio: iguala piezas que suenan mas o menos llenas, para que
    * cambiar de paquete no obligue a tocar el volumen. Se mide con tools/musica.mjs.
@@ -91,7 +91,7 @@ export const SCORES: Record<PackId, Piece> = {
   // La del hospital: un latido de dos golpes, campanas de monitor y un arpegio
   // tranquilo. Espera, no tension.
   contagio: {
-    title: 'Sala de espera',
+    title: { es: 'Sala de espera', en: 'Waiting Room' },
     level: 0.86,
     bpm: 84,
     perBeat: 4,
@@ -112,7 +112,7 @@ export const SCORES: Record<PackId, Piece> = {
   // Marcha en mayor con metales, bajo al galope y timbales. La cadencia
   // I - bVI - bVII es la del cine de aventuras; la melodia es propia.
   heroes: {
-    title: 'Marcha heroica',
+    title: { es: 'Marcha heroica', en: 'Heroic March' },
     level: 1,
     bpm: 108,
     perBeat: 4,
@@ -139,7 +139,7 @@ export const SCORES: Record<PackId, Piece> = {
   // Himno en menor: mas grave que la de DC, con un ostinato de cuerda que no
   // para y un redoble de toms antes de volver a empezar.
   marvel: {
-    title: 'Llamada a filas',
+    title: { es: 'Llamada a filas', en: 'Call to Arms' },
     level: 1.08,
     bpm: 100,
     perBeat: 4,
@@ -167,7 +167,7 @@ export const SCORES: Record<PackId, Piece> = {
   },
 
   frutas: {
-    title: 'Puesto del mercado',
+    title: { es: 'Puesto del mercado', en: 'Market Stall' },
     level: 1.3,
     bpm: 124,
     perBeat: 4,
@@ -185,7 +185,7 @@ export const SCORES: Record<PackId, Piece> = {
   },
 
   cortafuegos: {
-    title: 'Sala de servidores',
+    title: { es: 'Sala de servidores', en: 'Server Room' },
     level: 1.8,
     bpm: 118,
     perBeat: 4,
@@ -205,7 +205,7 @@ export const SCORES: Record<PackId, Piece> = {
 
   // Lidia: la cuarta subida suena a ingravidez. Casi sin ritmo.
   orbita: {
-    title: 'Orbita baja',
+    title: { es: 'Orbita baja', en: 'Low Orbit' },
     level: 1,
     bpm: 70,
     perBeat: 4,
@@ -225,7 +225,7 @@ export const SCORES: Record<PackId, Piece> = {
 
   // Dorico sobre un bordon, con flauta y tambor de mano.
   asedio: {
-    title: 'Guardia en la muralla',
+    title: { es: 'Guardia en la muralla', en: 'Watch on the Walls' },
     level: 0.75,
     bpm: 96,
     perBeat: 4,
@@ -244,7 +244,7 @@ export const SCORES: Record<PackId, Piece> = {
 
   // Frigio: el semitono sobre la tonica es lo que suena a secreto.
   grimorio: {
-    title: 'Tomo prohibido',
+    title: { es: 'Tomo prohibido', en: 'Forbidden Tome' },
     level: 0.85,
     bpm: 76,
     perBeat: 4,
@@ -263,7 +263,7 @@ export const SCORES: Record<PackId, Piece> = {
   },
 
   arrecife: {
-    title: 'Bajo la marea',
+    title: { es: 'Bajo la marea', en: 'Beneath the Tide' },
     level: 0.88,
     bpm: 76,
     perBeat: 4,
@@ -282,7 +282,7 @@ export const SCORES: Record<PackId, Piece> = {
   },
 
   jurasico: {
-    title: 'Valle perdido',
+    title: { es: 'Valle perdido', en: 'Lost Valley' },
     level: 1.1,
     bpm: 88,
     perBeat: 4,
@@ -300,7 +300,7 @@ export const SCORES: Record<PackId, Piece> = {
   },
 
   banda: {
-    title: 'Ultimo ensayo',
+    title: { es: 'Ultimo ensayo', en: 'Final Rehearsal' },
     level: 1.35,
     bpm: 120,
     perBeat: 4,
@@ -319,7 +319,7 @@ export const SCORES: Record<PackId, Piece> = {
 
   // Jiga en 12/8: cuatro pulsos de tres corcheas, bajo de "um-pa" y violin.
   piratas: {
-    title: 'Taberna del puerto',
+    title: { es: 'Taberna del puerto', en: 'Harbor Tavern' },
     level: 1.3,
     bpm: 104,
     perBeat: 3,

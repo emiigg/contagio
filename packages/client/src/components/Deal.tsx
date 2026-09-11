@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { play } from '../sound';
 import { CardBack } from './CardBack';
+import { useT } from '../i18n';
 
 const SHUFFLE_MS = 1200;
 /** Separacion entre carta y carta al repartir. */
@@ -40,6 +41,7 @@ function centerOf(el: HTMLElement | null): { x: number; y: number } | null {
  * el estado ya viene repartido del servidor.
  */
 export function Deal({ centerEl, deckEl, seatEls, handSize, onDone }: DealProps) {
+  const t = useT();
   const [phase, setPhase] = useState<'shuffle' | 'deal' | 'settle'>('shuffle');
   const [flying, setFlying] = useState(false);
   const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -143,9 +145,9 @@ export function Deal({ centerEl, deckEl, seatEls, handSize, onDone }: DealProps)
           />
         ))}
 
-      <p className="deal__caption">{phase === 'shuffle' ? 'Barajando' : 'Repartiendo'}</p>
+      <p className="deal__caption">{phase === 'shuffle' ? t.deal.shuffle : t.deal.deal}</p>
       <button type="button" className="deal__skip" onClick={finish}>
-        Saltar
+        {t.deal.skip}
       </button>
     </div>
   );

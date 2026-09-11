@@ -1,7 +1,6 @@
 import { AutoGlyph, MoonGlyph, SunGlyph } from '../art';
-import { THEME_LABEL, useTheme } from '../theme';
-
-const SHORT: Record<string, string> = { system: 'Auto', light: 'Claro', dark: 'Oscuro' };
+import { useT } from '../i18n';
+import { useTheme } from '../theme';
 
 /**
  * Un solo boton para los tres estados: automatico, claro y oscuro. Empieza en
@@ -10,18 +9,21 @@ const SHORT: Record<string, string> = { system: 'Auto', light: 'Claro', dark: 'O
  */
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const { choice, resolved, cycle } = useTheme();
+  const t = useT();
   const Icon = choice === 'system' ? AutoGlyph : resolved === 'dark' ? MoonGlyph : SunGlyph;
+  const label = t.theme.label[choice];
 
   return (
     <button
       type="button"
       className={`themeswitch ${compact ? 'themeswitch--compact' : ''}`}
+      data-control="theme"
       onClick={cycle}
-      title={`${THEME_LABEL[choice]}. Pulsa para cambiar.`}
-      aria-label={`${THEME_LABEL[choice]}. Pulsa para cambiar de tema.`}
+      title={t.theme.title(label)}
+      aria-label={t.theme.aria(label)}
     >
       <Icon className="themeswitch__icon" />
-      {!compact && <span className="themeswitch__label">{SHORT[choice]}</span>}
+      {!compact && <span className="themeswitch__label">{t.theme.short[choice]}</span>}
     </button>
   );
 }

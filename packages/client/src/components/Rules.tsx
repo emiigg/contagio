@@ -3,21 +3,17 @@ import { useEffect, useRef } from 'react';
 import { DEFAULT_PACK } from '@contagio/engine';
 import type { CardKind, TreatmentKind } from '@contagio/engine';
 
+import { useT } from '../i18n';
 import { usePack } from '../packs';
 
 const TREATMENTS: TreatmentKind[] = ['swap', 'steal', 'spread', 'quarantine', 'malpractice'];
+const KINDS: CardKind[] = ['organ', 'virus', 'medicine', 'treatment'];
 
-/** Los nombres de las reglas: cada paquete los traduce, pero se explican con estos. */
-const BASE_KINDS: Record<CardKind, string> = {
-  organ: 'Organo',
-  virus: 'Virus',
-  medicine: 'Medicina',
-  treatment: 'Tratamiento',
-};
-
-/** Reglas resumidas, redactadas para esta version. */
+/** Reglas resumidas, redactadas para esta version. Cada paquete traduce los nombres; se explican con los de siempre. */
 export function Rules({ onClose }: { onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const t = useT();
+  const r = t.rules;
   const { text, art } = usePack();
   const renamed = text.id !== DEFAULT_PACK;
   const Virus = art.virus;
@@ -33,24 +29,25 @@ export function Rules({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-label="Reglas de Contagio" onClick={onClose}>
+    <div className="modal" role="dialog" aria-modal="true" aria-label={r.label} onClick={onClose}>
       <div className="modal__panel" onClick={(e) => e.stopPropagation()}>
         <header className="modal__head">
-          <h2 className="modal__title">Como se juega</h2>
+          <h2 className="modal__title">{r.title}</h2>
           <button ref={closeRef} type="button" className="btn btn--ghost" onClick={onClose}>
-            Cerrar
+            {t.common.close}
           </button>
         </header>
 
         <div className="modal__body">
           {renamed && (
             <section className="rule">
-              <h3>Paquete {text.name}</h3>
-              <p>Cambian los nombres y los dibujos, no las reglas. Cada carta equivale a una de siempre:</p>
+              <h3>{r.pack(text.name)}</h3>
+              <p>{r.packIntro}</p>
               <ul>
-                {(Object.keys(BASE_KINDS) as CardKind[]).map((kind) => (
+                {KINDS.map((kind) => (
                   <li key={kind}>
-                    <strong>{text.kinds[kind]}</strong> juega como {BASE_KINDS[kind].toLowerCase()}.
+                    <strong>{text.kinds[kind]}</strong>
+                    {r.playsAs(r.base[kind])}
                   </li>
                 ))}
               </ul>
@@ -58,42 +55,44 @@ export function Rules({ onClose }: { onClose: () => void }) {
           )}
 
           <section className="rule">
-            <h3>Objetivo</h3>
-            <p>
-              Gana quien primero tenga cuatro organos sanos de distinto color sobre la mesa. Un organo esta sano
-              mientras no tenga un virus encima: libre, vacunado o inmune cuentan igual.
-            </p>
+            <h3>{r.goal}</h3>
+            <p>{r.goalText}</p>
           </section>
 
           <section className="rule">
-            <h3>El turno</h3>
-            <p>Juegas una carta o descartas las que quieras. Despues robas hasta tener tres en la mano y pasas.</p>
+            <h3>{r.turn}</h3>
+            <p>{r.turnText}</p>
           </section>
 
           <section className="rule">
             <h3>
-              <Virus className="rule__glyph" /> Virus{renamed && ` · ${text.kinds.virus}`}
+              <Virus className="rule__glyph" /> {r.viruses}
+              {renamed && ` · ${text.kinds.virus}`}
             </h3>
             <ul>
-              <li>Sobre un organo libre: lo infecta.</li>
-              <li>Sobre un organo ya infectado: lo extirpa; organo y virus van al descarte.</li>
-              <li>Sobre un organo vacunado: destruye la vacuna en vez de infectar.</li>
+              {r.virusRules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
             </ul>
           </section>
 
           <section className="rule">
             <h3>
-              <Medicine className="rule__glyph" /> Medicinas{renamed && ` · ${text.kinds.medicine}`}
+              <Medicine className="rule__glyph" /> {r.medicines}
+              {renamed && ` · ${text.kinds.medicine}`}
             </h3>
             <ul>
-              <li>Sobre un organo infectado: lo cura.</li>
-              <li>Sobre un organo libre: lo vacuna. Hara falta un virus extra para tumbarlo.</li>
-              <li>Sobre un organo vacunado: lo inmuniza. Ya nada puede tocarlo.</li>
+              {r.medicineRules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
             </ul>
           </section>
 
           <section className="rule">
-            <h3>Tratamientos{renamed && ` · ${text.kinds.treatment}`}</h3>
+            <h3>
+              {r.treatments}
+              {renamed && ` · ${text.kinds.treatment}`}
+            </h3>
             <ul>
               {TREATMENTS.map((kind) => (
                 <li key={kind}>
@@ -104,17 +103,16 @@ export function Rules({ onClose }: { onClose: () => void }) {
           </section>
 
           <section className="rule">
-            <h3>Detalles que deciden partidas</h3>
+            <h3>{r.details}</h3>
             <ul>
-              <li>Nunca puedes tener dos organos del mismo color.</li>
-              <li>El organo comodin vale como cualquier color; los virus y medicinas comodin, tambien.</li>
-              <li>Un organo inmune no se roba, no se intercambia y no se infecta.</li>
+              {r.detailRules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
             </ul>
           </section>
 
           <p className="modal__note">
-            Contagio es un proyecto de portafolio con reglas propias inspiradas en el genero de cartas de sabotaje.
-            Ilustraciones y textos originales.
+            {r.note}
             {text.credit && ` ${text.credit}`}
           </p>
         </div>

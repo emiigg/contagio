@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 
-import type { PackId } from '@contagio/engine';
+import type { Localized, PackId } from '@contagio/engine';
 
 import { SCORES, compile, scheduleStep, trackOutput } from './score';
 import type { Compiled } from './score';
@@ -113,7 +113,7 @@ function subscribe(fn: () => void): () => void {
 }
 
 /** Titulo de la pieza que toca ahora, suene o este en silencio. */
-export function useTrackTitle(): string | null {
+export function useTrackTitle(): Localized | null {
   return useSyncExternalStore(
     subscribe,
     () => (wanted ? SCORES[wanted].title : null),

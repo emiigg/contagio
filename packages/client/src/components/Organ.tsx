@@ -1,6 +1,7 @@
 import { cardName, organStatus } from '@contagio/engine';
 import type { Color, OrganPile } from '@contagio/engine';
 
+import { useT } from '../i18n';
 import { CardGlyph, OrganSilhouette, usePack } from '../packs';
 
 /**
@@ -21,6 +22,7 @@ export function OrganSlot({
   onClick?: () => void;
 }) {
   const label = usePack().text.organs[color].name;
+  const t = useT();
   const className = `slot tone-${color} ${compact ? 'slot--compact' : ''} ${targetable ? 'is-targetable' : ''}`;
   const glyph = <OrganSilhouette color={color} className="slot__glyph" />;
 
@@ -31,8 +33,8 @@ export function OrganSlot({
         type="button"
         className={className}
         onClick={onClick}
-        title={`Colocar aqui: ${label}`}
-        aria-label={`Colocar ${label} en su hueco`}
+        title={t.organ.placeHere(label)}
+        aria-label={t.organ.placeAria(label)}
       >
         {glyph}
       </button>
@@ -40,7 +42,7 @@ export function OrganSlot({
   }
 
   return (
-    <span className={className} title={`${label}: sin colocar`} aria-label={`${label} sin colocar`}>
+    <span className={className} title={t.organ.empty(label)} aria-label={t.organ.emptyAria(label)}>
       {glyph}
     </span>
   );
@@ -57,7 +59,8 @@ interface OrganProps {
 }
 
 export function Organ({ pile, targetable, selected, hit, onClick, compact }: OrganProps) {
-  const { id, text, art } = usePack();
+  const { id, text, art, lang } = usePack();
+  const t = useT();
   const status = organStatus(pile);
   const stamp = status === 'free' ? null : text.stamps[status];
   const classes = [
@@ -72,7 +75,7 @@ export function Organ({ pile, targetable, selected, hit, onClick, compact }: Org
     .filter(Boolean)
     .join(' ');
 
-  const label = `${cardName(pile.organ, id)}, ${stamp ? stamp.toLowerCase() : 'libre'}`;
+  const label = `${cardName(pile.organ, id, lang)}, ${stamp ? stamp.toLowerCase() : t.organ.free}`;
   const Virus = art.virus;
   const Medicine = art.medicine;
 
@@ -82,12 +85,12 @@ export function Organ({ pile, targetable, selected, hit, onClick, compact }: Org
       {stamp && <span className={`organ__stamp organ__stamp--${status}`}>{stamp}</span>}
       <span className="organ__layers">
         {pile.viruses.map((virus) => (
-          <span key={virus.id} className={`chip tone-${virus.color}`} title={cardName(virus, id)}>
+          <span key={virus.id} className={`chip tone-${virus.color}`} title={cardName(virus, id, lang)}>
             <Virus className="chip__glyph" />
           </span>
         ))}
         {pile.medicines.map((medicine) => (
-          <span key={medicine.id} className={`chip tone-${medicine.color}`} title={cardName(medicine, id)}>
+          <span key={medicine.id} className={`chip tone-${medicine.color}`} title={cardName(medicine, id, lang)}>
             <Medicine className="chip__glyph" />
           </span>
         ))}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { play } from '../sound';
+import { useT } from '../i18n';
 
 const R = 14;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -18,6 +19,7 @@ const URGENT_S = 5;
 export function TurnClock({ msLeft, limitMs, ticking = false }: { msLeft: number; limitMs: number; ticking?: boolean }) {
   const [left, setLeft] = useState(msLeft);
   const tickedRef = useRef<number | null>(null);
+  const t = useT();
 
   useEffect(() => {
     setLeft(msLeft);
@@ -45,7 +47,7 @@ export function TurnClock({ msLeft, limitMs, ticking = false }: { msLeft: number
     <span
       className={`clock ${seconds <= URGENT_S ? 'is-urgent' : ''}`}
       role="timer"
-      aria-label={`Quedan ${seconds} segundos de turno`}
+      aria-label={t.clock(seconds)}
     >
       <svg className="clock__dial" viewBox="0 0 34 34" aria-hidden>
         <circle className="clock__track" cx="17" cy="17" r={R} />

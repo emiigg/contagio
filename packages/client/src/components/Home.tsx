@@ -1,7 +1,11 @@
 import { useState, type FormEvent } from 'react';
 
+import { DEFAULT_PACK, getPack } from '@contagio/engine';
+
 import { BrainGlyph, HeartGlyph, LiverGlyph, LungGlyph, Mark } from '../art';
+import { useLang, useT } from '../i18n';
 import { CURRENT, hasUnseenRelease, markReleaseSeen, releaseDate } from '../releases';
+import { LangToggle } from './LangToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 interface HomeProps {
@@ -17,11 +21,15 @@ interface HomeProps {
 const NEWS_NOTES = 3;
 
 export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowReleases }: HomeProps) {
+  const t = useT();
+  const lang = useLang();
   const [playerName, setPlayerName] = useState(name);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unseen, setUnseen] = useState(hasUnseenRelease);
+  const organs = getPack(DEFAULT_PACK, lang).organs;
+  const news = CURRENT.text[lang];
 
   function openReleases() {
     markReleaseSeen();
@@ -32,8 +40,8 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowRel
   async function submit(event: FormEvent, mode: 'create' | 'join') {
     event.preventDefault();
     const trimmed = playerName.trim();
-    if (!trimmed) return setError('Escribe un nombre para la mesa.');
-    if (mode === 'join' && code.trim().length < 4) return setError('El codigo de sala tiene 4 caracteres.');
+    if (!trimmed) return setError(t.home.needName);
+    if (mode === 'join' && code.trim().length < 4) return setError(t.home.badCode);
 
     setBusy(true);
     setError(null);
@@ -41,7 +49,7 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowRel
       if (mode === 'create') await onCreate(trimmed);
       else await onJoin(code.trim().toUpperCase(), trimmed);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo entrar');
+      setError(err instanceof Error ? err.message : t.home.cantJoin);
     } finally {
       setBusy(false);
     }
@@ -55,62 +63,60 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowRel
             <Mark className="home__mark" />
             Contagio
           </h1>
-          <p className="home__lead">
-            Cuatro organos sanos sobre la mesa y la partida es tuya. El problema son los otros cinco laboratorios
-            intentando lo mismo, con virus en la mano.
-          </p>
+          <p className="home__lead">{t.home.lead}</p>
 
-          <ul className="specimen" aria-label="Los cuatro organos del cuerpo">
+          <ul className="specimen" aria-label={t.home.specimen}>
             <li className="specimen__item tone-red">
               <HeartGlyph className="specimen__glyph" />
-              <span>Corazon</span>
+              <span>{organs.red.name}</span>
             </li>
             <li className="specimen__item tone-blue">
               <BrainGlyph className="specimen__glyph" />
-              <span>Cerebro</span>
+              <span>{organs.blue.name}</span>
             </li>
             <li className="specimen__item tone-green">
               <LungGlyph className="specimen__glyph" />
-              <span>Pulmon</span>
+              <span>{organs.green.name}</span>
             </li>
             <li className="specimen__item tone-yellow">
               <LiverGlyph className="specimen__glyph" />
-              <span>Higado</span>
+              <span>{organs.yellow.name}</span>
             </li>
           </ul>
 
           <div className="home__tools">
             <button type="button" className="btn btn--ghost" onClick={onShowRules}>
-              Como se juega
+              {t.home.howTo}
             </button>
             <ThemeToggle />
+            <LangToggle />
           </div>
         </div>
 
         <form className="home__form" onSubmit={(e) => submit(e, 'create')}>
           <label className="field">
-            <span className="field__label">Tu nombre en la mesa</span>
+            <span className="field__label">{t.home.nameLabel}</span>
             <input
               className="field__input"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               maxLength={18}
-              placeholder="Dra. Marin"
+              placeholder={t.home.namePlaceholder}
               autoComplete="nickname"
             />
           </label>
 
           <button type="submit" className="btn btn--primary btn--block" disabled={busy || !connected}>
-            Crear sala
+            {t.home.create}
           </button>
 
           <div className="home__divider">
-            <span>o entra con un codigo</span>
+            <span>{t.home.or}</span>
           </div>
 
           <div className="home__join">
             <label className="field field--code">
-              <span className="field__label">Codigo</span>
+              <span className="field__label">{t.home.code}</span>
               <input
                 className="field__input mono"
                 value={code}
@@ -122,31 +128,31 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowRel
               />
             </label>
             <button type="button" className="btn btn--outline" onClick={(e) => void submit(e, 'join')} disabled={busy || !connected}>
-              Entrar
+              {t.home.join}
             </button>
           </div>
 
           {error && <p className="notice notice--error">{error}</p>}
-          {!connected && <p className="notice">Conectando con el servidor.</p>}
+          {!connected && <p className="notice">{t.home.connecting}</p>}
         </form>
 
         <section className="news" aria-labelledby="news-title">
           <div className="news__body">
             <p className="news__meta mono">
-              novedades · v{CURRENT.version} · {releaseDate(CURRENT.date)}
-              {unseen && <span className="news__badge">nuevo</span>}
+              {t.home.news} · v{CURRENT.version} · {releaseDate(CURRENT.date, lang)}
+              {unseen && <span className="news__badge">{t.home.fresh}</span>}
             </p>
             <h2 id="news-title" className="news__title">
-              {CURRENT.title}
+              {news.title}
             </h2>
             <ul className="news__notes">
-              {CURRENT.notes.slice(0, NEWS_NOTES).map((note) => (
+              {news.notes.slice(0, NEWS_NOTES).map((note) => (
                 <li key={note}>{note}</li>
               ))}
             </ul>
           </div>
           <button type="button" className="btn btn--outline news__more" onClick={openReleases}>
-            Historial de versiones
+            {t.home.history}
           </button>
         </section>
       </div>
