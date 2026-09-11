@@ -191,7 +191,7 @@ test('la partida arranca con el paquete que elige el anfitrion', async () => {
 });
 
 test('el turno de una persona se juega solo cuando se le acaba el tiempo', async () => {
-  // Servidor aparte con un "minuto" de segundo y medio: el resto de pruebas
+  // Servidor aparte con un turno de segundo y medio: el resto de pruebas
   // juegan a su ritmo y no deben notar este reloj.
   const port = PORT + 1;
   const quick = await startServer(port, { TURN_LIMIT_MS: '1500', BOT_DELAY_MS: '300', OPENING_DELAY_MS: '100' });
@@ -237,7 +237,7 @@ async function until(check, timeoutMs = 5000) {
 }
 
 test('cada turno estrena reloj y la conexion de otro no lo reinicia', async () => {
-  // Con dos personas seguidas los dos turnos llegan con el minuto entero: sin
+  // Con dos personas seguidas los dos turnos llegan con el tiempo entero: sin
   // un identificador de reloj, el cliente creia que seguia el turno anterior.
   const port = PORT + 2;
   const url = `http://localhost:${port}`;
@@ -266,7 +266,10 @@ test('cada turno estrena reloj y la conexion de otro no lo reinicia', async () =
     await until(() => last.get(other)?.isYourTurn);
     const second = last.get(other);
     assert.notEqual(second.turnClockId, first.turnClockId, 'el turno nuevo tiene que estrenar reloj');
-    assert.ok(second.turnMsLeft > 59_000, `el turno nuevo empezo con ${second.turnMsLeft} ms`);
+    assert.ok(
+      second.turnMsLeft > second.turnLimitMs - 1000,
+      `el turno nuevo empezo con ${second.turnMsLeft} de ${second.turnLimitMs} ms`,
+    );
 
     // Quien no juega se va: a quien juega no se le toca el reloj.
     await new Promise((r) => setTimeout(r, 300));

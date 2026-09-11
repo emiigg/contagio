@@ -4,8 +4,11 @@ import { play } from '../sound';
 
 const R = 14;
 const CIRCUMFERENCE = 2 * Math.PI * R;
-/** Por debajo de esto el reloj se pone rojo: queda poco y hay que mirarlo. */
-const URGENT_S = 10;
+/**
+ * Por debajo de esto el reloj se pone rojo y tu turno hace tic: queda poco y
+ * hay que mirarlo. Con turnos de veinte segundos, diez seria medio turno sonando.
+ */
+const URGENT_S = 5;
 
 /**
  * Reloj del turno: un aro que se gasta. Solo aparece cuando juega una persona,

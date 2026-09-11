@@ -1970,7 +1970,7 @@ button {
 /* --- reloj del turno ------------------------------------------------------ */
 
 /* Un aro que se gasta. Solo sale cuando juega una persona: los bots no lo
-   necesitan y un aro de un minuto sobre un turno de cuatro segundos confunde. */
+   necesitan y un aro de veinte segundos sobre un turno de cuatro confunde. */
 .clock {
   position: relative;
   display: inline-grid;

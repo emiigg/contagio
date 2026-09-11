@@ -40,8 +40,12 @@ const MOVE_SOUND: Partial<Record<string, SoundName>> = {
 /** Cuanto se resalta un organo despues de recibir una carta. */
 const HIT_MS = 3200;
 
-/** Cuanto espera la mesa, en tu turno y sin que toques nada, antes de recordartelo. */
-const REMIND_MS = 20_000;
+/**
+ * Que parte del turno espera la mesa, sin que toques nada, antes de
+ * recordartelo. Se mide con el turno y no en segundos fijos: con turnos de
+ * veinte segundos llega a los ocho y aun quedan doce para pensar.
+ */
+const REMIND_SHARE = 0.4;
 
 /** Lo que tarda en irse la franja de tu turno. */
 const FLASH_MS = 1900;
@@ -148,9 +152,9 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
       play('nudge');
       buzz([60]);
       setFlash({ key: -view.turnCount, text: 'Te toca jugar' });
-    }, REMIND_MS);
+    }, view.turnLimitMs * REMIND_SHARE);
     return () => clearTimeout(timer);
-  }, [myTurn, view.turnCount]);
+  }, [myTurn, view.turnCount, view.turnLimitMs]);
 
   useEffect(() => {
     if (!flash) return;

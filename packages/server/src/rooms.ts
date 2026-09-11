@@ -34,11 +34,12 @@ const OPENING_DELAY_MS = Number(process.env.OPENING_DELAY_MS ?? 4200);
 /** Tiempo antes de que un bot cubra el turno de un humano desconectado. */
 const ABANDON_DELAY_MS = 8000;
 /**
- * Lo que dura el turno de una persona. Pasado el minuto la mesa juega por ella
- * con la misma heuristica que los bots: una partida en tiempo real no puede
- * quedarse parada porque alguien se levante a por un cafe.
+ * Lo que dura el turno de una persona. Pasado ese tiempo la mesa juega por
+ * ella con la misma heuristica que los bots: una partida en tiempo real no
+ * puede quedarse parada porque alguien se levante a por un cafe. Veinte
+ * segundos: con un minuto, el resto de la mesa se cansaba de esperar.
  */
-const TURN_LIMIT_MS = Number(process.env.TURN_LIMIT_MS ?? 60_000);
+const TURN_LIMIT_MS = Number(process.env.TURN_LIMIT_MS ?? 20_000);
 
 export type RoomBroadcast = {
   room: (room: RoomView) => void;
@@ -175,9 +176,9 @@ export class Room {
     if (!member) return;
     member.socketId = socketId;
     if (this.state) this.state = setConnected(this.state, playerId, socketId !== null);
-    // Solo la conexion de quien juega mueve el reloj: si vuelve estrena minuto,
+    // Solo la conexion de quien juega mueve el reloj: si vuelve estrena turno entero,
     // si se va lo cubre un bot pasado el margen. Que otro recargue la pagina no
-    // puede regalarle un minuto nuevo a quien esta jugando.
+    // puede regalarle tiempo nuevo a quien esta jugando.
     if (this.state?.players[this.state.turn]?.id === playerId) this.scheduleAutoTurn();
     this.pushState();
   }
@@ -205,7 +206,7 @@ export class Room {
   /**
    * Programa el final del turno: lo juega un bot enseguida, un humano
    * desconectado pasado un margen para que le de tiempo a volver, y una persona
-   * conectada al agotarse su minuto. Solo el minuto se ensena como reloj.
+   * conectada al agotarse su tiempo. Solo ese tiempo se ensena como reloj.
    */
   private scheduleAutoTurn(): void {
     this.clearTimer();
@@ -245,7 +246,7 @@ export class Room {
 
     if (timedOut) {
       const socketId = this.members.find((m) => m.id === playerId)?.socketId;
-      if (socketId) this.broadcast.toast(socketId, 'Se agoto tu minuto: la mesa ha jugado por ti.');
+      if (socketId) this.broadcast.toast(socketId, 'Se agoto tu tiempo: la mesa ha jugado por ti.');
     }
 
     this.scheduleAutoTurn();
