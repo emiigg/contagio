@@ -226,6 +226,63 @@ test('el turno de una persona se juega solo cuando se le acaba el tiempo', async
   }
 });
 
+/** Espera a que se cumpla una condicion sobre las vistas recibidas. */
+async function until(check, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (check()) return;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  assert.fail('la condicion no se cumplio a tiempo');
+}
+
+test('cada turno estrena reloj y la conexion de otro no lo reinicia', async () => {
+  // Con dos personas seguidas los dos turnos llegan con el minuto entero: sin
+  // un identificador de reloj, el cliente creia que seguia el turno anterior.
+  const port = PORT + 2;
+  const url = `http://localhost:${port}`;
+  const own = await startServer(port, { OPENING_DELAY_MS: '0' });
+  const a = io(url, { transports: ['websocket'], forceNew: true });
+  const b = io(url, { transports: ['websocket'], forceNew: true });
+  sockets.push(a, b);
+  await Promise.all([a, b].map((s) => new Promise((r) => s.on('connect', r))));
+
+  try {
+    const last = new Map();
+    a.on('game:view', (view) => last.set(a, view));
+    b.on('game:view', (view) => last.set(b, view));
+    const { room } = await ask(a, 'room:create', { name: 'Ana' });
+    await ask(b, 'room:join', { code: room.code, name: 'Beto' });
+    await ask(a, 'room:start', {});
+    await until(() => last.get(a) && last.get(b));
+
+    const opener = last.get(a).isYourTurn ? a : b;
+    const other = opener === a ? b : a;
+    const first = last.get(opener);
+    assert.equal(typeof first.turnClockId, 'number');
+
+    await new Promise((r) => setTimeout(r, 150));
+    await ask(opener, 'game:action', { action: { type: 'DISCARD', cardIds: [first.hand[0].id] } });
+    await until(() => last.get(other)?.isYourTurn);
+    const second = last.get(other);
+    assert.notEqual(second.turnClockId, first.turnClockId, 'el turno nuevo tiene que estrenar reloj');
+    assert.ok(second.turnMsLeft > 59_000, `el turno nuevo empezo con ${second.turnMsLeft} ms`);
+
+    // Quien no juega se va: a quien juega no se le toca el reloj.
+    await new Promise((r) => setTimeout(r, 300));
+    const before = last.get(other);
+    opener.close();
+    await until(() => last.get(other) !== before);
+    const after = last.get(other);
+    assert.equal(after.turnClockId, second.turnClockId, 'la desconexion de otro reinicio el reloj');
+    assert.ok(after.turnMsLeft < second.turnMsLeft - 200, 'el tiempo de quien juega volvio a llenarse');
+  } finally {
+    a.close();
+    b.close();
+    own.kill();
+  }
+});
+
 /** Reutiliza la heuristica del motor sobre la vista publica del jugador. */
 function pickAction(view, seed) {
   const choice = chooseBotAction(viewToState(view), view.youId, 'normal', seed);

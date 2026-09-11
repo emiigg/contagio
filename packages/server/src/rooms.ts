@@ -58,6 +58,8 @@ export class Room {
   private botSeed = randomSeed();
   /** Cuando vence el turno en curso, si es de una persona. */
   private turnDeadline: number | null = null;
+  /** Numera los relojes: el cliente reinicia el aro cuando cambia. */
+  private clockId = 0;
 
   constructor(code: string, private readonly broadcast: RoomBroadcast) {
     this.code = code;
@@ -173,9 +175,10 @@ export class Room {
     if (!member) return;
     member.socketId = socketId;
     if (this.state) this.state = setConnected(this.state, playerId, socketId !== null);
-    // Quien vuelve a sentarse estrena minuto: el reloj se reprograma antes de
-    // publicar la vista para que nadie reciba el del turno anterior.
-    this.scheduleAutoTurn();
+    // Solo la conexion de quien juega mueve el reloj: si vuelve estrena minuto,
+    // si se va lo cubre un bot pasado el margen. Que otro recargue la pagina no
+    // puede regalarle un minuto nuevo a quien esta jugando.
+    if (this.state?.players[this.state.turn]?.id === playerId) this.scheduleAutoTurn();
     this.pushState();
   }
 
@@ -185,6 +188,7 @@ export class Room {
     const clock = {
       msLeft: this.turnDeadline === null ? null : Math.max(0, this.turnDeadline - Date.now()),
       limitMs: TURN_LIMIT_MS,
+      id: this.clockId,
     };
     for (const member of this.members) {
       if (!member.socketId) continue;
@@ -219,7 +223,10 @@ export class Room {
     const base = member.isBot ? BOT_DELAY_MS : timed ? TURN_LIMIT_MS : ABANDON_DELAY_MS;
     const delay = base + opening;
 
-    if (timed) this.turnDeadline = Date.now() + delay;
+    if (timed) {
+      this.turnDeadline = Date.now() + delay;
+      this.clockId++;
+    }
     this.botTimer = setTimeout(() => this.playAutoTurn(active.id, timed), delay);
   }
 

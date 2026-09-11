@@ -42,15 +42,22 @@ export interface PlayerView {
   turnMsLeft: number | null;
   /** Duracion completa del turno, para saber cuanto se ha gastado ya. */
   turnLimitMs: number;
+  /**
+   * Cambia cada vez que arranca un reloj. Sin el, dos turnos seguidos de
+   * personas llegan con el mismo tiempo restante (el minuto entero) y el
+   * cliente no puede distinguir un turno nuevo del anterior.
+   */
+  turnClockId: number;
 }
 
 /** Lo que el motor no sabe: cuanto lleva pensando quien juega. */
 export interface TurnClock {
   msLeft: number | null;
   limitMs: number;
+  id: number;
 }
 
-export function toPlayerView(state: GameState, youId: string, clock: TurnClock = { msLeft: null, limitMs: 0 }): PlayerView {
+export function toPlayerView(state: GameState, youId: string, clock: TurnClock = { msLeft: null, limitMs: 0, id: 0 }): PlayerView {
   const turnPlayer = state.players[state.turn];
   const you = state.players.find((p) => p.id === youId);
   return {
@@ -79,5 +86,6 @@ export function toPlayerView(state: GameState, youId: string, clock: TurnClock =
     legalActions: turnPlayer?.id === youId ? legalActions(state, youId) : [],
     turnMsLeft: state.phase === 'playing' ? clock.msLeft : null,
     turnLimitMs: clock.limitMs,
+    turnClockId: clock.id,
   };
 }

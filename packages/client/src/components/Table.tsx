@@ -264,7 +264,14 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         <div className="bar__turn">
           <Pulse active={view.isYourTurn} />
           <span>{view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}</span>
-          {view.turnMsLeft !== null && !dealing && <TurnClock msLeft={view.turnMsLeft} limitMs={view.turnLimitMs} />}
+          {/* Un reloj por turno: la clave lo monta de cero cada vez que arranca uno. */}
+          {view.turnMsLeft !== null && !dealing && (
+            <TurnClock
+              key={view.turnClockId}
+              msLeft={view.turnMsLeft}
+              limitMs={view.turnLimitMs}
+            />
+          )}
         </div>
         <div className="bar__tools">
           <ThemeToggle compact />
