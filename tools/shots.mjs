@@ -108,12 +108,14 @@ async function main() {
   await shot('05-mesa');
 
   // El boton de tema: desde automatico, dos pulsaciones dejan la mesa oscura.
+  // Se busca por su etiqueta: el de sonido comparte la clase y va antes.
+  const themeButton = '.bar__tools .themeswitch[aria-label*="tema"]';
   if (!THEME) {
-    await page.click('.themeswitch');
-    await page.click('.themeswitch');
+    await page.click(themeButton);
+    await page.click(themeButton);
     await wait(400);
     await shot('05b-mesa-oscura');
-    await page.click('.themeswitch');
+    await page.click(themeButton);
     await wait(300);
   }
 
