@@ -1,3 +1,4 @@
+import { DEFAULT_LANG, type Lang } from './lang.js';
 import { getPack, type PackId } from './packs.js';
 import type { Card, TreatmentKind } from './types.js';
 import { COLORS } from './types.js';
@@ -20,8 +21,8 @@ export const DECK_COMPOSITION = {
 };
 
 /** El nombre de una carta depende del paquete; la carta en si es la misma en todos. */
-export function cardName(card: Card, packId?: PackId): string {
-  const pack = getPack(packId);
+export function cardName(card: Card, packId?: PackId, lang: Lang = DEFAULT_LANG): string {
+  const pack = getPack(packId, lang);
   switch (card.kind) {
     case 'organ':
       return pack.organs[card.color!].name;
@@ -35,8 +36,8 @@ export function cardName(card: Card, packId?: PackId): string {
 }
 
 /** Que hace la carta, contado con el vocabulario del paquete. */
-export function cardText(card: Card, packId?: PackId): string {
-  const pack = getPack(packId);
+export function cardText(card: Card, packId?: PackId, lang: Lang = DEFAULT_LANG): string {
+  const pack = getPack(packId, lang);
   return card.kind === 'treatment' ? pack.treatments[card.treatment!].text : pack.hints[card.kind];
 }
 

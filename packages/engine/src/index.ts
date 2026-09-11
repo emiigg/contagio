@@ -1,4 +1,5 @@
 export * from './types.js';
+export * from './lang.js';
 export * from './cards.js';
 export * from './packs.js';
 export * from './rules.js';

@@ -5,6 +5,7 @@ import { buildDeck, cardName } from '../src/cards.js';
 import { applyAction, createGame } from '../src/engine.js';
 import { legalActions } from '../src/legal.js';
 import { chooseBotAction } from '../src/bot.js';
+import { LANGS } from '../src/lang.js';
 import { PACKS, PACK_IDS, fillTemplate, getPack } from '../src/packs.js';
 import { organStatus } from '../src/rules.js';
 import { toPlayerView } from '../src/view.js';
@@ -464,21 +465,42 @@ function packStrings(value: unknown): string[] {
   return [];
 }
 
-test('cada paquete da nombre propio a las 20 cartas distintas del mazo', () => {
+test('cada paquete da nombre propio a las 20 cartas distintas del mazo, en cada idioma', () => {
   for (const id of PACK_IDS) {
-    const names = new Set(buildDeck().map((card) => cardName(card, id)));
-    assert.equal(names.size, 20, `${id}: ${[...names].join(', ')}`);
+    for (const lang of LANGS) {
+      const names = new Set(buildDeck().map((card) => cardName(card, id, lang)));
+      assert.equal(names.size, 20, `${id}/${lang}: ${[...names].join(', ')}`);
+    }
   }
 });
 
-test('los textos de los paquetes van sin tildes y no dejan huecos sin rellenar', () => {
+test('los textos van sin tildes en espanol, en ASCII en ingles, y no dejan huecos sin rellenar', () => {
   const values = { p: 'Ana', card: 'Carta', organ: 'su Carta', n: 2, threats: 'amenazas', victim: 'Luis' };
   for (const id of PACK_IDS) {
     for (const text of packStrings(PACKS[id])) {
       assert.doesNotMatch(text, /[áéíóúüñ¿¡]/i, `${id}: "${text}"`);
     }
-    for (const line of Object.values(PACKS[id].lines)) {
-      assert.doesNotMatch(fillTemplate(line, values), /[{}]/, `${id}: ${line}`);
+    // Sin comillas tipograficas ni rayas: el mismo criterio que el espanol sin tildes.
+    for (const text of packStrings(getPack(id, 'en'))) {
+      assert.doesNotMatch(text, /[^\x20-\x7e]/, `${id}/en: "${text}"`);
+    }
+    for (const lang of LANGS) {
+      for (const line of Object.values(getPack(id, lang).lines)) {
+        assert.doesNotMatch(fillTemplate(line, values), /[{}]/, `${id}/${lang}: ${line}`);
+      }
+    }
+  }
+});
+
+test('cada paquete tiene version inglesa y cada plantilla pide los mismos huecos en los dos idiomas', () => {
+  const holes = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
+  const templates = (pack: ReturnType<typeof getPack>) => ({ ...pack.lines, ...pack.buttons, ...pack.ending });
+  for (const id of PACK_IDS) {
+    const es = templates(getPack(id, 'es'));
+    const en = templates(getPack(id, 'en'));
+    assert.notEqual(getPack(id, 'en'), getPack(id, 'es'), `${id} sin traducir`);
+    for (const key of Object.keys(es) as (keyof typeof es)[]) {
+      assert.equal(holes(en[key]), holes(es[key]), `${id}.${String(key)}: "${en[key]}" frente a "${es[key]}"`);
     }
   }
 });
@@ -522,6 +544,7 @@ test('las frases contraen el articulo como en el habla', () => {
 test('un paquete desconocido cae en Contagio en vez de dejar cartas sin nombre', () => {
   assert.equal(getPack('inventado').id, 'contagio');
   assert.equal(getPack(undefined).id, 'contagio');
+  assert.equal(getPack('inventado', 'en').name, 'Contagio');
   const state = scenario();
   (state as { pack: string }).pack = 'inventado';
   assert.equal(toPlayerView(state, 'p0').pack, 'contagio');

@@ -1,3 +1,5 @@
+import { DEFAULT_LANG, type Lang } from './lang.js';
+import { PACKS_EN } from './packs-en.js';
 import type { CardKind, Color, OrganStatus, TreatmentKind } from './types.js';
 
 /**
@@ -39,8 +41,11 @@ export const DEFAULT_PACK: PackId = 'contagio';
 
 export interface PackOrgan {
   name: string;
-  /** Articulo del nombre: "el Corazon de Ana", "la Fresa de Ana". */
-  art: 'el' | 'la';
+  /**
+   * Articulo del nombre en espanol: "el Corazon de Ana", "la Fresa de Ana".
+   * En ingles es siempre 'the' y no se usa: el dueno va en genitivo.
+   */
+  art: string;
 }
 
 /**
@@ -83,9 +88,10 @@ export interface Pack {
   words: {
     organ: string;
     organs: string;
-    the: 'el' | 'la';
-    one: 'uno' | 'una';
-    /** Plural y concordado con organs: "sanos", "frescas". */
+    /** Articulo y numeral concordados: 'el' | 'la' y 'uno' | 'una'; en ingles 'the' y 'one'. */
+    the: string;
+    one: string;
+    /** Plural y concordado con organs: "sanos", "frescas". En ingles va delante: "fresh fruits". */
     healthy: string;
     threat: string;
     threats: string;
@@ -1160,11 +1166,13 @@ export function isPackId(value: unknown): value is PackId {
 }
 
 /**
- * Paquete por id. Cualquier valor desconocido cae en Contagio: un estado
- * antiguo o incompleto (los bots simulan sobre vistas) nunca se queda sin nombres.
+ * Paquete por id, en el idioma pedido. Cualquier valor desconocido cae en
+ * Contagio: un estado antiguo o incompleto (los bots simulan sobre vistas)
+ * nunca se queda sin nombres.
  */
-export function getPack(id?: string | null): Pack {
-  return isPackId(id) ? PACKS[id] : PACKS[DEFAULT_PACK];
+export function getPack(id?: string | null, lang: Lang = DEFAULT_LANG): Pack {
+  const key = isPackId(id) ? id : DEFAULT_PACK;
+  return lang === 'en' ? PACKS_EN[key] : PACKS[key];
 }
 
 /** Rellena los huecos {clave} de una plantilla. */
