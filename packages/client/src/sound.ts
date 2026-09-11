@@ -109,6 +109,16 @@ function unlock(): void {
 if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', unlock, { passive: true });
   window.addEventListener('keydown', unlock);
+  // Los ajustes son del navegador, no de la pestana. Cada una los leia al
+  // abrir y no volvia a mirarlos: la musica seguia sonando en la otra
+  // pestana, y al tocar alli un deslizador se guardaba su copia vieja encima
+  // de lo que se acababa de decidir aqui.
+  window.addEventListener('storage', (event) => {
+    if (event.key !== KEY && event.key !== null) return;
+    settings = read();
+    applyLevels();
+    for (const fn of listeners) fn();
+  });
 }
 
 /** Contexto y entrada de la musica, para music.ts. Nulos si el navegador no tiene Web Audio. */
