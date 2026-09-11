@@ -59,6 +59,8 @@ async function main() {
 
   const browser = await chromium.connectOverCDP(CDP_URL);
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  // En espanol, que es lo que buscan los selectores de texto: el navegador del contenedor diria ingles.
+  await context.addInitScript(() => localStorage.setItem('contagio.lang', 'es'));
   const page = await context.newPage();
 
   await page.goto(URL);

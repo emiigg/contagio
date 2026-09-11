@@ -65,6 +65,11 @@ async function main() {
     // encontraria el navegador de alguien que ya eligio tema.
     await context.addInitScript((value) => localStorage.setItem('contagio.theme', value), THEME);
   }
+  // Se juega en espanol, que es lo que buscan los selectores de texto; el
+  // navegador del contenedor diria ingles. El ingles se captura aparte al final.
+  await context.addInitScript(() => {
+    if (!localStorage.getItem('contagio.lang')) localStorage.setItem('contagio.lang', 'es');
+  });
   const page = await context.newPage();
   const errors = [];
   page.on('console', (msg) => msg.type() === 'error' && errors.push(msg.text()));
@@ -122,8 +127,8 @@ async function main() {
   await shot('05-mesa');
 
   // El boton de tema: desde automatico, dos pulsaciones dejan la mesa oscura.
-  // Se busca por su etiqueta: el de sonido comparte la clase y va antes.
-  const themeButton = '.bar__tools .themeswitch[aria-label*="tema"]';
+  // Se busca por su marca: el de sonido y el de idioma comparten la clase.
+  const themeButton = '.bar__tools [data-control="theme"]';
   if (!THEME) {
     await page.click(themeButton);
     await page.click(themeButton);
@@ -223,6 +228,13 @@ async function main() {
   }
   await wait(600);
   await shot('10-partida-avanzada');
+
+  // La misma mesa en ingles: el registro y el anuncio ya vienen en los dos idiomas.
+  await page.click('.bar__tools [data-control="lang"]');
+  await wait(500);
+  await shot('11-mesa-ingles');
+  await page.click('.bar__tools [data-control="lang"]');
+  await wait(300);
 
   await page.setViewportSize({ width: 420, height: 860 });
   await wait(600);
