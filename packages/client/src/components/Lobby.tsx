@@ -21,9 +21,9 @@ interface LobbyProps {
 }
 
 const DIFFICULTY_LABEL: Record<BotDifficulty, string> = {
-  easy: 'Blanda',
+  easy: 'Facil',
   normal: 'Normal',
-  hard: 'Dura',
+  hard: 'Dificil',
 };
 
 export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, onStart, onLeave, onShowRules }: LobbyProps) {
