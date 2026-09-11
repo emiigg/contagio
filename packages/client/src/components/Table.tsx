@@ -10,7 +10,7 @@ import { CardBack } from './CardBack';
 import { CardFace } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
-import { SoundToggle } from './SoundToggle';
+import { SoundMenu } from './SoundMenu';
 import { ThemeToggle } from './ThemeToggle';
 import { TurnClock } from './TurnClock';
 import { play } from '../sound';
@@ -313,7 +313,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           )}
         </div>
         <div className="bar__tools">
-          <SoundToggle />
+          <SoundMenu />
           <ThemeToggle compact />
           <button type="button" className="btn btn--ghost" onClick={onShowRules}>
             Reglas

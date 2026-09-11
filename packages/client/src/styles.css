@@ -1992,6 +1992,78 @@ button {
   letter-spacing: -0.01em;
 }
 
+/* --- panel de sonido ------------------------------------------------------ */
+
+.soundmenu {
+  position: relative;
+}
+
+.soundmenu__button.is-open {
+  background: var(--hover);
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+/* Cuelga del boton hacia la izquierda: el boton siempre esta en el extremo
+   derecho de su barra, y asi el panel no se sale de la pantalla. */
+.soundmenu__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 35;
+  width: min(17rem, calc(100vw - 1.5rem));
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-sheet);
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.soundmenu__title {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.soundmenu__row {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr) 1.8rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.soundmenu__range {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.soundmenu__value {
+  text-align: right;
+  color: var(--ink-soft);
+}
+
+.soundmenu__panel.is-muted .soundmenu__range,
+.soundmenu__panel.is-muted .soundmenu__value {
+  opacity: 0.45;
+}
+
+.soundmenu__status {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+.soundmenu__mute {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.86rem;
+}
+
 @media (max-width: 900px) {
   .home__sheet {
     grid-template-columns: 1fr;

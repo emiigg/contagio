@@ -119,6 +119,12 @@ async function main() {
     await wait(300);
   }
 
+  await page.click('.soundmenu__button');
+  await page.waitForSelector('.soundmenu__panel');
+  await wait(200);
+  await shot('05c-menu-sonido');
+  await page.keyboard.press('Escape');
+
   // Mano: pasar el raton por una carta para ver la leyenda.
   const cards = page.locator('.hand__slot');
   if (await cards.count()) {
