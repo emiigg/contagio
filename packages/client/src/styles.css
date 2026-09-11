@@ -1045,7 +1045,9 @@ button {
   display: grid;
   place-content: center;
   gap: 0.3rem;
-  padding: 0.4rem;
+  /* Poco margen a los lados: "Vengadores" tiene que caber entera en una linea
+     de la carta mas estrecha, o el nombre se va a cuatro lineas. */
+  padding: 0.4rem 0.2rem;
   background: var(--card);
   border: 1px solid var(--line);
   border-top: 3px solid var(--tone, var(--treatment));
@@ -1054,14 +1056,20 @@ button {
   text-align: center;
 }
 
+/* El dibujo se mide con la carta: en ventanas bajas la carta encoge y un
+   nombre de tres lineas ("Torre de los Vengadores") se salia por abajo. */
 .pile__glyph {
-  width: 2.7rem;
-  height: 2.7rem;
+  width: min(2.7rem, calc(var(--w) * 0.52));
+  height: min(2.7rem, calc(var(--w) * 0.52));
   justify-self: center;
 }
 
 .pile__name {
-  font-size: 0.72rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: min(0.66rem, calc(var(--w) * 0.15));
   font-weight: 700;
   color: var(--ink);
   line-height: 1.1;
@@ -1105,7 +1113,10 @@ button {
   display: grid;
   justify-items: center;
   gap: 0.2rem;
-  width: clamp(5rem, 11vh, 6.6rem);
+  /* Crece con el nombre hasta un tope y ahi parte la linea: con ancho fijo,
+     "Pulso electromagnetico" o "Reclutamiento" se salian de la carta. */
+  min-width: clamp(5rem, 11vh, 6.6rem);
+  max-width: clamp(7rem, 15vh, 8.6rem);
   padding: 0.5rem 0.35rem;
   background: var(--card);
   border: 1px solid var(--line);
@@ -1119,6 +1130,15 @@ button {
 .announce__glyph {
   width: clamp(2.3rem, 5.4vh, 3.2rem);
   height: clamp(2.3rem, 5.4vh, 3.2rem);
+}
+
+/* Una palabra que no cabe entera se parte (con guion si el navegador sabe
+   silabear en espanol) en vez de asomar por el borde de la carta. */
+.announce__cardname,
+.pile__name,
+.card__name {
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .announce__cardname {
@@ -2359,6 +2379,18 @@ button {
     --w: 3.4rem;
   }
 
+  /* En una carta de 3,4 rem no cabe un nombre que se pueda leer: se cortaba o
+     se salia. Queda el dibujo en su color, mas grande; el nombre ya lo dice el
+     anuncio de la jugada. */
+  .pile__name {
+    display: none;
+  }
+
+  .pile__glyph {
+    width: calc(var(--w) * 0.62);
+    height: calc(var(--w) * 0.62);
+  }
+
   .ticker {
     display: none;
   }
@@ -2500,7 +2532,12 @@ button {
   }
 
   .announce__card {
-    width: 3.6rem;
+    min-width: 3.6rem;
+    max-width: 5.4rem;
+  }
+
+  .announce__cardname {
+    font-size: 0.6rem;
   }
 
   .announce__glyph {
@@ -2549,7 +2586,7 @@ button {
   }
 
   .announce__card {
-    width: 3.2rem;
+    min-width: 3.2rem;
     padding: 0.3rem 0.25rem;
   }
 
