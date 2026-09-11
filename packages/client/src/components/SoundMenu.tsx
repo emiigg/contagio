@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { SoundOffGlyph, SoundOnGlyph } from '../art';
 import { useTrackTitle } from '../music';
@@ -17,6 +17,7 @@ export function SoundMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<ReturnType<typeof setTimeout>>();
   const panelId = useId();
   const silent = muted || (music === 0 && effects === 0);
@@ -38,6 +39,26 @@ export function SoundMenu() {
       window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('keydown', onKey);
     };
+  }, [open]);
+
+  // El panel cuelga del boton hacia la izquierda, lo que solo cabe si el
+  // boton esta en el borde derecho. En el movil la barra se parte en dos
+  // filas y el boton queda a la izquierda: se mide al abrir y se corre lo
+  // justo para quedar dentro de la pantalla.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const fit = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      panel.style.transform = '';
+      const { left, right } = panel.getBoundingClientRect();
+      const edge = 8;
+      const shift = left < edge ? edge - left : right > window.innerWidth - edge ? window.innerWidth - edge - right : 0;
+      if (shift) panel.style.transform = `translateX(${shift}px)`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
   }, [open]);
 
   useEffect(() => () => clearTimeout(previewRef.current), []);
@@ -73,7 +94,7 @@ export function SoundMenu() {
       </button>
 
       {open && (
-        <div id={panelId} className={`soundmenu__panel ${muted ? 'is-muted' : ''}`} role="group" aria-label="Volumen">
+        <div ref={panelRef} id={panelId} className={`soundmenu__panel ${muted ? 'is-muted' : ''}`} role="group" aria-label="Volumen">
           <p className="soundmenu__title">Sonido</p>
 
           <label className="soundmenu__row">
