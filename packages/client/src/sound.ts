@@ -18,40 +18,89 @@ export type SoundName =
   | 'win'
   | 'lose';
 
-const KEY = 'contagio.sound';
+/** Volumenes de 0 a 1. Silenciar no los pisa: al volver, suenan como estaban. */
+export interface SoundSettings {
+  muted: boolean;
+  music: number;
+  effects: number;
+}
 
-function read(): boolean {
+const KEY = 'contagio.sound';
+const DEFAULTS: SoundSettings = { muted: false, music: 0.5, effects: 0.8 };
+
+/** Techo de la musica respecto a los efectos: va de fondo, no tapa la mesa. */
+const MUSIC_TRIM = 0.9;
+
+const clamp01 = (n: unknown, fallback: number) =>
+  typeof n === 'number' && Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback;
+
+function read(): SoundSettings {
   try {
-    return localStorage.getItem(KEY) !== 'off';
+    const raw = localStorage.getItem(KEY);
+    // Antes solo habia encendido o apagado, guardado tal cual en esta clave.
+    if (raw === null || raw === 'on') return DEFAULTS;
+    if (raw === 'off') return { ...DEFAULTS, muted: true };
+    const saved = JSON.parse(raw) as Partial<SoundSettings>;
+    return {
+      muted: saved.muted === true,
+      music: clamp01(saved.music, DEFAULTS.music),
+      effects: clamp01(saved.effects, DEFAULTS.effects),
+    };
   } catch {
-    return true;
+    return DEFAULTS;
   }
 }
 
-let enabled = typeof localStorage === 'undefined' ? true : read();
+let settings: SoundSettings = typeof localStorage === 'undefined' ? DEFAULTS : read();
 const listeners = new Set<() => void>();
 let ctx: AudioContext | null = null;
+let master: GainNode | null = null;
 let out: GainNode | null = null;
+let musicBus: GainNode | null = null;
+let duck: GainNode | null = null;
 let noise: AudioBuffer | null = null;
 
+// Master -> altavoz. Efectos y musica entran por separado para que cada
+// deslizador mueva solo lo suyo, y la musica pasa por un "duck" que la aparta
+// un momento cuando hay algo que oir, como el final de la partida.
 function context(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (!ctx) {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return null;
     ctx = new Ctor();
+    master = ctx.createGain();
+    master.connect(ctx.destination);
     out = ctx.createGain();
-    out.gain.value = 0.5;
-    out.connect(ctx.destination);
+    out.connect(master);
+    duck = ctx.createGain();
+    duck.connect(master);
+    musicBus = ctx.createGain();
+    musicBus.connect(duck);
+    applyLevels(0);
   }
   return ctx;
+}
+
+/** Lleva los tres volumenes a lo que dicen los ajustes, con una rampa corta para que no chasquee. */
+function applyLevels(ramp = 0.08): void {
+  if (!ctx || !master || !out || !musicBus) return;
+  const at = ctx.currentTime;
+  const set = (node: GainNode, value: number) => {
+    node.gain.cancelScheduledValues(at);
+    if (ramp === 0) node.gain.setValueAtTime(value, at);
+    else node.gain.setTargetAtTime(value, at, ramp / 3);
+  };
+  set(master, settings.muted ? 0 : 0.5);
+  set(out, settings.effects);
+  set(musicBus, settings.music * MUSIC_TRIM);
 }
 
 // El navegador no deja sonar nada antes del primer gesto. Se aprovecha el que
 // haya -el clic en "Crear sala" o en "Entrar"- para despertar el audio, y se
 // sigue escuchando porque algunos moviles lo vuelven a dormir.
 function unlock(): void {
-  if (!enabled) return;
+  if (settings.muted) return;
   const ac = context();
   if (ac && ac.state === 'suspended') void ac.resume();
 }
@@ -59,6 +108,20 @@ function unlock(): void {
 if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', unlock, { passive: true });
   window.addEventListener('keydown', unlock);
+}
+
+/** Contexto y entrada de la musica, para music.ts. Nulos si el navegador no tiene Web Audio. */
+export function musicOutput(): { ac: AudioContext; bus: GainNode } | null {
+  const ac = context();
+  return ac && musicBus ? { ac, bus: musicBus } : null;
+}
+
+/** Aparta la musica mientras suena un aviso y la devuelve despues. */
+function duckMusic(ac: AudioContext, at: number, hold: number): void {
+  if (!duck) return;
+  duck.gain.cancelScheduledValues(at);
+  duck.gain.setTargetAtTime(0.3, at, 0.04);
+  duck.gain.setTargetAtTime(1, at + hold, 0.35);
 }
 
 function noiseBuffer(ac: AudioContext): AudioBuffer {
@@ -176,11 +239,13 @@ const SOUNDS: Record<SoundName, (ac: AudioContext, t: number) => void> = {
   },
   tick: (ac, t) => tone(ac, t, 1600, 0.04, { gain: 0.07, attack: 0.002 }),
   win: (ac, t) => {
+    duckMusic(ac, t, 1.4);
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
       tone(ac, t + i * 0.11, f, i === 3 ? 0.9 : 0.45, { type: 'triangle', gain: 0.11 }),
     );
   },
   lose: (ac, t) => {
+    duckMusic(ac, t, 1.6);
     [392, 311.13, 261.63].forEach((f, i) =>
       tone(ac, t + i * 0.18, f, i === 2 ? 0.9 : 0.55, { type: 'triangle', gain: 0.1, glide: i === 2 ? 240 : undefined }),
     );
@@ -188,7 +253,7 @@ const SOUNDS: Record<SoundName, (ac: AudioContext, t: number) => void> = {
 };
 
 export function play(name: SoundName): void {
-  if (!enabled) return;
+  if (settings.muted || settings.effects === 0) return;
   const ac = context();
   if (!ac || !out) return;
   // Con el audio aun dormido no se encola nada: sonaria todo de golpe y a
@@ -200,27 +265,33 @@ export function play(name: SoundName): void {
   SOUNDS[name](ac, ac.currentTime + 0.01);
 }
 
-function subscribe(fn: () => void): () => void {
+export function subscribeSound(fn: () => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
 
-export function setSoundEnabled(next: boolean): void {
-  enabled = next;
+export function getSoundSettings(): SoundSettings {
+  return settings;
+}
+
+export function setSoundSettings(patch: Partial<SoundSettings>): void {
+  const wasSilent = settings.muted || settings.effects === 0;
+  settings = { ...settings, ...patch };
   try {
-    localStorage.setItem(KEY, next ? 'on' : 'off');
+    localStorage.setItem(KEY, JSON.stringify(settings));
   } catch {
     /* modo privado: la preferencia dura lo que la pestana */
   }
-  if (next) {
+  applyLevels();
+  if (!settings.muted) {
     unlock();
     // Un roce de carta confirma que ya suena; el clic mismo acaba de despertar el audio.
-    setTimeout(() => play('deal'), 60);
+    if (wasSilent && settings.effects > 0) setTimeout(() => play('deal'), 60);
   }
   for (const fn of listeners) fn();
 }
 
-export function useSound() {
-  const on = useSyncExternalStore(subscribe, () => enabled, () => true);
-  return { enabled: on, toggle: () => setSoundEnabled(!enabled) };
+export function useSound(): SoundSettings & { set: (patch: Partial<SoundSettings>) => void } {
+  const current = useSyncExternalStore(subscribeSound, getSoundSettings, () => DEFAULTS);
+  return { ...current, set: setSoundSettings };
 }

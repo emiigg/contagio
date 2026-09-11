@@ -7,6 +7,7 @@ import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { Rules } from './components/Rules';
 import { Table } from './components/Table';
+import { useMusic } from './music';
 import { useContagio } from './net';
 import { PackProvider } from './packs';
 
@@ -17,6 +18,10 @@ export default function App() {
   const youId = playerId ?? view?.youId ?? null;
   const isHost = Boolean(room && youId && room.players.some((p) => p.id === youId && p.isHost));
   const inGame = room && view && room.status !== 'lobby';
+
+  // La musica es la del paquete de la sala, desde que se entra en ella: en la
+  // sala misma sirve para oir cada paquete antes de elegirlo.
+  useMusic(room?.pack ?? null);
 
   return (
     // El paquete de la sala viste toda la pantalla, fondo incluido, en cuanto
