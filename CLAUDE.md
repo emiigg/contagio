@@ -35,7 +35,7 @@ npm run dev          # tsc --watch + servidor + Vite, se apagan juntos con Ctrl+
 npm run build        # engine -> client -> server
 npm run typecheck    # tsc -b de engine y server
 npm test             # 31 pruebas del motor (node:test)
-npm run test:e2e     # 5 pruebas de integración por socket; levanta servidores de verdad
+npm run test:e2e     # 6 pruebas de integración por socket; levanta servidores de verdad
 npm start            # producción: un solo proceso Node sirve cliente y socket
 ```
 
@@ -62,6 +62,14 @@ Cuatro fronteras que no conviene cruzar:
    agota su minuto: no hay una segunda implementación de "jugar bien".
 4. **El azar es determinista** (mulberry32 sembrado). Baraja, sorteo de salida y ruido de los bots salen de semillas,
    lo que hace reproducibles las partidas y los tests.
+
+### Sonido
+
+`client/src/sound.ts` sintetiza todo con Web Audio (osciladores y ruido filtrado): **no se añaden archivos de audio**,
+por la misma razón que no se copian ilustraciones. `play(name)` no hace nada si la mesa está en silencio o si el audio
+aún no se ha despertado con un gesto; nada se encola, o sonaría todo de golpe después. Cada disparo se ancla a algo
+que no se repite (`lastMove.serial`, `turnCount`) para que recargar a media partida no vuelva a sonar lo de antes.
+En el contenedor no se oye nada: las pruebas solo garantizan que no hay errores, el oído lo pone el autor.
 
 ### Paquetes de cartas
 
@@ -139,6 +147,13 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
   en `true` deja el reparto colgado.
 - **El reloj se programa antes de publicar la vista.** `scheduleAutoTurn()` va antes de `pushState()`, o la vista sale
   siempre con el tiempo del turno anterior.
+- **Un reloj se reconoce por `turnClockId`, no por el tiempo que le queda.** Dos turnos humanos seguidos llegan con
+  el minuto entero exacto; si el aro se reinicia cuando cambia `msLeft`, sigue con el tiempo del anterior. Con bots
+  en medio no se ve, porque el aro desaparece en su turno: hace falta probarlo con dos personas. Y `setConnection`
+  solo reprograma el reloj si quien se conecta o se va es el jugador en turno.
+- **Los asientos rotan desde tu silla**: `players.slice(me + 1)` seguido de `players.slice(0, me)`. Tomar la lista
+  tal cual solo cuadra para el anfitrión, que es el índice 0, y una prueba con un único navegador nunca lo detecta:
+  hay que mirar la mesa de un invitado.
 - **Una frase de interfaz no dice «órgano».** Sale de `pack.words` (con su género: `the`, `one`) o de las
   plantillas, que contraen «de el» → «del» con `contract()`. Escribir `'el organo'` a mano deja «el organo» en la
   mesa de Frutero, que es de frutas.

@@ -71,6 +71,12 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **Un minuto por turno** (`TURN_LIMIT_MS`) cuando juega una persona, con un aro que se gasta junto al indicador de
   turno. Si llega a cero, la mesa juega por ella con la misma heurística de los bots: nadie se queda esperando a
   alguien que se ha levantado. Los bots no llevan reloj.
+- **Cada cual ve la mesa desde su silla**: los rivales se sientan en el orden en que juegan después de ti —el
+  siguiente a tu izquierda, el anterior a tu derecha—, así que el turno da la vuelta a la mesa en el mismo sentido
+  para todos, no solo para el anfitrión.
+- **La mesa suena**: barajado y reparto al empezar, una campanada cuando te toca, un golpe distinto según la jugada,
+  el tic de tus últimos diez segundos y un arpegio al terminar. Todo se sintetiza en el navegador con Web Audio
+  —osciladores y ruido filtrado, sin un solo archivo de audio— y hay un botón de silencio que se recuerda.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 - **Quien abre sale por sorteo**, no es el anfitrión: abrir es una ventaja pequeña pero constante. El sorteo usa la
@@ -175,7 +181,8 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
   al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
   cierra —y su código deja de existir— cuando pierde a todos sus humanos. Y que el turno de una persona vence solo:
   con un servidor aparte y un «minuto» de segundo y medio, la partida avanza sin que nadie juegue. Y que solo el
-  anfitrión elige paquete, solo en la sala, y que la partida arranca con él.
+  anfitrión elige paquete, solo en la sala, y que la partida arranca con él. Y que cada turno estrena reloj aunque
+  jueguen dos personas seguidas, sin que la desconexión de otro le reinicie el minuto a quien está jugando.
 
 ## Revisión visual
 
