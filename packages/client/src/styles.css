@@ -2237,6 +2237,91 @@ button {
   font-size: 0.86rem;
 }
 
+/* --- novedades ------------------------------------------------------------ */
+
+/* Ocupa las dos columnas del inicio, bajo una raya: se lee despues de lo que
+   importa -como se juega y como se entra-, no antes. */
+.news {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.8rem 2rem;
+  padding-top: clamp(1rem, 2.5vw, 1.6rem);
+  border-top: 1px solid var(--line);
+}
+
+.news__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--ink-faint);
+}
+
+.news__badge {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--turn);
+  color: var(--on-turn);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.news__title {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.news__notes,
+.release__notes {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.news__more {
+  white-space: nowrap;
+}
+
+.releases {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.release {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.release__meta {
+  margin: 0;
+  color: var(--ink-faint);
+}
+
+.release__title {
+  margin: 0.25rem 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 700px) {
+  .news {
+    grid-template-columns: 1fr;
+  }
+
+  .news__more {
+    justify-self: start;
+  }
+}
+
 @media (max-width: 900px) {
   .home__sheet {
     grid-template-columns: 1fr;

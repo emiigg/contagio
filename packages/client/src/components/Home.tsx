@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 
 import { BrainGlyph, HeartGlyph, LiverGlyph, LungGlyph, Mark } from '../art';
+import { CURRENT, hasUnseenRelease, markReleaseSeen, releaseDate } from '../releases';
 import { ThemeToggle } from './ThemeToggle';
 
 interface HomeProps {
@@ -9,13 +10,24 @@ interface HomeProps {
   onCreate: (name: string) => Promise<void>;
   onJoin: (code: string, name: string) => Promise<void>;
   onShowRules: () => void;
+  onShowReleases: () => void;
 }
 
-export function Home({ name, connected, onCreate, onJoin, onShowRules }: HomeProps) {
+/** Cuantas notas de la version vigente caben en el inicio; el resto, en el historial. */
+const NEWS_NOTES = 3;
+
+export function Home({ name, connected, onCreate, onJoin, onShowRules, onShowReleases }: HomeProps) {
   const [playerName, setPlayerName] = useState(name);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unseen, setUnseen] = useState(hasUnseenRelease);
+
+  function openReleases() {
+    markReleaseSeen();
+    setUnseen(false);
+    onShowReleases();
+  }
 
   async function submit(event: FormEvent, mode: 'create' | 'join') {
     event.preventDefault();
@@ -117,6 +129,26 @@ export function Home({ name, connected, onCreate, onJoin, onShowRules }: HomePro
           {error && <p className="notice notice--error">{error}</p>}
           {!connected && <p className="notice">Conectando con el servidor.</p>}
         </form>
+
+        <section className="news" aria-labelledby="news-title">
+          <div className="news__body">
+            <p className="news__meta mono">
+              novedades · v{CURRENT.version} · {releaseDate(CURRENT.date)}
+              {unseen && <span className="news__badge">nuevo</span>}
+            </p>
+            <h2 id="news-title" className="news__title">
+              {CURRENT.title}
+            </h2>
+            <ul className="news__notes">
+              {CURRENT.notes.slice(0, NEWS_NOTES).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+          <button type="button" className="btn btn--outline news__more" onClick={openReleases}>
+            Historial de versiones
+          </button>
+        </section>
       </div>
     </div>
   );

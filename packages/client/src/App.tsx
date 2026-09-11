@@ -5,6 +5,7 @@ import { DEFAULT_PACK } from '@contagio/engine';
 import { Backdrop } from './components/Backdrop';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
+import { Releases } from './components/Releases';
 import { Rules } from './components/Rules';
 import { Table } from './components/Table';
 import { useMusic } from './music';
@@ -14,6 +15,7 @@ import { PackProvider } from './packs';
 export default function App() {
   const { connected, room, view, playerId, toasts, name, actions } = useContagio();
   const [showRules, setShowRules] = useState(false);
+  const [showReleases, setShowReleases] = useState(false);
 
   const youId = playerId ?? view?.youId ?? null;
   const isHost = Boolean(room && youId && room.players.some((p) => p.id === youId && p.isHost));
@@ -37,6 +39,7 @@ export default function App() {
             onCreate={actions.createRoom}
             onJoin={actions.joinRoom}
             onShowRules={() => setShowRules(true)}
+            onShowReleases={() => setShowReleases(true)}
           />
         )}
 
@@ -67,6 +70,7 @@ export default function App() {
         )}
 
         {showRules && <Rules onClose={() => setShowRules(false)} />}
+        {showReleases && <Releases onClose={() => setShowReleases(false)} />}
 
         <div className="toasts" role="status" aria-live="polite">
           {toasts.map((toast) => (

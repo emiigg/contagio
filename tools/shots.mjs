@@ -71,7 +71,15 @@ async function main() {
   page.on('pageerror', (err) => errors.push(String(err)));
 
   const shot = async (name) => {
-    await page.screenshot({ path: resolve(OUT, `${name}.png`) });
+    try {
+      await page.screenshot({ path: resolve(OUT, `${name}.png`) });
+    } catch (err) {
+      // El Chromium sin GPU del contenedor no captura a 2x un modal con
+      // desplazamiento interno (el historial de versiones). A 1x si.
+      if (!String(err).includes('Unable to capture screenshot')) throw err;
+      await page.screenshot({ path: resolve(OUT, `${name}.png`), scale: 'css' });
+      console.log('     (a 1x: a escala completa no se deja capturar)');
+    }
     if (process.env.SHOT_DEBUG) {
       const info = await page.evaluate(() => ({
         dealing: !!document.querySelector('.table.is-dealing'),
@@ -86,6 +94,12 @@ async function main() {
   await page.goto(URL);
   await page.waitForSelector('.home__title');
   await shot('01-inicio');
+
+  await page.click('.news__more');
+  await page.waitForSelector('.releases');
+  await wait(200);
+  await shot('01b-novedades');
+  await page.keyboard.press('Escape');
 
   await page.fill('.field__input', 'Dra. Marin');
   await page.click('button[type="submit"]');
