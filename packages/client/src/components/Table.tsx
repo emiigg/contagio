@@ -87,7 +87,12 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   const dealtRef = useRef(false);
 
   const you = view.players.find((p) => p.id === view.youId)!;
-  const rivals = view.players.filter((p) => p.id !== view.youId);
+  // Los rivales se sientan en el orden en que juegan despues de ti: el
+  // siguiente a tu izquierda y el anterior a tu derecha, como en una mesa de
+  // verdad. Tomarlos en el orden de la lista solo cuadraba para el anfitrion,
+  // que es el primero.
+  const me = view.players.findIndex((p) => p.id === view.youId);
+  const rivals = [...view.players.slice(me + 1), ...view.players.slice(0, Math.max(me, 0))];
 
   // Cada cambio de turno limpia lo que estuviera a medio elegir.
   useEffect(() => {
