@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { play } from '../sound';
 import { CardBack } from './CardBack';
 
 const SHUFFLE_MS = 1200;
@@ -44,6 +45,7 @@ export function Deal({ centerEl, deckEl, seatEls, handSize, onDone }: DealProps)
   const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
   const [deckShift, setDeckShift] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const doneRef = useRef(false);
+  const shuffledRef = useRef(false);
 
   const finish = () => {
     if (doneRef.current) return;
@@ -88,11 +90,19 @@ export function Deal({ centerEl, deckEl, seatEls, handSize, onDone }: DealProps)
     const dealAt = SHUFFLE_MS;
     const lastFlight = dealAt + (flights[flights.length - 1]?.delay ?? 0) + FLIGHT_MS;
 
+    // El barajado suena una vez aunque el efecto se monte dos (modo estricto).
+    if (!shuffledRef.current) {
+      shuffledRef.current = true;
+      play('shuffle');
+    }
+
     const timers = [
       setTimeout(() => setPhase('deal'), dealAt),
       setTimeout(() => setFlying(true), dealAt + 40),
       setTimeout(() => setPhase('settle'), lastFlight),
       setTimeout(finish, lastFlight + SETTLE_MS),
+      // Un roce por carta, al ritmo exacto al que salen volando.
+      ...flights.map((flight) => setTimeout(() => play('deal'), dealAt + 40 + flight.delay)),
     ];
     return () => timers.forEach(clearTimeout);
   }, [flights.length]);

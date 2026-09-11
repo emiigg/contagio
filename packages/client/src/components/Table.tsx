@@ -10,8 +10,11 @@ import { CardBack } from './CardBack';
 import { CardFace } from './Card';
 import { Deal } from './Deal';
 import { Organ, OrganSlot } from './Organ';
+import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { TurnClock } from './TurnClock';
+import { play } from '../sound';
+import type { SoundName } from '../sound';
 
 interface TableProps {
   view: PlayerView;
@@ -25,6 +28,14 @@ interface TableProps {
 
 type OrganKey = string;
 const keyOf = (playerId: string, organId: string): OrganKey => `${playerId}:${organId}`;
+
+/** Que suena con cada jugada. Los tratamientos comparten un soplido. */
+const MOVE_SOUND: Partial<Record<string, SoundName>> = {
+  PLAY_ORGAN: 'organ',
+  PLAY_VIRUS: 'virus',
+  PLAY_MEDICINE: 'medicine',
+  DISCARD: 'discard',
+};
 
 /** Cuanto se resalta un organo despues de recibir una carta. */
 const HIT_MS = 3200;
@@ -93,6 +104,28 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   // que es el primero.
   const me = view.players.findIndex((p) => p.id === view.youId);
   const rivals = [...view.players.slice(me + 1), ...view.players.slice(0, Math.max(me, 0))];
+
+  // Cada jugada suena en cuanto llega. Se parte de la ultima ya vista para que
+  // entrar o recargar a media partida no repita la de hace un rato.
+  const heardRef = useRef<number | null>(view.lastMove?.serial ?? null);
+  useEffect(() => {
+    const move = view.lastMove;
+    if (!move || dealing || heardRef.current === move.serial) return;
+    heardRef.current = move.serial;
+    if (move.kind !== 'START') play(MOVE_SOUND[move.kind] ?? 'treatment');
+  }, [view.lastMove?.serial, dealing]);
+
+  // Tu turno avisa con una campanada, una vez por turno y ya repartidas las cartas.
+  const chimedRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (dealing || !view.isYourTurn || view.phase !== 'playing' || chimedRef.current === view.turnCount) return;
+    chimedRef.current = view.turnCount;
+    play('turn');
+  }, [view.isYourTurn, view.turnCount, view.phase, dealing]);
+
+  useEffect(() => {
+    if (view.phase === 'finished') play(view.winnerId === view.youId ? 'win' : 'lose');
+  }, [view.phase]);
 
   // Cada cambio de turno limpia lo que estuviera a medio elegir.
   useEffect(() => {
@@ -275,10 +308,12 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               key={view.turnClockId}
               msLeft={view.turnMsLeft}
               limitMs={view.turnLimitMs}
+              ticking={view.isYourTurn}
             />
           )}
         </div>
         <div className="bar__tools">
+          <SoundToggle />
           <ThemeToggle compact />
           <button type="button" className="btn btn--ghost" onClick={onShowRules}>
             Reglas

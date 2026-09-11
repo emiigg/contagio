@@ -5,6 +5,7 @@ import type { BotDifficulty, PackId, RoomView } from '@contagio/engine';
 
 import { Mark } from '../art';
 import { PACK_ART } from '../packs';
+import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 interface LobbyProps {
@@ -62,6 +63,7 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, o
             <p className="lobby__lead">Comparte el codigo o rellena la mesa con bots. De {MIN_PLAYERS} a {MAX_PLAYERS} jugadores.</p>
           </div>
           <div className="lobby__tools">
+            <SoundToggle />
             <ThemeToggle compact />
             <button type="button" className="codechip mono" onClick={copyCode} title="Copiar codigo">
               <span className="codechip__code">{room.code}</span>

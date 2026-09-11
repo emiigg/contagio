@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { play } from '../sound';
 
 const R = 14;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -10,8 +12,9 @@ const URGENT_S = 10;
  * porque es la unica que puede quedarse pensando; si llega a cero, la mesa
  * juega por ella y el aro desaparece con el turno.
  */
-export function TurnClock({ msLeft, limitMs }: { msLeft: number; limitMs: number }) {
+export function TurnClock({ msLeft, limitMs, ticking = false }: { msLeft: number; limitMs: number; ticking?: boolean }) {
   const [left, setLeft] = useState(msLeft);
+  const tickedRef = useRef<number | null>(null);
 
   useEffect(() => {
     setLeft(msLeft);
@@ -26,6 +29,14 @@ export function TurnClock({ msLeft, limitMs }: { msLeft: number; limitMs: number
   // segundos de los que dura un turno, que es lo que la gente cuenta.
   const seconds = Math.min(Math.ceil(left / 1000), Math.ceil(limitMs / 1000));
   const spent = limitMs > 0 ? Math.min(1, Math.max(0, left / limitMs)) : 0;
+
+  // Los ultimos segundos de tu propio turno se oyen: el aro esta arriba y la
+  // mirada, en la mano.
+  useEffect(() => {
+    if (!ticking || seconds > URGENT_S || seconds <= 0 || tickedRef.current === seconds) return;
+    tickedRef.current = seconds;
+    play('tick');
+  }, [seconds, ticking]);
 
   return (
     <span
