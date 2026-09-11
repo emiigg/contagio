@@ -42,7 +42,7 @@ npm run test:e2e     # 6 pruebas de integración por socket; levanta servidores 
 npm start            # producción: un solo proceso Node sirve cliente y socket
 ```
 
-Variables útiles: `PORT`, `CORS_ORIGIN`, `MAX_ROOMS` (5), `EMPTY_GRACE_MS` (60 000), `TURN_LIMIT_MS` (60 000),
+Variables útiles: `PORT`, `CORS_ORIGIN`, `MAX_ROOMS` (5), `EMPTY_GRACE_MS` (60 000), `TURN_LIMIT_MS` (20 000),
 `BOT_DELAY_MS` (4500), `OPENING_DELAY_MS` (4200).
 
 ## Arquitectura y sus límites
@@ -62,7 +62,7 @@ Cuatro fronteras que no conviene cruzar:
    salen de ahí nunca. La vista incluye `legalActions`, y la interfaz resalta objetivos válidos a partir de esa lista
    en vez de reimplementar las reglas.
 3. **Los bots usan el propio motor** (`chooseBotAction`). La misma heurística cubre al humano desconectado y al que
-   agota su minuto: no hay una segunda implementación de "jugar bien".
+   agota su tiempo: no hay una segunda implementación de "jugar bien".
 4. **El azar es determinista** (mulberry32 sembrado). Baraja, sorteo de salida y ruido de los bots salen de semillas,
    lo que hace reproducibles las partidas y los tests.
 
@@ -77,7 +77,9 @@ En el contenedor no se oye nada: las pruebas solo garantizan que no hay errores,
 El grafo es `master -> destino`, con los efectos y la música entrando por separado (`out` y `musicBus`, cada uno con
 el volumen de su deslizador) y la música a través de un `duck` que la aparta mientras suena un aviso (`turn`, `nudge`,
 `win`, `lose`). Los ajustes (`muted`, `music`, `effects`) se guardan en JSON en `contagio.sound`; el valor antiguo
-`'on' | 'off'` de esa misma clave se sigue leyendo.
+`'on' | 'off'` de esa misma clave se sigue leyendo. Son del navegador, no de la pestaña: cada una
+escucha el evento `storage` y adopta lo que decida otra. Sin eso, la que se quedó con la copia vieja la escribía
+encima en cuanto alguien tocaba allí un deslizador.
 
 La música de fondo es una partitura por paquete en `client/src/score.ts` (`SCORES: Record<PackId, Piece>`, así que un
 paquete nuevo no compila sin su pieza) y la toca `music.ts`, que programa con un cuarto de segundo de antelación sobre
@@ -112,6 +114,11 @@ Romper cualquiera de estos es una regresión aunque compile:
   nada: nada de listas que crecen.
 - **Alturas fijas donde el contenido varía** (cartel de jugada, cabeceras de asiento) y recorte con elipsis. Si un
   bloque crece con el texto, la mesa se desplaza bajo el cursor.
+- **Ningún nombre de carta asoma por su carta**, en ningún paquete ni anchura. La carta del anuncio crece hasta un
+  tope y parte la palabra (`overflow-wrap: anywhere` y `hyphens: auto`, que silabea porque la página es `lang="es"`);
+  el descarte encoge el dibujo con la carta y corta en tres líneas, y por debajo de 900 px, donde la carta mide
+  3,4 rem, no lleva nombre: solo el dibujo, más grande. «Pulso electromagnetico» (Órbita) y
+  «Espantapajaros» (Asedio) son la prueba: si esos caben, caben todos.
 - **Cada carta se juega señalando su sitio**: el órgano en su hueco, el virus sobre el órgano, la negligencia médica
   sobre la mesa entera del rival. Los botones del pie son atajo, no el camino principal.
 - **El reverso de carta no cambia con el tema**, ni con el paquete: es el mismo objeto sobre la mesa. Verde de
@@ -174,7 +181,7 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
 - **El reloj se programa antes de publicar la vista.** `scheduleAutoTurn()` va antes de `pushState()`, o la vista sale
   siempre con el tiempo del turno anterior.
 - **Un reloj se reconoce por `turnClockId`, no por el tiempo que le queda.** Dos turnos humanos seguidos llegan con
-  el minuto entero exacto; si el aro se reinicia cuando cambia `msLeft`, sigue con el tiempo del anterior. Con bots
+  el turno entero exacto; si el aro se reinicia cuando cambia `msLeft`, sigue con el tiempo del anterior. Con bots
   en medio no se ve, porque el aro desaparece en su turno: hace falta probarlo con dos personas. Y `setConnection`
   solo reprograma el reloj si quien se conecta o se va es el jugador en turno.
 - **Los asientos rotan desde tu silla**: `players.slice(me + 1)` seguido de `players.slice(0, me)`. Tomar la lista

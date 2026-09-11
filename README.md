@@ -68,7 +68,7 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **Todo se juega señalando su sitio**: el órgano cae en su hueco, el virus sobre el órgano que ataca y la negligencia
   médica sobre la mesa entera del rival —esa, además, pregunta antes, porque cambiar el cuerpo completo no tiene
   vuelta atrás.
-- **Un minuto por turno** (`TURN_LIMIT_MS`) cuando juega una persona, con un aro que se gasta junto al indicador de
+- **Veinte segundos por turno** (`TURN_LIMIT_MS`) cuando juega una persona, con un aro que se gasta junto al indicador de
   turno. Si llega a cero, la mesa juega por ella con la misma heurística de los bots: nadie se queda esperando a
   alguien que se ha levantado. Los bots no llevan reloj.
 - **Cada cual ve la mesa desde su silla**: los rivales se sientan en el orden en que juegan después de ti —el
@@ -77,18 +77,18 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **Tu turno no pasa desapercibido.** Había quien no se enteraba de que le tocaba: miraba su mano, no la barra. Ahora
   el aviso llega por varios sitios a la vez —una franja «Tu turno» cruza la mesa, suena una llamada de metales que
   aparta la música un momento, la barra se enciende, tu zona se tiñe y las cartas jugables dan un salto—, el móvil
-  vibra, y la pestaña del navegador dice «Tu turno» para quien espera mirando otra. Si pasan veinte segundos sin que
-  toques nada, la mesa lo recuerda una vez. El rival que juega lleva marco y un piloto junto al nombre. Nada de esto
+  vibra, y la pestaña del navegador dice «Tu turno» para quien espera mirando otra. Si se va el 40 % del turno —ocho
+  segundos— sin que toques nada, la mesa lo recuerda una vez. El rival que juega lleva marco y un piloto junto al nombre. Nada de esto
   mueve la mesa: todo pinta sobre medidas que ya existían.
 - **La mesa suena**: barajado y reparto al empezar, la llamada de tu turno, un golpe distinto según la jugada, el tic
-  de tus últimos diez segundos y un arpegio al terminar. Todo se sintetiza en el navegador con Web Audio
+  de tus últimos cinco segundos y un arpegio al terminar. Todo se sintetiza en el navegador con Web Audio
   —osciladores y ruido filtrado, sin un solo archivo de audio—.
 - **Cada paquete tiene su música**, compuesta para el juego y escrita como partitura en `client/src/score.ts`: unos
   compases de acordes y melodía con bajo, arpegio y percusión en patrones. Tampoco es un archivo: se sintetiza y se
   programa sobre el reloj del audio, y al cambiar de paquete en la sala una pieza se funde con la siguiente. Suena
   desde que entras en una sala y calla si la pestaña pasa a segundo plano.
 - **Volumen por separado**: el botón de sonido abre un panel con un deslizador para la música, otro para los efectos
-  y un «silenciar todo» que no pisa los volúmenes. Se recuerda entre visitas.
+  y un «silenciar todo» que no pisa los volúmenes. Se recuerda entre visitas y es el mismo en todas las pestañas.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 - **Quien abre sale por sorteo**, no es el anfitrión: abrir es una ventaja pequeña pero constante. El sorteo usa la
@@ -182,7 +182,7 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 
 - **`MAX_ROOMS` (5)**: al llegar al tope, crear sala responde con un aviso de volver más tarde en lugar de servir seis
   partidas a tirones. Entrar con código a una sala existente sigue funcionando.
-- **`TURN_LIMIT_MS` (60 000)**: lo que dura el turno de una persona antes de que la mesa juegue por ella.
+- **`TURN_LIMIT_MS` (20 000)**: lo que dura el turno de una persona antes de que la mesa juegue por ella.
 - **`EMPTY_GRACE_MS` (60 000)**: una sala sin humanos conectados se cierra pasado ese margen. No es cero porque
   recargar la página es una desconexión: quien vuelve dentro de ese minuto se reencuentra su partida donde la dejó.
   Si no queda ni el asiento de un humano —todos se fueron del vestíbulo—, se cierra en el acto.
@@ -199,9 +199,9 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
   un bot, y verifica que termina con un ganador con cuatro órganos sanos. Comprueba además la política de salas: que
   al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
   cierra —y su código deja de existir— cuando pierde a todos sus humanos. Y que el turno de una persona vence solo:
-  con un servidor aparte y un «minuto» de segundo y medio, la partida avanza sin que nadie juegue. Y que solo el
+  con un servidor aparte y un turno de segundo y medio, la partida avanza sin que nadie juegue. Y que solo el
   anfitrión elige paquete, solo en la sala, y que la partida arranca con él. Y que cada turno estrena reloj aunque
-  jueguen dos personas seguidas, sin que la desconexión de otro le reinicie el minuto a quien está jugando.
+  jueguen dos personas seguidas, sin que la desconexión de otro le reinicie el reloj a quien está jugando.
 
 ## Revisión visual
 
