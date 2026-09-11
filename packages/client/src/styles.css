@@ -26,6 +26,9 @@
   --brand: #c8443c;
   /* El mismo tono, aclarado, para cuando se apoya en un fondo oscuro. */
   --brand-warm: #e37a41;
+  /* De quien es el turno: el color de la marca, y la tinta que se lee encima. */
+  --turn: var(--brand);
+  --on-turn: #ffffff;
   /* Reverso de carta: verde quirofano, complementario del naranja. */
   --back: #16484a;
   --back-deep: #0e3033;
@@ -76,6 +79,8 @@
   --danger: #e4695c;
   --ok: #58b98d;
   --brand: #e37a41;
+  /* Sobre el naranja claro el blanco no llega a leerse: tinta oscura. */
+  --on-turn: #1a120d;
 
   --hover: rgba(231, 236, 231, 0.09);
   --veil: rgba(5, 9, 8, 0.66);
@@ -885,9 +890,30 @@ button {
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
+/* El rival que juega: marco del color del turno, fondo tintado y un piloto
+   junto al nombre. Todo pinta encima: el asiento no cambia de medida. */
 .seat-board.is-turn {
-  border-top-color: var(--danger);
-  box-shadow: 0 0 0 1px var(--danger);
+  border-top-color: var(--turn);
+  box-shadow: 0 0 0 2px var(--turn);
+  background: color-mix(in srgb, var(--turn) 7%, var(--card));
+}
+
+.seat-board.is-turn .seat-board__name::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: var(--turn);
+  vertical-align: 0.1em;
+  animation: beacon 1.1s ease-in-out infinite;
+}
+
+@keyframes beacon {
+  50% {
+    opacity: 0.25;
+  }
 }
 
 .seat-board.is-selectable {
@@ -1990,6 +2016,153 @@ button {
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.01em;
+}
+
+/* --- tu turno ------------------------------------------------------------- */
+
+/* Habia quien no se enteraba de que le tocaba: miraba su mano, no la barra.
+   Por eso son varias senales a la vez -la franja que cruza la mesa, la barra
+   encendida, tu zona tintada, las cartas que dan un salto- y ninguna mueve
+   nada de sitio: todo pinta sobre medidas que ya existian. */
+.turnpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.18rem 0.9rem 0.18rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.turnpill__text {
+  min-width: 0;
+  max-width: 20rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turnpill.is-live {
+  background: var(--turn);
+  border-color: var(--turn);
+  color: var(--on-turn);
+  font-weight: 800;
+}
+
+.turnpill.is-live .pulse.is-live {
+  color: currentColor;
+}
+
+.table.is-your-turn .dock {
+  background: color-mix(in srgb, var(--turn) 8%, var(--card));
+  box-shadow: inset 0 3px 0 var(--turn);
+}
+
+.table.is-your-turn .dock__guide:not(.is-muted) {
+  font-weight: 700;
+}
+
+.table.is-your-turn .dock__guide:not(.is-muted)::before {
+  content: '';
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--turn);
+  vertical-align: 0.08em;
+  animation: beacon 1.1s ease-in-out infinite;
+}
+
+.tag--turn {
+  border-color: var(--turn);
+  background: var(--turn);
+  color: var(--on-turn);
+  font-weight: 700;
+}
+
+/* La franja: cruza la pantalla de lado a lado, a media altura, y tine un poco
+   todo lo demas. Se va sola; mientras tanto no intercepta ningun clic. */
+.turnflash {
+  position: fixed;
+  inset: 0;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--turn) 9%, transparent);
+  animation: flash-out 380ms ease 1.45s forwards;
+}
+
+.turnflash__band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.6rem, 2vw, 1.4rem);
+  width: 100%;
+  padding: clamp(0.7rem, 2.2vh, 1.3rem) 1rem;
+  background: var(--turn);
+  color: var(--on-turn);
+  box-shadow: 0 10px 0 -4px color-mix(in srgb, var(--ink) 16%, transparent);
+  animation: band-in 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.turnflash__text {
+  font-size: clamp(2rem, 7vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  animation: text-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) 80ms both;
+}
+
+.turnflash .pulse {
+  width: clamp(4rem, 12vw, 8rem);
+  height: clamp(1.4rem, 4vw, 2.6rem);
+}
+
+.turnflash .pulse.is-live {
+  color: currentColor;
+}
+
+@keyframes band-in {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes text-in {
+  from {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes flash-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Las cartas que puedes jugar dan un salto, una tras otra: la mirada baja a
+   la mano, que es donde empieza el turno. */
+.hand.is-fresh .card.is-playable {
+  animation: hop 520ms cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 150ms);
+}
+
+@keyframes hop {
+  40% {
+    transform: translateY(-0.9rem);
+  }
 }
 
 /* --- panel de sonido ------------------------------------------------------ */

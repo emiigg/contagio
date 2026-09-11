@@ -9,6 +9,7 @@ export type SoundName =
   | 'shuffle'
   | 'deal'
   | 'turn'
+  | 'nudge'
   | 'organ'
   | 'virus'
   | 'medicine'
@@ -62,7 +63,7 @@ let noise: AudioBuffer | null = null;
 
 // Master -> altavoz. Efectos y musica entran por separado para que cada
 // deslizador mueva solo lo suyo, y la musica pasa por un "duck" que la aparta
-// un momento cuando hay algo que oir, como el final de la partida.
+// un momento cuando hay algo que oir, como el aviso de tu turno.
 function context(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (!ctx) {
@@ -198,6 +199,31 @@ function bell(ac: AudioContext, at: number, freq: number, dur: number, gain: num
   tone(ac, at, freq * 2.76, dur * 0.45, { gain: gain * 0.18, attack: 0.002 });
 }
 
+/** Un toque de metal: dos dientes de sierra desafinados tras un filtro que se abre y se cierra. */
+function horn(ac: AudioContext, at: number, freq: number, dur: number, gain: number): void {
+  const filter = ac.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.Q.value = 2;
+  filter.frequency.setValueAtTime(freq * 1.5, at);
+  filter.frequency.exponentialRampToValueAtTime(freq * 6, at + 0.05);
+  filter.frequency.exponentialRampToValueAtTime(freq * 2, at + dur);
+  const amp = ac.createGain();
+  amp.gain.setValueAtTime(0.0001, at);
+  amp.gain.exponentialRampToValueAtTime(gain, at + 0.03);
+  amp.gain.setValueAtTime(gain, at + dur * 0.6);
+  amp.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  filter.connect(amp).connect(out!);
+  for (const cents of [-7, 7]) {
+    const osc = ac.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, at);
+    osc.detune.setValueAtTime(cents, at);
+    osc.connect(filter);
+    osc.start(at);
+    osc.stop(at + dur + 0.02);
+  }
+}
+
 const SOUNDS: Record<SoundName, (ac: AudioContext, t: number) => void> = {
   // Un riffle: las cartas caen unas sobre otras cada vez mas juntas, y al final
   // un golpe seco al cuadrar el mazo.
@@ -210,10 +236,26 @@ const SOUNDS: Record<SoundName, (ac: AudioContext, t: number) => void> = {
     slap(ac, at + 0.1, 0.2);
   },
   deal: (ac, t) => hiss(ac, t, 0.05, { gain: 0.13, type: 'highpass', freq: 2600 }),
-  // Tu turno: dos campanadas que suben, como un aviso de consulta.
+  // Tu turno: una llamada de metal que sube en tres notas y remata con la
+  // campana de siempre, una octava arriba. Tiene que distinguirse de todo lo
+  // demas que suena en la mesa, porque es lo unico que te pide algo.
   turn: (ac, t) => {
-    bell(ac, t, 659.25, 1, 0.15);
-    bell(ac, t + 0.14, 987.77, 1.1, 0.13);
+    duckMusic(ac, t, 1.3);
+    hiss(ac, t, 0.3, { gain: 0.05, freq: 900, sweep: 4200, q: 0.9 });
+    horn(ac, t + 0.02, 392, 0.13, 0.13);
+    horn(ac, t + 0.15, 523.25, 0.13, 0.13);
+    horn(ac, t + 0.28, 659.25, 0.5, 0.15);
+    bell(ac, t + 0.3, 1318.51, 1.3, 0.12);
+    bell(ac, t + 0.3, 987.77, 1.1, 0.08);
+  },
+  // Sigue siendo tu turno: dos golpes con los nudillos en la mesa y la campana.
+  nudge: (ac, t) => {
+    duckMusic(ac, t, 0.9);
+    for (const at of [t, t + 0.16]) {
+      tone(ac, at, 210, 0.1, { gain: 0.22, glide: 120, attack: 0.002 });
+      hiss(ac, at, 0.03, { gain: 0.08, type: 'lowpass', freq: 1400 });
+    }
+    bell(ac, t + 0.38, 987.77, 0.9, 0.12);
   },
   organ: (ac, t) => {
     slap(ac, t);
@@ -263,6 +305,20 @@ export function play(name: SoundName): void {
     return;
   }
   SOUNDS[name](ac, ac.currentTime + 0.01);
+}
+
+/**
+ * Un zumbido corto en el movil. Va con el silencio de la mesa y no con el
+ * volumen de efectos: quien baja los efectos quiere menos ruido, quien silencia
+ * quiere que el telefono no haga nada.
+ */
+export function buzz(pattern: number[]): void {
+  if (settings.muted || typeof navigator === 'undefined') return;
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* algunos navegadores lo exponen y lo prohiben sin gesto previo */
+  }
 }
 
 export function subscribeSound(fn: () => void): () => void {

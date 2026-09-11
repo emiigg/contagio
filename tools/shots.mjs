@@ -142,8 +142,16 @@ async function main() {
   }
 
   /** Juega el turno: coloca, apunta a un organo, o descarta si no hay nada. */
+  let flashShot = false;
   async function playTurn() {
     await page.waitForSelector('.bar__turn >> text=Tu turno', { timeout: 90000 });
+    // La franja de tu turno dura menos de dos segundos: se captura la primera.
+    if (!flashShot && (await page.locator('.turnflash').count())) {
+      await wait(450);
+      await shot('07b-tu-turno');
+      flashShot = true;
+      await page.waitForSelector('.turnflash', { state: 'detached', timeout: 4000 });
+    }
     await wait(500);
     const hand = page.locator('.hand__slot .card.is-playable');
     if (await hand.count()) {

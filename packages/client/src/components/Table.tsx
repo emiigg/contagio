@@ -13,7 +13,7 @@ import { Organ, OrganSlot } from './Organ';
 import { SoundMenu } from './SoundMenu';
 import { ThemeToggle } from './ThemeToggle';
 import { TurnClock } from './TurnClock';
-import { play } from '../sound';
+import { buzz, play } from '../sound';
 import type { SoundName } from '../sound';
 
 interface TableProps {
@@ -39,6 +39,12 @@ const MOVE_SOUND: Partial<Record<string, SoundName>> = {
 
 /** Cuanto se resalta un organo despues de recibir una carta. */
 const HIT_MS = 3200;
+
+/** Cuanto espera la mesa, en tu turno y sin que toques nada, antes de recordartelo. */
+const REMIND_MS = 20_000;
+
+/** Lo que tarda en irse la franja de tu turno. */
+const FLASH_MS = 1900;
 
 /**
  * Un cuerpo se dibuja siempre con cinco huecos, uno por color mas el comodin.
@@ -87,6 +93,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   const [dealing, setDealing] = useState(false);
   /** Jugada a la espera de un si: hoy solo la negligencia medica. */
   const [confirming, setConfirming] = useState<{ text: string; action: Action } | null>(null);
+  /** Franja que cruza la mesa para decirte que juegas. La clave la vuelve a animar. */
+  const [flash, setFlash] = useState<{ key: number; text: string } | null>(null);
   const narrow = useNarrow();
   const { id: packId, text: pack } = usePack();
   const { words } = pack;
@@ -115,13 +123,51 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
     if (move.kind !== 'START') play(MOVE_SOUND[move.kind] ?? 'treatment');
   }, [view.lastMove?.serial, dealing]);
 
-  // Tu turno avisa con una campanada, una vez por turno y ya repartidas las cartas.
+  const myTurn = view.isYourTurn && view.phase === 'playing' && !dealing;
+  const busyRef = useRef(false);
+  busyRef.current = Boolean(selectedCardId || discarding || confirming);
+
+  // Tu turno se anuncia a la vez al oido, a la vista y en el bolsillo, una vez
+  // por turno y ya repartidas las cartas. Con solo la barra habia quien no se
+  // enteraba de que le tocaba: la vista esta en la mesa, no arriba.
   const chimedRef = useRef<number | null>(null);
   useEffect(() => {
-    if (dealing || !view.isYourTurn || view.phase !== 'playing' || chimedRef.current === view.turnCount) return;
+    if (!myTurn || chimedRef.current === view.turnCount) return;
     chimedRef.current = view.turnCount;
     play('turn');
-  }, [view.isYourTurn, view.turnCount, view.phase, dealing]);
+    buzz([90, 60, 90]);
+    setFlash({ key: view.turnCount, text: 'Tu turno' });
+  }, [myTurn, view.turnCount]);
+
+  // Si el turno se alarga sin que toques nada, la mesa lo recuerda una vez.
+  // Con una carta elegida no: ya estas jugando.
+  useEffect(() => {
+    if (!myTurn) return;
+    const timer = setTimeout(() => {
+      if (busyRef.current) return;
+      play('nudge');
+      buzz([60]);
+      setFlash({ key: -view.turnCount, text: 'Te toca jugar' });
+    }, REMIND_MS);
+    return () => clearTimeout(timer);
+  }, [myTurn, view.turnCount]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const timer = setTimeout(() => setFlash(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [flash]);
+
+  // La pestana tambien avisa, para quien espera su turno mirando otra.
+  useEffect(() => {
+    document.title = myTurn ? '● Tu turno · Contagio' : 'Contagio';
+  }, [myTurn]);
+  useEffect(
+    () => () => {
+      document.title = 'Contagio';
+    },
+    [],
+  );
 
   useEffect(() => {
     if (view.phase === 'finished') play(view.winnerId === view.youId ? 'win' : 'lose');
@@ -292,7 +338,7 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
   );
 
   return (
-    <div className={`table ${dealing ? 'is-dealing' : ''}`}>
+    <div className={`table ${dealing ? 'is-dealing' : ''} ${myTurn ? 'is-your-turn' : ''}`}>
       <header className="bar">
         <div className="bar__brand">
           <Mark className="bar__mark" />
@@ -300,8 +346,12 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           <span className="bar__code mono">sala {room.code}</span>
         </div>
         <div className="bar__turn">
-          <Pulse active={view.isYourTurn} />
-          <span>{view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}</span>
+          <span className={`turnpill ${myTurn ? 'is-live' : ''}`}>
+            <Pulse active={view.isYourTurn} />
+            <span className="turnpill__text" aria-live="polite">
+              {view.isYourTurn ? 'Tu turno' : `Juega ${turnName}`}
+            </span>
+          </span>
           {/* Un reloj por turno: la clave lo monta de cero cada vez que arranca uno. */}
           {view.turnMsLeft !== null && !dealing && (
             <TurnClock
@@ -368,7 +418,8 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
         <section className="mine" aria-label={`Tu ${words.body}`}>
           <header className="mine__head">
             <h2 className="mine__name">
-              {you.name} <span className="tag tag--you">tu</span>
+              {you.name}{' '}
+              {myTurn ? <span className="tag tag--turn">tu turno</span> : <span className="tag tag--you">tu</span>}
             </h2>
             <span className="mine__meta mono">
               {you.healthyOrgans}/4 {words.organs} {words.healthy}
@@ -436,7 +487,11 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
               ))}
           </ol>
 
-          <div className="hand" ref={handRef} style={{ '--n': view.hand.length } as React.CSSProperties}>
+          <div
+            className={`hand ${flash ? 'is-fresh' : ''}`}
+            ref={handRef}
+            style={{ '--n': view.hand.length } as React.CSSProperties}
+          >
             {view.hand.map((card, index) => (
               <div
                 key={card.id}
@@ -514,6 +569,16 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
           </div>
         </div>
       </footer>
+
+      {/* Por encima de todo y sin recibir el raton: se puede jugar mientras se va. */}
+      {flash && (
+        <div key={flash.key} className="turnflash" aria-hidden>
+          <div className="turnflash__band">
+            <Pulse active />
+            <span className="turnflash__text">{flash.text}</span>
+          </div>
+        </div>
+      )}
 
       {dealing && (
         <Deal
