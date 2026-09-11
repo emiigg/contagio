@@ -6,3 +6,4 @@ dist-test
 
 *.tsbuildinfo
 tools/shots/
+tools/musica/
