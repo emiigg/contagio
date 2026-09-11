@@ -13,6 +13,18 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.5.1',
+    date: '2026-09-11',
+    title: 'Turnos de veinte segundos',
+    notes: [
+      'Cada turno dura veinte segundos en vez de un minuto. El recordatorio llega a los ocho y el reloj suena en los ultimos cinco.',
+      'Los nombres largos ya no se salen de la carta en el anuncio de la jugada ni en el descarte, tampoco en el movil.',
+      'El triceratops de Jurasico, redibujado de cuerpo entero: ahora se reconocen la gola y los cuernos.',
+      'El panel de sonido ya no se sale de la pantalla en el movil.',
+      'Los ajustes de sonido son los mismos en todas las pestanas: si silencias la musica en una, calla en las demas.',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-09-11',
     title: 'Tu turno ya no pasa desapercibido',
