@@ -26,6 +26,11 @@ trampas que ya nos han costado una tarde.
   sigue a la primera entrada.
 - **Comentarios y textos de interfaz en español sin tildes** (`organo`, `Corazon`, `sin conexion`). Es deliberado y
   alcanza a los nombres de carta. La documentación en Markdown sí lleva tildes.
+- **Todo texto que ve quien juega existe en español y en inglés.** El inglés va en ASCII puro (sin comillas
+  tipográficas ni rayas), por el mismo motivo que el español va sin tildes. Dónde vive cada cosa: la interfaz en
+  `client/src/i18n.ts` (el diccionario inglés se tipa contra el español, así que una clave que falte no compila), los
+  paquetes en `engine/src/packs-en.ts`, las frases fijas de la mesa en `GRAMMAR` de `engine.ts`, los mensajes del
+  servidor en `server/src/messages.ts`, y las novedades y los títulos de la música con un campo por idioma.
 - Los comentarios se reservan para lo que el código no puede decir: por qué existe una constante, qué fallo previene
   una regla CSS. Nada de comentarios que repiten la línea siguiente.
 - TypeScript estricto con `noUncheckedIndexedAccess` y módulos `NodeNext`: **los imports llevan extensión `.js`**
@@ -95,8 +100,24 @@ registro) y viaja en `GameState.pack`, `RoomView.pack` y `PlayerView.pack`. El d
 (`client/src/packs/<id>.tsx`, un `PackArt` por paquete) y lo reparte `usePack()`, que App alimenta con el paquete de
 la sala. El anfitrión lo cambia con `room:pack`, solo en la sala.
 
-Añadir uno: entrada en `PACKS` y `PACK_IDS`, un `PackArt`, su línea en `PACK_ART` y su pieza en `SCORES` (con el
-`level` medido por `tools/musica.mjs`). Las pruebas del motor ya
+Añadir uno: entrada en `PACKS` y `PACK_IDS`, su traducción en `PACKS_EN`, un `PackArt`, su línea en `PACK_ART` y su
+pieza en `SCORES` (con el `level` medido por `tools/musica.mjs`). Las pruebas comprueban además que el inglés nombra
+las veinte cartas distintas y que cada plantilla pide los mismos huecos que la española.
+
+### Idiomas
+
+El idioma es de quien juega, no de la sala: en una misma mesa cada uno lee en el suyo. Por eso el motor no elige
+idioma: cada línea del registro y cada anuncio (`LogEntry.text`, `MoveSummary.text`) es un `Localized`, con la frase
+redactada en todos, y los errores y avisos del servidor también. El servidor sigue siendo la única fuente de verdad,
+también del texto. La gramática que no se traduce palabra por palabra vive en `GRAMMAR`: el genitivo inglés («Ana's
+Heart») frente a «el Corazon de Ana», y la contracción «de el» → «del», que solo existe en español.
+
+Los motivos por los que el motor rechaza una jugada siguen en español y son para quien programa: la interfaz solo
+ofrece jugadas legales, así que el servidor responde a quien juega con un «esa jugada ya no es válida» genérico.
+
+En el cliente, `useLang()` guarda la elección en `contagio.lang` (la primera vez manda `navigator.language`), la
+comparte entre pestañas como el sonido y la escribe en `<html lang>`, que es lo que deja silabear los nombres largos.
+El script en línea de `index.html` la aplica antes del primer pintado. Las pruebas del motor ya
 comprueban nombres distintos, textos sin tildes y plantillas sin huecos. Los glifos se revisan a 16 px, porque así se
 ven como fichas sobre los órganos.
 
@@ -162,8 +183,11 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
   navegador entero. No es el juego. `shots.mjs` reintenta esa captura a 1x; si el navegador muere, se relanza sin
   `--rm` para conservar los logs. Y un `shots.mjs` que falla deja su servidor escuchando: hay que
   buscar el PID del puerto con `ss -ltnp` y matarlo antes de repetir, o la guardia de puerto se plantará.
-- **`.themeswitch` no identifica el botón de tema**: el de sonido comparte la clase y va antes en la barra. Las
-  herramientas lo buscan por su `aria-label`.
+- **`.themeswitch` no identifica el botón de tema**: el de sonido y el de idioma comparten la clase y van antes en la
+  barra. Las herramientas lo buscan por `data-control="theme"`, que no cambia con el idioma.
+- **El Chromium del contenedor habla inglés.** Sin idioma guardado, la interfaz arrancaría en inglés y los selectores
+  de texto de las herramientas («Anadir bot», «Tu turno») no encontrarían nada. `shots.mjs` y `anchos.mjs` siembran
+  `contagio.lang = 'es'`; el inglés se revisa con la captura `11-mesa-ingles`, que cambia de idioma a media partida.
 - **No ejecutar los `.ts` directamente** (`--experimental-strip-types`): los imports llevan `.js` y falla con
   `ERR_MODULE_NOT_FOUND`. Por eso `scripts/dev.mjs` compila antes de arrancar.
 - **Orden y especificidad en la hoja de estilos.** Es un único archivo largo y sin preprocesador: una regla nueva

@@ -101,6 +101,18 @@ notas viven en `packages/client/src/releases.ts`, escritas para quien juega —q
 tocó—, y la etiqueta de «nuevo» se apaga cuando se abre el historial. La versión de los `package.json` sigue a la
 primera entrada de esa lista.
 
+## Idiomas
+
+Contagio se juega en español o en inglés, con el botón ES / EN; la primera vez manda el idioma del navegador. El
+idioma es de cada jugador y no de la sala, así que en una misma partida uno puede leer la mesa en español y otro en
+inglés. Para eso el motor, que es quien cuenta cada jugada, la redacta en los dos idiomas a la vez, y el cliente
+muestra la suya. Lo que no se traduce palabra por palabra lo resuelve una gramática por idioma: «Ana infecta el
+Corazón de Luis» frente a «Ana infects Luis's Heart».
+
+Los doce paquetes tienen su versión inglesa, que no es una traducción literal: «Manzana podrida» es *Bad Apple*,
+«Palomazo» es *Jam Session* y los personajes de DC y Marvel llevan su nombre original. Las pruebas del motor exigen
+que cada plantilla inglesa pida los mismos huecos que la española y que no se repita ningún nombre de carta.
+
 ## Tema y fondo
 
 El tema arranca en **automático**: manda `prefers-color-scheme`, que es lo que ya tiene decidido quien juega. El botón
@@ -194,7 +206,8 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 - `packages/engine/test/engine.test.ts`: composición del mazo, cada efecto de carta, victoria, y una partida completa
   entre bots que comprueba en cada turno que las 68 cartas siguen existiendo, sin duplicados ni pérdidas. De los
   paquetes comprueba que cada uno nombra las 20 cartas distintas, que sus textos van sin tildes y sin huecos por
-  rellenar, y que el registro cuenta la jugada en su vocabulario.
+  rellenar, y que el registro cuenta la jugada en su vocabulario. Y lo mismo en inglés: veinte nombres
+  distintos, solo ASCII y, en cada plantilla, los mismos huecos que en español.
 - `packages/server/test/smoke.test.mjs`: levanta el servidor real, juega una partida por socket con dos clientes y
   un bot, y verifica que termina con un ganador con cuatro órganos sanos. Comprueba además la política de salas: que
   al llegar al tope se rechaza crear una nueva, que el hueco se libera al soltarse una, y que una sala en partida se
