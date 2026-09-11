@@ -29,20 +29,20 @@ El mazo son 68 cartas: 21 órganos, 17 virus, 20 medicinas y 10 tratamientos.
 Antes de empezar, el anfitrión elige en la sala con qué mazo se juega; el resto ve la elección y el fondo cambia en el
 acto. La mecánica es siempre la misma: cambian los nombres, lo que dice cada carta, sus dibujos y la decoración de fondo.
 
-| Paquete | Lo que se protege (órganos + comodín) | Ataque | Defensa | Especiales |
-| --- | --- | --- | --- | --- |
-| **Contagio** (por defecto) | Corazón, Cerebro, Pulmón, Hígado, Órgano quimérico | Virus | Medicinas | Tratamientos |
-| **Héroes DC** | Flash, Superman, Linterna Verde, Batman, Mujer Maravilla | Villanos | Refuerzos | Eventos |
-| **Héroes Marvel** | Iron Man, Capitán América, Hulk, Thor, Spider-Man | Villanos | Refuerzos | Eventos |
-| **Frutero** | Fresa, Arándano, Kiwi, Plátano, Macedonia | Plagas | Conservas | Imprevistos |
-| **Cortafuegos** | Procesador, Base de datos, Router, Fuente de poder, Nube híbrida | Malware | Parches | Comandos |
-| **Órbita** | Reactor, Soporte vital, Invernadero, Panel solar, Módulo prototipo | Averías | Reparaciones | Maniobras |
-| **Asedio** | Armería, Pozo, Huerto, Tesoro, Torre del homenaje | Asaltos | Defensas | Estratagemas |
-| **Arrecife** | Cangrejo, Ballena, Tortuga, Pez globo, Pulpo mimético | Amenazas | Rescates | Mareas |
-| **Grimorio** | Fuego, Agua, Bosque, Rayo, Éter | Maldiciones | Runas | Conjuros |
-| **Jurásico** | Tiranosaurio, Pterodáctilo, Diplodocus, Triceratops, Huevo misterioso | Peligros | Refugios | Fenómenos |
-| **Banda** | Guitarra, Batería, Teclado, Trompeta, Tocadiscos | Ruidos | Afinaciones | Escenario |
-| **Piratas** | Loro, Barco, Mapa, Catalejo, Isla del tesoro | Desastres | Remedios | Tretas |
+| Paquete | Lo que se protege (órganos + comodín) | Ataque | Defensa | Especiales | Música |
+| --- | --- | --- | --- | --- | --- |
+| **Contagio** (por defecto) | Corazón, Cerebro, Pulmón, Hígado, Órgano quimérico | Virus | Medicinas | Tratamientos | *Sala de espera*: latido y campanas de monitor |
+| **Héroes DC** | Flash, Superman, Linterna Verde, Batman, Mujer Maravilla | Villanos | Refuerzos | Eventos | *Marcha heroica*: metales, bajo al galope y timbales |
+| **Héroes Marvel** | Iron Man, Capitán América, Hulk, Thor, Spider-Man | Villanos | Refuerzos | Eventos | *Llamada a filas*: himno en menor con ostinato de cuerda |
+| **Frutero** | Fresa, Arándano, Kiwi, Plátano, Macedonia | Plagas | Conservas | Imprevistos | *Puesto del mercado*: marimba saltarina |
+| **Cortafuegos** | Procesador, Base de datos, Router, Fuente de poder, Nube híbrida | Malware | Parches | Comandos | *Sala de servidores*: arpegio de sintetizador |
+| **Órbita** | Reactor, Soporte vital, Invernadero, Panel solar, Módulo prototipo | Averías | Reparaciones | Maniobras | *Órbita baja*: lidio, casi sin ritmo |
+| **Asedio** | Armería, Pozo, Huerto, Tesoro, Torre del homenaje | Asaltos | Defensas | Estratagemas | *Guardia en la muralla*: flauta dórica y tambor |
+| **Arrecife** | Cangrejo, Ballena, Tortuga, Pez globo, Pulpo mimético | Amenazas | Rescates | Mareas | *Bajo la marea*: acordes de séptima que flotan |
+| **Grimorio** | Fuego, Agua, Bosque, Rayo, Éter | Maldiciones | Runas | Conjuros | *Tomo prohibido*: frigio sobre un bordón |
+| **Jurásico** | Tiranosaurio, Pterodáctilo, Diplodocus, Triceratops, Huevo misterioso | Peligros | Refugios | Fenómenos | *Valle perdido*: trompa y toms |
+| **Banda** | Guitarra, Batería, Teclado, Trompeta, Tocadiscos | Ruidos | Afinaciones | Escenario | *Último ensayo*: riff con batería |
+| **Piratas** | Loro, Barco, Mapa, Catalejo, Isla del tesoro | Desastres | Remedios | Tretas | *Taberna del puerto*: jiga en 12/8 |
 
 Un paquete es texto en el motor (`packages/engine/src/packs.ts`) y dibujo en el cliente
 (`packages/client/src/packs/`). El texto incluye las plantillas con las que el registro cuenta cada jugada —«Ana
@@ -74,13 +74,32 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **Cada cual ve la mesa desde su silla**: los rivales se sientan en el orden en que juegan después de ti —el
   siguiente a tu izquierda, el anterior a tu derecha—, así que el turno da la vuelta a la mesa en el mismo sentido
   para todos, no solo para el anfitrión.
-- **La mesa suena**: barajado y reparto al empezar, una campanada cuando te toca, un golpe distinto según la jugada,
-  el tic de tus últimos diez segundos y un arpegio al terminar. Todo se sintetiza en el navegador con Web Audio
-  —osciladores y ruido filtrado, sin un solo archivo de audio— y hay un botón de silencio que se recuerda.
+- **Tu turno no pasa desapercibido.** Había quien no se enteraba de que le tocaba: miraba su mano, no la barra. Ahora
+  el aviso llega por varios sitios a la vez —una franja «Tu turno» cruza la mesa, suena una llamada de metales que
+  aparta la música un momento, la barra se enciende, tu zona se tiñe y las cartas jugables dan un salto—, el móvil
+  vibra, y la pestaña del navegador dice «Tu turno» para quien espera mirando otra. Si pasan veinte segundos sin que
+  toques nada, la mesa lo recuerda una vez. El rival que juega lleva marco y un piloto junto al nombre. Nada de esto
+  mueve la mesa: todo pinta sobre medidas que ya existían.
+- **La mesa suena**: barajado y reparto al empezar, la llamada de tu turno, un golpe distinto según la jugada, el tic
+  de tus últimos diez segundos y un arpegio al terminar. Todo se sintetiza en el navegador con Web Audio
+  —osciladores y ruido filtrado, sin un solo archivo de audio—.
+- **Cada paquete tiene su música**, compuesta para el juego y escrita como partitura en `client/src/score.ts`: unos
+  compases de acordes y melodía con bajo, arpegio y percusión en patrones. Tampoco es un archivo: se sintetiza y se
+  programa sobre el reloj del audio, y al cambiar de paquete en la sala una pieza se funde con la siguiente. Suena
+  desde que entras en una sala y calla si la pestaña pasa a segundo plano.
+- **Volumen por separado**: el botón de sonido abre un panel con un deslizador para la música, otro para los efectos
+  y un «silenciar todo» que no pisa los volúmenes. Se recuerda entre visitas.
 - **El reparto se ve**: las cartas se barajan en el centro, salen una a una hacia cada jugador y el mazo se retira
   después a su sitio. Se puede saltar, y se omite si el sistema pide movimiento reducido.
 - **Quien abre sale por sorteo**, no es el anfitrión: abrir es una ventaja pequeña pero constante. El sorteo usa la
   misma semilla que baraja y la mesa lo anuncia en el centro, ya repartidas las cartas.
+
+## Novedades
+
+La pantalla de inicio anuncia la versión vigente con sus tres cambios principales y abre el historial completo. Las
+notas viven en `packages/client/src/releases.ts`, escritas para quien juega —qué cambia en la mesa, no qué archivo se
+tocó—, y la etiqueta de «nuevo» se apaga cuando se abre el historial. La versión de los `package.json` sigue a la
+primera entrada de esa lista.
 
 ## Tema y fondo
 
@@ -205,6 +224,16 @@ con pocos jugadores y en ventanas concretas.
 
 ```bash
 node tools/anchos.mjs
+```
+
+`tools/musica.mjs` renderiza la música de fondo a WAV en `tools/musica/`, sin jugar ni abrir altavoces: transpila el
+mismo `score.ts` del juego y lo pasa por un `OfflineAudioContext`. Imprime el pico y el nivel medio de cada pieza,
+avisa si alguna satura, y con eso se ajusta el `level` de cada una para que cambiar de paquete no obligue a tocar el
+volumen.
+
+```bash
+node tools/musica.mjs              # las doce piezas
+node tools/musica.mjs heroes marvel
 ```
 
 Necesita un Chromium accesible por CDP en `localhost:9222`. En una máquina sin las librerías de escritorio:

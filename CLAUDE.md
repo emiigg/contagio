@@ -21,6 +21,9 @@ trampas que ya nos han costado una tarde.
 - **El cuerpo del commit explica el porqué**, no el qué: qué se rompía, qué se decidió y a costa de qué. El diff ya
   dice el qué.
 - Identidad git configurada en local (`--local`), rama principal `main`.
+- **Lo que cambia para quien juega se anuncia.** Una entrada nueva (o una nota más en la vigente) en
+  `client/src/releases.ts`, redactada como texto de interfaz; la versión de los cuatro `package.json` y del lockfile
+  sigue a la primera entrada.
 - **Comentarios y textos de interfaz en español sin tildes** (`organo`, `Corazon`, `sin conexion`). Es deliberado y
   alcanza a los nombres de carta. La documentación en Markdown sí lleva tildes.
 - Los comentarios se reservan para lo que el código no puede decir: por qué existe una constante, qué fallo previene
@@ -71,6 +74,17 @@ aún no se ha despertado con un gesto; nada se encola, o sonaría todo de golpe 
 que no se repite (`lastMove.serial`, `turnCount`) para que recargar a media partida no vuelva a sonar lo de antes.
 En el contenedor no se oye nada: las pruebas solo garantizan que no hay errores, el oído lo pone el autor.
 
+El grafo es `master -> destino`, con los efectos y la música entrando por separado (`out` y `musicBus`, cada uno con
+el volumen de su deslizador) y la música a través de un `duck` que la aparta mientras suena un aviso (`turn`, `nudge`,
+`win`, `lose`). Los ajustes (`muted`, `music`, `effects`) se guardan en JSON en `contagio.sound`; el valor antiguo
+`'on' | 'off'` de esa misma clave se sigue leyendo.
+
+La música de fondo es una partitura por paquete en `client/src/score.ts` (`SCORES: Record<PackId, Piece>`, así que un
+paquete nuevo no compila sin su pieza) y la toca `music.ts`, que programa con un cuarto de segundo de antelación sobre
+el reloj del audio. Las melodías son propias: **no se transcribe ningún tema conocido**, tampoco en los paquetes de
+héroes. `score.ts` no sabe de React ni de cuándo suena nada, para que `tools/musica.mjs` pueda renderizarlo a WAV y
+medirlo; el `level` de cada pieza sale de esa medida.
+
 ### Paquetes de cartas
 
 Un paquete es solo piel: la carta sigue siendo `{ kind, color | treatment }` y ninguna regla pregunta qué paquete se
@@ -79,7 +93,8 @@ registro) y viaja en `GameState.pack`, `RoomView.pack` y `PlayerView.pack`. El d
 (`client/src/packs/<id>.tsx`, un `PackArt` por paquete) y lo reparte `usePack()`, que App alimenta con el paquete de
 la sala. El anfitrión lo cambia con `room:pack`, solo en la sala.
 
-Añadir uno: entrada en `PACKS` y `PACK_IDS`, un `PackArt` y su línea en `PACK_ART`. Las pruebas del motor ya
+Añadir uno: entrada en `PACKS` y `PACK_IDS`, un `PackArt`, su línea en `PACK_ART` y su pieza en `SCORES` (con el
+`level` medido por `tools/musica.mjs`). Las pruebas del motor ya
 comprueban nombres distintos, textos sin tildes y plantillas sin huecos. Los glifos se revisan a 16 px, porque así se
 ven como fichas sobre los órganos.
 
@@ -103,6 +118,9 @@ Romper cualquiera de estos es una regresión aunque compile:
   quirófano con la marca en naranja, que es el complementario.
 - **El comodín de cada paquete lleva los cuatro colores** (`var(--organ-*)`), y es el único glifo que los nombra; el
   resto hereda `currentColor`. El fondo usa los mismos diez huecos fijos en todos los paquetes.
+- **Tu turno se avisa por varios sitios y ninguno mueve nada**: franja fija por encima de todo y sin ratón, píldora
+  de la barra con el mismo relleno en los dos estados, sombra interior en el pie, etiqueta que cambia de texto en una
+  cabecera de alto fijo. El color del turno es `--turn` (la marca), no uno de los de órgano.
 - Todo lo que se anima se salta con `prefers-reduced-motion`.
 
 ## Revisión visual
@@ -119,6 +137,7 @@ node tools/shots.mjs                                # capturas de cada pantalla 
 SHOT_THEME=dark SHOT_BOTS=5 node tools/shots.mjs    # la misma partida en oscuro y con la mesa llena
 SHOT_PACK=frutas node tools/shots.mjs               # con otro paquete de cartas
 node tools/anchos.mjs                               # once anchuras: desbordes y centrado
+node tools/musica.mjs [paquete...]                  # la musica a WAV en tools/musica/, con pico y nivel
 
 docker rm -f contagio-chrome                        # al terminar
 ```
@@ -131,6 +150,13 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
   capturas: el cliente se servía desde disco (actualizado) pero la lógica era de horas antes. Se revisó un rato una
   función "rota" que en realidad funcionaba. De ahí la guardia de puerto.
 - **`pkill -f "npm run test"` mata la propia shell** del agente. Buscar el PID con `pgrep` y matarlo por número.
+- **El Chromium del contenedor a veces no captura a 2x** («Unable to capture screenshot»): su proceso GPU se cae al
+  copiar la imagen (`docker logs contagio-chrome`: `CopyOutputResultSender`), y tras varias caídas puede cerrarse el
+  navegador entero. No es el juego. `shots.mjs` reintenta esa captura a 1x; si el navegador muere, se relanza sin
+  `--rm` para conservar los logs. Y un `shots.mjs` que falla deja su servidor escuchando: hay que
+  buscar el PID del puerto con `ss -ltnp` y matarlo antes de repetir, o la guardia de puerto se plantará.
+- **`.themeswitch` no identifica el botón de tema**: el de sonido comparte la clase y va antes en la barra. Las
+  herramientas lo buscan por su `aria-label`.
 - **No ejecutar los `.ts` directamente** (`--experimental-strip-types`): los imports llevan `.js` y falla con
   `ERR_MODULE_NOT_FOUND`. Por eso `scripts/dev.mjs` compila antes de arrancar.
 - **Orden y especificidad en la hoja de estilos.** Es un único archivo largo y sin preprocesador: una regla nueva
