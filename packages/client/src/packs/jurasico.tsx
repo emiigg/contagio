@@ -55,19 +55,25 @@ function DiplodocusGlyph({ className }: GlyphProps) {
   );
 }
 
+/**
+ * De cuerpo entero y de perfil, como el diplodocus: solo la cabeza, con la
+ * gola de frente, se leia como una bola con pinchos. Lo que lo delata es la
+ * silueta -gola detras de la cabeza, dos cuernos largos hacia delante, pico y
+ * cuatro patas cortas-, y esa se sigue viendo a 32 px.
+ */
 function TriceratopsGlyph({ className }: GlyphProps) {
   return (
     <svg {...CARD} className={className}>
-      <path d="M23 28c-4-10 2-20 11-20 7 0 10 8 8 16l-4 8z" fill="currentColor" fillOpacity="0.12" />
       <path
-        d="M38 31c-2 5-7 7-12 7H15l-8-6 5-6c4-4 9-5 14-4.5 5 .5 10 4 12 9.5z"
+        d="M3 29c4-.5 7-3 10-5.5 4-3 9-4.5 14-4.5 4 0 6.5 2 7.5 5l.5 6c-1 3-4 4.5-7.5 4.5H15c-5 0-8.5-2-12-5.5z"
         fill="currentColor"
-        fillOpacity="0.2"
+        fillOpacity="0.16"
       />
-      <path d="M23 22.5L8 14l18 6" />
-      <path d="M27.5 11.5l-2.5-3M34 8V4.5M40 11l2.5-2.5" />
-      <path d="M11.5 27.5l-1-5.5 4 4" />
-      <circle cx="28" cy="28" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M30 25c-3-5-2-12 3-15 3-1.8 6.5-.5 7.5 2.5L36 21z" fill="currentColor" fillOpacity="0.1" />
+      <path d="M31 24l7-3.5 7.5 7-3.5 2.5-3.5-1c-2 2-5 2.3-7 1z" fill="currentColor" fillOpacity="0.24" />
+      <path d="M34.5 21.5L42 13M37.5 21l7-6M43 26.5l1.2-3" />
+      <path d="M11 32v7M16 34v5M25 34v5M30 33v6" />
+      <circle cx="36.5" cy="24.5" r="1.3" fill="currentColor" stroke="none" />
     </svg>
   );
 }
