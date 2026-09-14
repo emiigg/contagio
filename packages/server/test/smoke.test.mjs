@@ -190,6 +190,32 @@ test('la partida arranca con el paquete que elige el anfitrion', async () => {
   guest.close();
 });
 
+test('el anfitrion elige en la sala cuanto dura cada turno', async () => {
+  const host = connect();
+  const guest = connect();
+  await Promise.all([host, guest].map((s) => new Promise((r) => s.on('connect', r))));
+  const views = [];
+  host.on('game:view', (view) => views.push(view));
+
+  const { room } = await ask(host, 'room:create', { name: 'Anfitriona' });
+  assert.equal(room.turnLimitMs, 20_000, 'una sala nueva empieza con turnos de veinte segundos');
+  await ask(guest, 'room:join', { code: room.code, name: 'Invitado' });
+
+  await assert.rejects(ask(guest, 'room:turnLimit', { ms: 60_000 }), /anfitrion/i);
+  await assert.rejects(ask(host, 'room:turnLimit', { ms: 10_000 }), /no valido/i);
+  await assert.rejects(ask(host, 'room:turnLimit', { ms: 90_000 }), /no valido/i);
+  const chosen = await ask(host, 'room:turnLimit', { ms: 45_000 });
+  assert.equal(chosen.room.turnLimitMs, 45_000);
+
+  await ask(host, 'room:start', {});
+  for (let i = 0; i < 50 && views.length === 0; i++) await new Promise((r) => setTimeout(r, 100));
+  assert.equal(views[0]?.turnLimitMs, 45_000, 'la partida no trae el tiempo elegido en la sala');
+  await assert.rejects(ask(host, 'room:turnLimit', { ms: 20_000 }), /empezado/i);
+
+  host.close();
+  guest.close();
+});
+
 test('el turno de una persona se juega solo cuando se le acaba el tiempo', async () => {
   // Servidor aparte con un turno de segundo y medio: el resto de pruebas
   // juegan a su ritmo y no deben notar este reloj.

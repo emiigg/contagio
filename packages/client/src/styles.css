@@ -472,7 +472,10 @@ button {
   color: var(--ink-faint);
 }
 
-.roster__remove {
+/* Anadir bot vive en el primer asiento libre, que es lo que ocupa: fuera de la
+   lista pedia una fila de botones propia y la sala dejaba de caber. */
+.roster__remove,
+.roster__add {
   flex: none;
   border: none;
   background: none;
@@ -480,13 +483,6 @@ button {
   font-size: 0.82rem;
   cursor: pointer;
   text-decoration: underline;
-}
-
-.lobby__controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  align-items: center;
 }
 
 .segmented {
@@ -507,6 +503,32 @@ button {
 .segmented__option.is-active {
   background: var(--ink);
   color: var(--card);
+}
+
+/* Ajustes de la partida, cada uno con su nombre encima: dos filas de botones
+   sin rotulo ("Normal", "30 s") no dicen que eligen. */
+.lobby__settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem 1.4rem;
+}
+
+/* Empezar cierra la fila de ajustes a la derecha; si no cabe, baja sola. */
+.lobby__start {
+  margin-left: auto;
+}
+
+.setting {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.setting__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 .lobby__foot {

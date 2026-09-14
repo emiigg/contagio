@@ -37,8 +37,10 @@ const ABANDON_DELAY_MS = 8000;
 /**
  * Lo que dura el turno de una persona. Pasado ese tiempo la mesa juega por
  * ella con la misma heuristica que los bots: una partida en tiempo real no
- * puede quedarse parada porque alguien se levante a por un cafe. Veinte
- * segundos: con un minuto, el resto de la mesa se cansaba de esperar.
+ * puede quedarse parada porque alguien se levante a por un cafe. Es el de
+ * una sala nueva: el anfitrion lo cambia en la sala entre los de
+ * TURN_LIMITS_MS. Veinte segundos porque con un minuto, en una mesa que no lo
+ * ha pedido, el resto se cansaba de esperar.
  */
 const TURN_LIMIT_MS = Number(process.env.TURN_LIMIT_MS ?? 20_000);
 
@@ -56,6 +58,7 @@ export class Room {
   state: GameState | null = null;
   difficulty: BotDifficulty = 'normal';
   pack: PackId = DEFAULT_PACK;
+  turnLimitMs = TURN_LIMIT_MS;
   private botTimer: NodeJS.Timeout | null = null;
   private botSeed = randomSeed();
   /** Cuando vence el turno en curso, si es de una persona. */
@@ -89,6 +92,7 @@ export class Room {
       status: this.status,
       difficulty: this.difficulty,
       pack: this.pack,
+      turnLimitMs: this.turnLimitMs,
       maxPlayers: MAX_PLAYERS,
       players: this.members.map((m) => ({
         id: m.id,
@@ -200,7 +204,7 @@ export class Room {
     if (!this.state) return;
     const clock = {
       msLeft: this.turnDeadline === null ? null : Math.max(0, this.turnDeadline - Date.now()),
-      limitMs: TURN_LIMIT_MS,
+      limitMs: this.turnLimitMs,
       id: this.clockId,
     };
     for (const member of this.members) {
@@ -233,7 +237,7 @@ export class Room {
     // El primer turno espera al reparto animado del cliente.
     const opening = this.state.turnCount <= 1 ? OPENING_DELAY_MS : 0;
     const timed = !member.isBot && member.socketId !== null;
-    const base = member.isBot ? BOT_DELAY_MS : timed ? TURN_LIMIT_MS : ABANDON_DELAY_MS;
+    const base = member.isBot ? BOT_DELAY_MS : timed ? this.turnLimitMs : ABANDON_DELAY_MS;
     const delay = base + opening;
 
     if (timed) {

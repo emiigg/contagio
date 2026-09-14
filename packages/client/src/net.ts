@@ -147,6 +147,7 @@ export function useContagio() {
       removePlayer: (playerId: string) => call('room:removePlayer', { playerId }),
       setDifficulty: (difficulty: BotDifficulty) => call('room:difficulty', { difficulty }),
       setPack: (pack: PackId) => call('room:pack', { pack }),
+      setTurnLimit: (ms: number) => call('room:turnLimit', { ms }),
       start: () => call('room:start', {} as never),
       reopen: () => call('room:reopen', {} as never),
       async leave() {

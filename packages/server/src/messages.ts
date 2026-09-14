@@ -32,6 +32,8 @@ export const MSG = {
   badDifficulty: { es: 'Dificultad no valida', en: 'Unknown difficulty' },
   hostPicksPack: { es: 'Solo el anfitrion elige el paquete', en: 'Only the host picks the deck' },
   badPack: { es: 'Paquete no valido', en: 'Unknown deck' },
+  hostSetsTurn: { es: 'Solo el anfitrion decide el tiempo de turno', en: 'Only the host sets the turn time' },
+  badTurnLimit: { es: 'Tiempo de turno no valido', en: 'That turn time is not available' },
   hostStarts: { es: 'Solo el anfitrion puede empezar', en: 'Only the host can start the game' },
   hostReopens: { es: 'Solo el anfitrion puede repetir', en: 'Only the host can start a rematch' },
   notOver: { es: 'La partida sigue en marcha', en: 'The game is still going' },

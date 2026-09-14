@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { COLORS, MAX_PLAYERS, MIN_PLAYERS, PACK_IDS, getPack } from '@contagio/engine';
+import { COLORS, MAX_PLAYERS, MIN_PLAYERS, PACK_IDS, TURN_LIMITS_MS, getPack } from '@contagio/engine';
 import type { BotDifficulty, PackId, RoomView } from '@contagio/engine';
 
 import { Mark } from '../art';
@@ -17,6 +17,7 @@ interface LobbyProps {
   onRemove: (playerId: string) => Promise<unknown>;
   onDifficulty: (difficulty: BotDifficulty) => Promise<unknown>;
   onPack: (pack: PackId) => Promise<unknown>;
+  onTurnLimit: (ms: number) => Promise<unknown>;
   onStart: () => Promise<unknown>;
   onLeave: () => void;
   onShowRules: () => void;
@@ -24,7 +25,18 @@ interface LobbyProps {
 
 const DIFFICULTIES: BotDifficulty[] = ['easy', 'normal', 'hard'];
 
-export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, onStart, onLeave, onShowRules }: LobbyProps) {
+export function Lobby({
+  room,
+  youId,
+  onAddBot,
+  onRemove,
+  onDifficulty,
+  onPack,
+  onTurnLimit,
+  onStart,
+  onLeave,
+  onShowRules,
+}: LobbyProps) {
   const t = useT();
   const lang = useLang();
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +106,11 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, o
             <li key={`empty-${i}`} className="roster__row roster__row--empty">
               <span className="roster__index mono">{String(room.players.length + i + 1).padStart(2, '0')}</span>
               <span className="roster__name">{t.lobby.emptySeat}</span>
+              {isHost && i === 0 && (
+                <button type="button" className="roster__add" onClick={() => void guard(onAddBot)}>
+                  {t.lobby.addBot}
+                </button>
+              )}
             </li>
           ))}
         </ol>
@@ -132,34 +149,57 @@ export function Lobby({ room, youId, onAddBot, onRemove, onDifficulty, onPack, o
           <p className="packs__tagline">{getPack(room.pack, lang).tagline}</p>
         </section>
 
-        {isHost ? (
-          <div className="lobby__controls">
-            <div className="segmented" role="group" aria-label={t.lobby.difficulty}>
-              {DIFFICULTIES.map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  className={`segmented__option ${room.difficulty === level ? 'is-active' : ''}`}
-                  onClick={() => void guard(() => onDifficulty(level))}
-                >
-                  {t.lobby.levels[level]}
-                </button>
-              ))}
+        {isHost && (
+          <div className="lobby__settings">
+            <div className="setting">
+              <span id="difficulty-label" className="setting__label">
+                {t.lobby.difficulty}
+              </span>
+              <div className="segmented" role="group" aria-labelledby="difficulty-label">
+                {DIFFICULTIES.map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    aria-pressed={room.difficulty === level}
+                    className={`segmented__option ${room.difficulty === level ? 'is-active' : ''}`}
+                    onClick={() => void guard(() => onDifficulty(level))}
+                  >
+                    {t.lobby.levels[level]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="setting">
+              <span id="turn-label" className="setting__label">
+                {t.lobby.turn}
+              </span>
+              <div className="segmented" role="group" aria-labelledby="turn-label">
+                {TURN_LIMITS_MS.map((ms) => (
+                  <button
+                    key={ms}
+                    type="button"
+                    aria-pressed={room.turnLimitMs === ms}
+                    className={`segmented__option ${room.turnLimitMs === ms ? 'is-active' : ''}`}
+                    onClick={() => room.turnLimitMs !== ms && void guard(() => onTurnLimit(ms))}
+                  >
+                    {t.lobby.seconds(ms / 1000)}
+                  </button>
+                ))}
+              </div>
             </div>
             <button
               type="button"
-              className="btn btn--outline"
-              onClick={() => void guard(onAddBot)}
-              disabled={room.players.length >= MAX_PLAYERS}
+              className="btn btn--primary lobby__start"
+              onClick={() => void guard(onStart)}
+              disabled={!canStart}
             >
-              {t.lobby.addBot}
-            </button>
-            <button type="button" className="btn btn--primary" onClick={() => void guard(onStart)} disabled={!canStart}>
               {t.lobby.start}
             </button>
           </div>
-        ) : (
-          <p className="notice">{t.lobby.hostStarts}</p>
+        )}
+
+        {!isHost && (
+          <p className="notice">{t.lobby.hostStarts(Math.round(room.turnLimitMs / 1000))}</p>
         )}
 
         {error && <p className="notice notice--error">{error}</p>}

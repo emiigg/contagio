@@ -51,6 +51,7 @@ export default function App() {
             onRemove={actions.removePlayer}
             onDifficulty={actions.setDifficulty}
             onPack={actions.setPack}
+            onTurnLimit={actions.setTurnLimit}
             onStart={actions.start}
             onLeave={() => void actions.leave()}
             onShowRules={() => setShowRules(true)}

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
 
-import { MAX_PLAYERS, isPackId } from '@contagio/engine';
+import { MAX_PLAYERS, TURN_LIMITS_MS, isPackId } from '@contagio/engine';
 import type { BotDifficulty, ClientToServerEvents, ServerToClientEvents } from '@contagio/engine';
 
 import { Room, generateRoomCode } from './rooms.js';
@@ -171,6 +171,20 @@ io.on('connection', (socket) => {
     if (!isPackId(pack)) return ack({ ok: false, error: MSG.badPack });
 
     room.pack = pack;
+    room.pushState();
+    ack({ ok: true, data: { room: room.view() } });
+  });
+
+  /** Como el paquete: cambiar el reloj a media partida seria cambiar las reglas. */
+  socket.on('room:turnLimit', ({ ms }, ack) => {
+    const found = roomOf(socket.id);
+    if (!found) return ack({ ok: false, error: MSG.notInRoom });
+    const { room, playerId } = found;
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostSetsTurn });
+    if (room.status !== 'lobby') return ack({ ok: false, error: MSG.alreadyStarted });
+    if (!TURN_LIMITS_MS.includes(ms)) return ack({ ok: false, error: MSG.badTurnLimit });
+
+    room.turnLimitMs = ms;
     room.pushState();
     ack({ ok: true, data: { room: room.view() } });
   });
