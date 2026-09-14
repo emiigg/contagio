@@ -24,7 +24,7 @@ interface TableProps {
   room: RoomView;
   isHost: boolean;
   onPlay: (action: Action) => Promise<unknown>;
-  onRematch: () => void;
+  onReopen: () => void;
   onLeave: () => void;
   onShowRules: () => void;
 }
@@ -90,7 +90,7 @@ function seatLayout<T>(rivals: T[]): { left: T[]; top: T[]; right: T[] } {
   return { left: rivals.slice(0, 1), top: rivals.slice(1, 4), right: rivals.slice(4) };
 }
 
-export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRules }: TableProps) {
+export function Table({ view, room, isHost, onPlay, onReopen, onLeave, onShowRules }: TableProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [swapMineId, setSwapMineId] = useState<string | null>(null);
   const [discardIds, setDiscardIds] = useState<string[]>([]);
@@ -639,9 +639,10 @@ export function Table({ view, room, isHost, onPlay, onRematch, onLeave, onShowRu
                   ? pack.ending.winText
                   : pack.ending.loseText}
             </p>
+            {!isHost && <p className="curtain__text">{t.table.hostReopens}</p>}
             <div className="curtain__actions">
               {isHost && (
-                <button type="button" className="btn btn--primary" onClick={onRematch}>
+                <button type="button" className="btn btn--primary" onClick={onReopen}>
                   {t.table.rematch}
                 </button>
               )}

@@ -63,7 +63,7 @@ export default function App() {
             room={room}
             isHost={isHost}
             onPlay={actions.play}
-            onRematch={() => void actions.rematch()}
+            onReopen={() => void actions.reopen()}
             onLeave={() => void actions.leave()}
             onShowRules={() => setShowRules(true)}
           />

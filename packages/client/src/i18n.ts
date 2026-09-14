@@ -162,6 +162,7 @@ const es = {
     tieTitle: 'Se acaban las cartas. Tablas.',
     tieText: 'Nadie reunio ventaja suficiente antes de que se agotara el mazo.',
     rematch: 'Otra partida',
+    hostReopens: 'Si hay otra, el anfitrion vuelve a abrir la sala y pasas a ella.',
     home: 'Volver al inicio',
   },
   guide: {
@@ -331,6 +332,7 @@ const en: Strings = {
     tieTitle: 'The cards run out. A draw.',
     tieText: 'Nobody got far enough ahead before the deck ran out.',
     rematch: 'Play again',
+    hostReopens: 'If there is another round, the host takes everyone back to the room.',
     home: 'Back to start',
   },
   guide: {

@@ -101,7 +101,13 @@ export function useContagio() {
         });
     });
     socket.on('disconnect', () => setConnected(false));
-    socket.on('room:state', setRoom);
+    socket.on('room:state', (next) => {
+      setRoom(next);
+      // De vuelta en la sala, la vista de la partida acabada sobra: si se
+      // quedara, al empezar la siguiente asomaria su telon de final hasta que
+      // llegase la vista nueva.
+      if (next.status === 'lobby') setView(null);
+    });
     socket.on('game:view', setView);
     socket.on('game:over', ({ winnerName }) => pushToast(strings().net.wins(winnerName)));
     socket.on('toast', ({ message, kind }) => pushToast(pick(message), kind));
@@ -142,7 +148,7 @@ export function useContagio() {
       setDifficulty: (difficulty: BotDifficulty) => call('room:difficulty', { difficulty }),
       setPack: (pack: PackId) => call('room:pack', { pack }),
       start: () => call('room:start', {} as never),
-      rematch: () => call('room:rematch', {} as never),
+      reopen: () => call('room:reopen', {} as never),
       async leave() {
         await call('room:leave', {} as never).catch(() => undefined);
         writeSession(null);

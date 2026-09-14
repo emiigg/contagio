@@ -186,13 +186,13 @@ io.on('connection', (socket) => {
     ack({ ok: true, data: { room: room.view() } });
   });
 
-  socket.on('room:rematch', (_payload, ack) => {
+  socket.on('room:reopen', (_payload, ack) => {
     const found = roomOf(socket.id);
     if (!found) return ack({ ok: false, error: MSG.notInRoom });
     const { room, playerId } = found;
-    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostRematches });
+    if (room.hostId !== playerId) return ack({ ok: false, error: MSG.hostReopens });
 
-    const result = room.rematch();
+    const result = room.reopen();
     if (!result.ok) return ack({ ok: false, error: result.error! });
     ack({ ok: true, data: { room: room.view() } });
   });

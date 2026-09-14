@@ -41,7 +41,8 @@ export interface ClientToServerEvents {
   'room:difficulty': (payload: { difficulty: BotDifficulty }, ack: Ack<{ room: RoomView }>) => void;
   'room:pack': (payload: { pack: PackId }, ack: Ack<{ room: RoomView }>) => void;
   'room:start': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
-  'room:rematch': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
+  /** Al acabar, la mesa vuelve a la sala: ahi se cambia paquete, bots o tiempo. */
+  'room:reopen': (payload: Record<string, never>, ack: Ack<{ room: RoomView }>) => void;
   'room:leave': (payload: Record<string, never>, ack: Ack<Record<string, never>>) => void;
   'game:action': (payload: { action: Action }, ack: Ack<Record<string, never>>) => void;
 }

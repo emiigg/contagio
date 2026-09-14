@@ -33,7 +33,8 @@ export const MSG = {
   hostPicksPack: { es: 'Solo el anfitrion elige el paquete', en: 'Only the host picks the deck' },
   badPack: { es: 'Paquete no valido', en: 'Unknown deck' },
   hostStarts: { es: 'Solo el anfitrion puede empezar', en: 'Only the host can start the game' },
-  hostRematches: { es: 'Solo el anfitrion puede repetir', en: 'Only the host can start a rematch' },
+  hostReopens: { es: 'Solo el anfitrion puede repetir', en: 'Only the host can start a rematch' },
+  notOver: { es: 'La partida sigue en marcha', en: 'The game is still going' },
   invalidMove: { es: 'Esa jugada ya no es valida', en: 'That move is no longer valid' },
   timedOut: { es: 'Se agoto tu tiempo: la mesa ha jugado por ti.', en: 'Your time ran out: the table played for you.' },
 } satisfies Record<string, Localized | ((n: number) => Localized)>;

@@ -286,6 +286,59 @@ test('cada turno estrena reloj y la conexion de otro no lo reinicia', async () =
   }
 });
 
+test('al acabar, la mesa vuelve a la sala y alli se puede cambiar de paquete', async () => {
+  // Turnos de una decima: nadie juega y la partida acaba sola en segundos.
+  const port = PORT + 3;
+  const url = `http://localhost:${port}`;
+  const own = await startServer(port, { TURN_LIMIT_MS: '100', BOT_DELAY_MS: '50', OPENING_DELAY_MS: '0' });
+  const host = io(url, { transports: ['websocket'], forceNew: true });
+  const guest = io(url, { transports: ['websocket'], forceNew: true });
+  const late = io(url, { transports: ['websocket'], forceNew: true });
+  sockets.push(host, guest, late);
+  await Promise.all([host, guest, late].map((s) => new Promise((r) => s.on('connect', r))));
+
+  try {
+    let view = null;
+    let roomView = null;
+    host.on('game:view', (v) => (view = v));
+    host.on('room:state', (r) => (roomView = r));
+
+    const { room } = await ask(host, 'room:create', { name: 'Anfitriona' });
+    await ask(guest, 'room:join', { code: room.code, name: 'Invitado' });
+    await ask(host, 'room:addBot', {});
+    await ask(host, 'room:start', {});
+    await assert.rejects(ask(host, 'room:reopen', {}), /en marcha/i);
+
+    await until(() => view?.phase === 'finished', 30_000);
+    await assert.rejects(ask(guest, 'room:reopen', {}), /anfitrion/i);
+    // Quien se va del final no se queda ocupando asiento en la sala.
+    await ask(guest, 'room:leave', {});
+
+    const reopened = await ask(host, 'room:reopen', {});
+    assert.equal(reopened.room.status, 'lobby');
+    assert.deepEqual(
+      reopened.room.players.map((p) => p.isBot),
+      [false, true],
+      'en la sala siguen la anfitriona y el bot, sin el invitado que se fue',
+    );
+    await until(() => roomView?.status === 'lobby');
+
+    // En la sala se entra de nuevo y el paquete vuelve a poder cambiarse.
+    await ask(late, 'room:join', { code: room.code, name: 'Tardia' });
+    await ask(host, 'room:pack', { pack: 'frutas' });
+    view = null;
+    await ask(host, 'room:start', {});
+    await until(() => view !== null);
+    assert.equal(view.pack, 'frutas', 'la partida nueva no trae el paquete elegido en la sala');
+    assert.equal(view.players.length, 3);
+  } finally {
+    host.close();
+    guest.close();
+    late.close();
+    own.kill();
+  }
+});
+
 /** Reutiliza la heuristica del motor sobre la vista publica del jugador. */
 function pickAction(view, seed) {
   const choice = chooseBotAction(viewToState(view), view.youId, 'normal', seed);

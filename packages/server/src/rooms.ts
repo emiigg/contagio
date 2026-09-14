@@ -154,11 +154,22 @@ export class Room {
     return { ok: true };
   }
 
-  /** Nueva partida con los mismos jugadores. */
-  rematch(): { ok: boolean; error?: Localized } {
+  /**
+   * Devuelve la mesa a la sala en vez de repartir otra vez: ahi se cambia el
+   * paquete, los bots o el tiempo sin tener que abrir una sala nueva. Quien se
+   * fue durante la partida no vuelve con ella: en la sala no hay asientos
+   * guardados, y dejarlo ocuparia un sitio que la partida siguiente jugaria
+   * por el.
+   */
+  reopen(): { ok: boolean; error?: Localized } {
+    if (this.status !== 'finished') return { ok: false, error: MSG.notOver };
     this.clearTimer();
     this.state = null;
-    return this.start();
+    for (const member of this.members) {
+      if (!member.isBot && member.socketId === null) this.remove(member.id);
+    }
+    this.pushState();
+    return { ok: true };
   }
 
   handleAction(playerId: string, action: Action): { ok: boolean; error?: Localized } {
