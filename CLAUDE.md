@@ -101,8 +101,27 @@ registro) y viaja en `GameState.pack`, `RoomView.pack` y `PlayerView.pack`. El d
 la sala. El anfitrión lo cambia con `room:pack`, solo en la sala.
 
 Añadir uno: entrada en `PACKS` y `PACK_IDS`, su traducción en `PACKS_EN`, un `PackArt`, su línea en `PACK_ART` y su
-pieza en `SCORES` (con el `level` medido por `tools/musica.mjs`). Las pruebas comprueban además que el inglés nombra
+pieza en `SCORES` (con el `level` medido por `tools/musica.mjs`), y sus dos escenas de final en `client/src/endings/`. Las pruebas comprueban además que el inglés nombra
 las veinte cartas distintas y que cada plantilla pide los mismos huecos que la española.
+
+### Escenas del final
+
+El telón de fin de partida abre con una escena del paquete: `client/src/endings/<id>.tsx` exporta `scenes = { win,
+lose }` y `ENDINGS` las reúne en un `Record<PackId, …>`, así que un paquete nuevo no compila sin las suyas. Las tablas
+son una sola escena para todos (`tie.tsx`), porque cuentan la mesa y no un mundo. Van en un archivo aparte (`lazy`)
+que la mesa pide en cuanto se monta: pesan casi tanto como el resto del cliente y solo hacen falta al acabar.
+
+- Todo se dibuja con `kit.tsx`: escenario de 320×160, una figura articulada por ángulos (`Figure`, `POSES`) y
+  efectos (`Sparkle`, `Puff`, `Dizzy`…). Nada de colores literales: tokens del tema, más `--story-edge` (contorno) y
+  `--story-glow` (lo que brilla o es blanco, que no puede apagarse en oscuro como `--paper`).
+- Los colores de órgano solo visten a los cuatro personajes que son cartas, cada uno el de la suya, y a la plaga que
+  ataca a un color concreto. Lo festivo va en `--brand-warm`.
+- Sin texto, sin `<defs>` ni `id`: la escena se lee igual en los dos idiomas y no choca con otra en la página.
+- Lo que se mueve son clases `story-*` de la hoja de estilos y se salta con `prefers-reduced-motion`; la escena
+  quieta ya cuenta el final entero.
+- En los héroes, siluetas propias. La estrella del Capitán (escudo y pecho) es un dibujo propio pedido por el autor;
+  siguen fuera la «S», el murciélago del pecho y la «A».
+- `data-outcome` en `.curtain__art` dice qué final salió (`win`, `lose`, `tie`): lo leen las capturas.
 
 ### Idiomas
 

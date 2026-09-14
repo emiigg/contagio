@@ -74,6 +74,11 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **«Otra partida» vuelve a la sala**: al acabar, el anfitrión devuelve la mesa a la sala, donde se cambia de
   paquete, de bots, de dificultad o de tiempo sin abrir una sala nueva, y alguien más puede entrar con el mismo
   código. Quien se fue durante la partida deja libre su asiento.
+- **Cada paquete cuenta su final.** El telón de fin de partida abre con una escena dibujada para el paquete: al ganar,
+  tus cuatro cartas lo celebran juntas —los héroes en su azotea, la manada al atardecer, la banda en pleno
+  concierto—; al perder, las mismas por los suelos, y a veces el rival que se lleva la partida. Los personajes llevan
+  el color de su carta, como en la mesa. Las tablas tienen su propia escena, una balanza en equilibrio. Todo es SVG
+  propio y se queda quieto con movimiento reducido.
 - **Cada cual ve la mesa desde su silla**: los rivales se sientan en el orden en que juegan después de ti —el
   siguiente a tu izquierda, el anterior a tu derecha—, así que el turno da la vuelta a la mesa en el mismo sentido
   para todos, no solo para el anfitrión.
