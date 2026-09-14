@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cardName, cardText, fillTemplate } from '@contagio/engine';
 import type { Action, Card, Color, Lang, OrganPile, Pack, PlayerView, PublicPlayer, RoomView } from '@contagio/engine';
@@ -18,6 +18,14 @@ import { useT } from '../i18n';
 import type { Strings } from '../i18n';
 import { buzz, play } from '../sound';
 import type { SoundName } from '../sound';
+
+/**
+ * Las escenas del final pesan casi tanto como el resto del cliente y solo hacen
+ * falta al acabar: van en su propio archivo, que la mesa pide en cuanto se
+ * monta para tenerlo listo mucho antes del telon.
+ */
+const loadEndings = () => import('../endings');
+const EndingScene = lazy(() => loadEndings().then((m) => ({ default: m.EndingScene })));
 
 interface TableProps {
   view: PlayerView;
@@ -91,6 +99,9 @@ function seatLayout<T>(rivals: T[]): { left: T[]; top: T[]; right: T[] } {
 }
 
 export function Table({ view, room, isHost, onPlay, onReopen, onLeave, onShowRules }: TableProps) {
+  useEffect(() => {
+    void loadEndings();
+  }, []);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [swapMineId, setSwapMineId] = useState<string | null>(null);
   const [discardIds, setDiscardIds] = useState<string[]>([]);
@@ -624,6 +635,10 @@ export function Table({ view, room, isHost, onPlay, onReopen, onLeave, onShowRul
       {view.phase === 'finished' && (
         <div className="curtain" role="dialog" aria-modal="true">
           <div className="curtain__panel">
+            {/* Si aun no ha llegado, un hueco de la misma medida: el texto no salta. */}
+            <Suspense fallback={<div className="curtain__art" aria-hidden />}>
+              <EndingScene pack={pack.id} winnerId={view.winnerId} youId={view.youId} />
+            </Suspense>
             <p className="curtain__eyebrow mono">{t.table.ended}</p>
             <h2 className="curtain__title">
               {!winner

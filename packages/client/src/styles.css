@@ -51,6 +51,11 @@
   --font-ui: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
 
+  /* Escenas del final: el contorno de las figuras y lo que brilla (ojos,
+     reactores, estrellas), que tiene que seguir claro tambien en oscuro. */
+  --story-edge: #16211f;
+  --story-glow: #fbfcf8;
+
   color-scheme: light;
 }
 
@@ -91,6 +96,9 @@
   --gloss-edge: rgba(255, 255, 255, 0.05);
   --ink-hover: #d3dbd4;
   --backdrop-alpha: 0.12;
+
+  --story-edge: #070b0a;
+  --story-glow: #f3f6f1;
 
   color-scheme: dark;
 }
@@ -1874,6 +1882,199 @@ button {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+/* Escena del final, pegada arriba y a sangre: los margenes negativos anulan
+   el relleno del panel, que es el mismo clamp. Proporcion fija 2:1, la del
+   viewBox, para que nada salte al cargar. */
+.curtain__art {
+  aspect-ratio: 2 / 1;
+  margin: calc(-1 * clamp(1.2rem, 3vw, 2rem));
+  margin-bottom: 1.1rem;
+  overflow: hidden;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+/* En una pantalla muy baja la escena echaria el texto y los botones fuera del
+   panel: ahi manda lo que se puede leer y pulsar. */
+@media (max-height: 520px) {
+  .curtain__art {
+    display: none;
+  }
+}
+
+.story {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Lo que se mueve en las escenas. La escena quieta ya cuenta el final entero,
+   asi que con movimiento reducido no se pierde nada. */
+@media (prefers-reduced-motion: no-preference) {
+  .story-bob {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: story-bob 2.6s ease-in-out calc(var(--i, 0) * 0.35s) infinite alternate;
+  }
+
+  .story-twinkle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: story-twinkle 2.4s ease-in-out calc(var(--i, 0) * 0.4s) infinite;
+  }
+
+  .story-flutter {
+    transform-box: fill-box;
+    transform-origin: 0% 0%;
+    animation: story-flutter 1.5s ease-in-out calc(var(--i, 0) * 0.2s) infinite alternate;
+  }
+
+  .story-smoke {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: story-smoke 4.2s ease-in calc(var(--i, 0) * 0.9s) infinite;
+  }
+
+  .story-sway {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: story-sway 5s ease-in-out calc(var(--i, 0) * 0.5s) infinite alternate;
+  }
+
+  .story-drop {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: story-drop 0.9s cubic-bezier(0.5, 0, 0.6, 1.3) calc(var(--i, 0) * 0.15s) backwards;
+  }
+
+  .story-flicker {
+    animation: story-flicker 3s steps(1) calc(var(--i, 0) * 0.7s) infinite;
+  }
+
+  .story-orbit {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: story-orbit 2.2s linear calc(var(--i, 0) * -0.5s) infinite;
+  }
+
+  .story-glow {
+    animation: story-glow 1.8s ease-in-out calc(var(--i, 0) * 0.3s) infinite alternate;
+  }
+
+  .story-float {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: story-float 3.6s ease-in-out calc(var(--i, 0) * 0.45s) infinite alternate;
+  }
+
+  .story-spin {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: story-orbit 12s linear infinite;
+  }
+
+  .story-sink {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: story-sink 1.6s cubic-bezier(0.4, 0, 0.6, 1) calc(var(--i, 0) * 0.2s) backwards;
+  }
+}
+
+@keyframes story-bob {
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes story-twinkle {
+  50% {
+    transform: scale(0.4);
+    opacity: 0.4;
+  }
+}
+
+@keyframes story-flutter {
+  to {
+    transform: skewY(-5deg) scaleX(1.06);
+  }
+}
+
+@keyframes story-smoke {
+  0% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-18px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes story-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes story-drop {
+  from {
+    transform: translateY(-22px) rotate(-8deg);
+  }
+}
+
+@keyframes story-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.15;
+  }
+  46% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  73% {
+    opacity: 1;
+  }
+}
+
+@keyframes story-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes story-glow {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes story-float {
+  to {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+
+@keyframes story-sink {
+  from {
+    transform: translateY(-16px);
+    opacity: 0.4;
+  }
 }
 
 .toasts {
