@@ -20,6 +20,28 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.7.0',
+    date: '2026-09-13',
+    text: {
+      es: {
+        title: 'Otra partida, desde la sala',
+        notes: [
+          'Al acabar, Otra partida devuelve la mesa a la sala: ahi se cambia de paquete, de bots o de dificultad sin abrir una sala nueva, y quien quiera puede entrar con el mismo codigo.',
+          'El anfitrion elige cuanto dura cada turno: 20, 30, 45 o 60 segundos. Los demas lo ven en la sala antes de empezar.',
+          'Quien se va al terminar la partida deja libre su asiento para la siguiente.',
+        ],
+      },
+      en: {
+        title: 'Play again, from the room',
+        notes: [
+          'When a game ends, Play again takes the table back to the room: change the deck, the bots or the difficulty without opening a new room, and anyone can join with the same code.',
+          'The host picks how long each turn lasts: 20, 30, 45 or 60 seconds. Everyone else sees it in the room before the game starts.',
+          'Whoever leaves when a game ends frees their seat for the next one.',
+        ],
+      },
+    },
+  },
+  {
     version: '0.6.0',
     date: '2026-09-11',
     text: {
