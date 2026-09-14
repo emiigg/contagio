@@ -20,6 +20,28 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.8.0',
+    date: '2026-09-13',
+    text: {
+      es: {
+        title: 'Cada paquete cuenta su final',
+        notes: [
+          'Al acabar la partida, el telon cuenta el final con una escena del paquete: si ganas, tus cuatro cartas lo celebran juntas; si pierdes, las ves por los suelos.',
+          'Doce finales distintos: los heroes en su azotea, la manada al atardecer, el concierto, el naufragio... y una escena propia para las tablas.',
+          'Las escenas se quedan quietas si el sistema pide movimiento reducido.',
+        ],
+      },
+      en: {
+        title: 'Every deck tells its own ending',
+        notes: [
+          'When a game ends, the curtain tells the ending with a scene from your deck: win and your four cards celebrate together; lose and you see them knocked down.',
+          'Twelve different endings: the heroes on their rooftop, the herd at sunset, the concert, the shipwreck... and a scene of its own for a draw.',
+          'Scenes stay still if your system asks for reduced motion.',
+        ],
+      },
+    },
+  },
+  {
     version: '0.7.0',
     date: '2026-09-13',
     text: {
