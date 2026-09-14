@@ -42,12 +42,12 @@ trampas que ya nos han costado una tarde.
 npm run dev          # tsc --watch + servidor + Vite, se apagan juntos con Ctrl+C
 npm run build        # engine -> client -> server
 npm run typecheck    # tsc -b de engine y server
-npm test             # 31 pruebas del motor (node:test)
-npm run test:e2e     # 6 pruebas de integración por socket; levanta servidores de verdad
+npm test             # 33 pruebas del motor (node:test)
+npm run test:e2e     # 8 pruebas de integración por socket; levanta servidores de verdad
 npm start            # producción: un solo proceso Node sirve cliente y socket
 ```
 
-Variables útiles: `PORT`, `CORS_ORIGIN`, `MAX_ROOMS` (5), `EMPTY_GRACE_MS` (60 000), `TURN_LIMIT_MS` (20 000),
+Variables útiles: `PORT`, `CORS_ORIGIN`, `MAX_ROOMS` (5), `EMPTY_GRACE_MS` (60 000), `TURN_LIMIT_MS` (20 000, el de una sala nueva; el anfitrión elige entre `TURN_LIMITS_MS`),
 `BOT_DELAY_MS` (4500), `OPENING_DELAY_MS` (4200).
 
 ## Arquitectura y sus límites
@@ -208,6 +208,9 @@ Ambas herramientas **se plantan si el puerto ya responde**. Es a propósito: ver
   el turno entero exacto; si el aro se reinicia cuando cambia `msLeft`, sigue con el tiempo del anterior. Con bots
   en medio no se ve, porque el aro desaparece en su turno: hace falta probarlo con dos personas. Y `setConnection`
   solo reprograma el reloj si quien se conecta o se va es el jugador en turno.
+- **Al volver a la sala, la vista vieja se tira.** `room:reopen` deja la sala en `lobby` y el cliente pone `view` a
+  `null` en cuanto lo ve. Si la conserva, al empezar la partida siguiente el `room:state` llega antes que la vista
+  nueva y asoma un instante el telón de final de la anterior.
 - **Los asientos rotan desde tu silla**: `players.slice(me + 1)` seguido de `players.slice(0, me)`. Tomar la lista
   tal cual solo cuadra para el anfitrión, que es el índice 0, y una prueba con un único navegador nunca lo detecta:
   hay que mirar la mesa de un invitado.

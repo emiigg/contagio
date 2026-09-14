@@ -68,9 +68,12 @@ Una partida se juega sola si nadie la lee. Tres decisiones hacen que los turnos 
 - **Todo se juega señalando su sitio**: el órgano cae en su hueco, el virus sobre el órgano que ataca y la negligencia
   médica sobre la mesa entera del rival —esa, además, pregunta antes, porque cambiar el cuerpo completo no tiene
   vuelta atrás.
-- **Veinte segundos por turno** (`TURN_LIMIT_MS`) cuando juega una persona, con un aro que se gasta junto al indicador de
-  turno. Si llega a cero, la mesa juega por ella con la misma heurística de los bots: nadie se queda esperando a
-  alguien que se ha levantado. Los bots no llevan reloj.
+- **De veinte segundos a un minuto por turno** cuando juega una persona —20, 30, 45 o 60, a elección del anfitrión en
+  la sala—, con un aro que se gasta junto al indicador de turno. Si llega a cero, la mesa juega por ella con la misma
+  heurística de los bots: nadie se queda esperando a alguien que se ha levantado. Los bots no llevan reloj.
+- **«Otra partida» vuelve a la sala**: al acabar, el anfitrión devuelve la mesa a la sala, donde se cambia de
+  paquete, de bots, de dificultad o de tiempo sin abrir una sala nueva, y alguien más puede entrar con el mismo
+  código. Quien se fue durante la partida deja libre su asiento.
 - **Cada cual ve la mesa desde su silla**: los rivales se sientan en el orden en que juegan después de ti —el
   siguiente a tu izquierda, el anterior a tu derecha—, así que el turno da la vuelta a la mesa en el mismo sentido
   para todos, no solo para el anfitrión.
@@ -194,7 +197,8 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
 
 - **`MAX_ROOMS` (5)**: al llegar al tope, crear sala responde con un aviso de volver más tarde en lugar de servir seis
   partidas a tirones. Entrar con código a una sala existente sigue funcionando.
-- **`TURN_LIMIT_MS` (20 000)**: lo que dura el turno de una persona antes de que la mesa juegue por ella.
+- **`TURN_LIMIT_MS` (20 000)**: lo que dura el turno de una persona en una sala nueva antes de que la mesa juegue por
+  ella. El anfitrión lo cambia en la sala entre 20, 30, 45 y 60 segundos.
 - **`EMPTY_GRACE_MS` (60 000)**: una sala sin humanos conectados se cierra pasado ese margen. No es cero porque
   recargar la página es una desconexión: quien vuelve dentro de ese minuto se reencuentra su partida donde la dejó.
   Si no queda ni el asiento de un humano —todos se fueron del vestíbulo—, se cierra en el acto.
@@ -214,7 +218,9 @@ Cada sala vive en memoria y mantiene un temporizador para los bots, así que hay
   cierra —y su código deja de existir— cuando pierde a todos sus humanos. Y que el turno de una persona vence solo:
   con un servidor aparte y un turno de segundo y medio, la partida avanza sin que nadie juegue. Y que solo el
   anfitrión elige paquete, solo en la sala, y que la partida arranca con él. Y que cada turno estrena reloj aunque
-  jueguen dos personas seguidas, sin que la desconexión de otro le reinicie el reloj a quien está jugando.
+  jueguen dos personas seguidas, sin que la desconexión de otro le reinicie el reloj a quien está jugando. Y que solo
+  el anfitrión elige el tiempo de turno, entre los permitidos y solo en la sala, y que la partida lo trae. Y que al
+  acabar la mesa vuelve a la sala sin quien se fue, admite a alguien nuevo y arranca con el paquete que se elija ahí.
 
 ## Revisión visual
 
